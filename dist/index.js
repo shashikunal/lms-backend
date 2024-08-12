@@ -17,3 +17,4 @@ app_1.app.listen(config_1.CONFIG.PORT || 8000, () => {
     console.log(`server is running on port number ${config_1.CONFIG.PORT}`);
     (0, db_1.default)();
 });
+//# sourceMappingURL=index.js.map

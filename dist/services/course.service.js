@@ -32,3 +32,4 @@ const getAllCoursesService = (res) => __awaiter(void 0, void 0, void 0, function
     });
 });
 exports.getAllCoursesService = getAllCoursesService;
+//# sourceMappingURL=course.service.js.map

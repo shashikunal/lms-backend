@@ -34,3 +34,4 @@ const errorMiddleware = function (err, req, res, next) {
     });
 };
 exports.errorMiddleware = errorMiddleware;
+//# sourceMappingURL=error.js.map

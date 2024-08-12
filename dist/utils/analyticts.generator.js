@@ -31,3 +31,4 @@ function generateLast12MonthsData(model) {
         return { last12Months };
     });
 }
+//# sourceMappingURL=analyticts.generator.js.map

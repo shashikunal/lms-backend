@@ -68,3 +68,4 @@ node_cron_1.default.schedule("0 0 0 * * *", () => __awaiter(void 0, void 0, void
         console.log(error);
     }
 }));
+//# sourceMappingURL=notification.controller.js.map

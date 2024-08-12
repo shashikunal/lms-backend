@@ -22,3 +22,4 @@ exports.CONFIG = {
     ACCESS_TOKEN_EXPIRE: process.env.ACCESS_TOKEN_EXPIRE,
     REFRESH_TOKEN_EXPIRE: process.env.REFRESH_TOKEN_EXPIRE,
 };
+//# sourceMappingURL=index.js.map

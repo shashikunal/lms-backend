@@ -38,3 +38,4 @@ const sendMail = (options) => __awaiter(void 0, void 0, void 0, function* () {
     yield transporter.sendMail(mailOptions);
 });
 exports.default = sendMail;
+//# sourceMappingURL=sendMail.js.map

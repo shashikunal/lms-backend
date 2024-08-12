@@ -19,3 +19,4 @@ courseRouter.put("/add-replay", auth_1.isAuthenticated, (0, auth_1.authorizeRole
 courseRouter.get("/get-all-course-dashboard", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), course_controller_1.getAllCoursesDashboard);
 courseRouter.delete("/delete-course/:id", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), course_controller_1.deleteCourseByAdmin);
 exports.default = courseRouter;
+//# sourceMappingURL=course.routes.js.map

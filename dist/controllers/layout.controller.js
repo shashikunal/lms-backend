@@ -164,3 +164,4 @@ exports.getLayoutByType = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, ne
         return next(new ErrorHandler_1.default(error, 500));
     }
 }));
+//# sourceMappingURL=layout.controller.js.map

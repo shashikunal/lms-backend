@@ -11,3 +11,4 @@ const redisClient = () => {
     throw new Error("Redis url not found");
 };
 exports.redis = new ioredis_1.Redis(redisClient());
+//# sourceMappingURL=redis.js.map

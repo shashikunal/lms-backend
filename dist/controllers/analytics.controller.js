@@ -49,3 +49,4 @@ exports.getOrderAnalytics = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
         return next(new ErrorHandler_1.default(error, 500));
     }
 }));
+//# sourceMappingURL=analytics.controller.js.map

@@ -52,3 +52,4 @@ const updateUserRolesService = (res, id, role) => __awaiter(void 0, void 0, void
     });
 });
 exports.updateUserRolesService = updateUserRolesService;
+//# sourceMappingURL=user.service.js.map
