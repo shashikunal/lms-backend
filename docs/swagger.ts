@@ -264,6 +264,7 @@ export const swaggerDocument: Record<string, any> = {
                     success: { type: "boolean", example: true },
                     message: { type: "string", example: "Please check your email: jane@example.com to activate your account!" },
                     activationToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5..." },
+                    activationCode: { type: "string", example: "4921" },
                     mailUrl: { type: "string", example: "https://ethereal.email/messages" },
                   },
                 },

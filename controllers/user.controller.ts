@@ -62,6 +62,7 @@ export const registrationUser = CatchAsyncErrors(
           success: true,
           message: `Please check your ${user.email} address to activate your account!`,
           activationToken: activationToken.token,
+          activationCode: activationCode,
           mailUrl: mailUrl || "https://ethereal.email/messages",
         });
       } catch (error: any) {
