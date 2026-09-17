@@ -44,16 +44,18 @@ export const updateNotificationStatus = CatchAsyncErrors(
   }
 );
 
-//delete notification ==> admin
-cron.schedule("0 0 0 * * *", async () => {
-  try {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    await NotificationModel.deleteMany({
-      status: "read",
-      createdAt: { $lt: thirtyDaysAgo },
-    });
-    console.log("deleted read notifications");
-  } catch (error: any) {
-    console.log(error);
-  }
-});
+//delete notification ==> admin (only schedule in long-running node environments, skip in serverless)
+if (process.env.VERCEL !== "1") {
+  cron.schedule("0 0 0 * * *", async () => {
+    try {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      await NotificationModel.deleteMany({
+        status: "read",
+        createdAt: { $lt: thirtyDaysAgo },
+      });
+      console.log("deleted read notifications");
+    } catch (error: any) {
+      console.log(error);
+    }
+  });
+}

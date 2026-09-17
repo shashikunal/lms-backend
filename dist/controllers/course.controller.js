@@ -145,14 +145,14 @@ exports.getCourseByUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, ne
     }
 }));
 exports.addQuestion = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _b, _c;
     try {
         const { question, courseId, contentId } = req.body;
         const course = yield course_model_1.default.findById(courseId);
         if (!mongoose_1.default.Types.ObjectId.isValid(contentId)) {
             return next(new ErrorHandler_1.default("Invalid content id ", 400));
         }
-        const courseContent = (_a = course === null || course === void 0 ? void 0 : course.courseData) === null || _a === void 0 ? void 0 : _a.find((item) => item._id.equals(contentId));
+        const courseContent = (_b = course === null || course === void 0 ? void 0 : course.courseData) === null || _b === void 0 ? void 0 : _b.find((item) => item._id.equals(contentId));
         if (!courseContent) {
             return next(new ErrorHandler_1.default("Invalid content id ", 400));
         }
@@ -166,7 +166,7 @@ exports.addQuestion = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) 
         courseContent.questions.push(newQuestion);
         //add notification to the question
         yield notificationModel_1.default.create({
-            user: (_b = req === null || req === void 0 ? void 0 : req.user) === null || _b === void 0 ? void 0 : _b._id,
+            user: (_c = req === null || req === void 0 ? void 0 : req.user) === null || _c === void 0 ? void 0 : _c._id,
             title: "new question added",
             message: `you have a new question in ${courseContent === null || courseContent === void 0 ? void 0 : courseContent.title}`,
         });
@@ -182,18 +182,18 @@ exports.addQuestion = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) 
     }
 }));
 exports.addAnswer = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _d, _e, _f, _g, _h, _j, _k;
     try {
         const { answer, courseId, contentId, questionId } = req.body;
         const course = yield course_model_1.default.findById(courseId);
         if (!mongoose_1.default.Types.ObjectId.isValid(contentId)) {
             return next(new ErrorHandler_1.default("Invalid content id ", 400));
         }
-        const courseContent = (_a = course === null || course === void 0 ? void 0 : course.courseData) === null || _a === void 0 ? void 0 : _a.find((item) => item._id.equals(contentId));
+        const courseContent = (_d = course === null || course === void 0 ? void 0 : course.courseData) === null || _d === void 0 ? void 0 : _d.find((item) => item._id.equals(contentId));
         if (!courseContent) {
             return next(new ErrorHandler_1.default("Invalid content id ", 400));
         }
-        const question = (_b = courseContent === null || courseContent === void 0 ? void 0 : courseContent.questions) === null || _b === void 0 ? void 0 : _b.find((item) => item._id.equals(questionId));
+        const question = (_e = courseContent === null || courseContent === void 0 ? void 0 : courseContent.questions) === null || _e === void 0 ? void 0 : _e.find((item) => item._id.equals(questionId));
         if (!question) {
             return next(new ErrorHandler_1.default("Invalid question id ", 400));
         }
@@ -203,12 +203,12 @@ exports.addAnswer = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
             answer,
         };
         //add this answer to our question
-        (_c = question === null || question === void 0 ? void 0 : question.questionReplies) === null || _c === void 0 ? void 0 : _c.push(newAnswer);
+        (_f = question === null || question === void 0 ? void 0 : question.questionReplies) === null || _f === void 0 ? void 0 : _f.push(newAnswer);
         yield (course === null || course === void 0 ? void 0 : course.save());
-        if (((_d = req.user) === null || _d === void 0 ? void 0 : _d._id) === ((_e = question.user) === null || _e === void 0 ? void 0 : _e._id)) {
+        if (((_g = req.user) === null || _g === void 0 ? void 0 : _g._id) === ((_h = question.user) === null || _h === void 0 ? void 0 : _h._id)) {
             //create a notification
             yield notificationModel_1.default.create({
-                user: (_f = req === null || req === void 0 ? void 0 : req.user) === null || _f === void 0 ? void 0 : _f._id,
+                user: (_j = req === null || req === void 0 ? void 0 : req.user) === null || _j === void 0 ? void 0 : _j._id,
                 title: "New Question Replay Received",
                 message: `You have a new answer in ${courseContent.title}`,
             });
@@ -221,7 +221,7 @@ exports.addAnswer = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
             const html = yield ejs_1.default.renderFile(path_1.default.join(__dirname, "../mails/question-replay.ejs"), data);
             try {
                 yield (0, sendMail_1.default)({
-                    email: (_g = question === null || question === void 0 ? void 0 : question.user) === null || _g === void 0 ? void 0 : _g.email,
+                    email: (_k = question === null || question === void 0 ? void 0 : question.user) === null || _k === void 0 ? void 0 : _k.email,
                     subject: "Question replay",
                     template: "question-replay.ejs",
                     data,
@@ -241,9 +241,9 @@ exports.addAnswer = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
     }
 }));
 exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e;
+    var _l, _m, _o, _p, _q;
     try {
-        const userCourseList = (_a = req.user) === null || _a === void 0 ? void 0 : _a.courses;
+        const userCourseList = (_l = req.user) === null || _l === void 0 ? void 0 : _l.courses;
         const courseId = req.params.id;
         //check if course exits in courseList
         const courseExits = userCourseList === null || userCourseList === void 0 ? void 0 : userCourseList.some((course) => course._id.toString() === courseId);
@@ -257,18 +257,18 @@ exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
             comment: review,
             rating,
         };
-        (_b = course === null || course === void 0 ? void 0 : course.reviews) === null || _b === void 0 ? void 0 : _b.push(reviewData);
+        (_m = course === null || course === void 0 ? void 0 : course.reviews) === null || _m === void 0 ? void 0 : _m.push(reviewData);
         let avg = 0;
-        (_c = course === null || course === void 0 ? void 0 : course.reviews) === null || _c === void 0 ? void 0 : _c.forEach((rev) => {
+        (_o = course === null || course === void 0 ? void 0 : course.reviews) === null || _o === void 0 ? void 0 : _o.forEach((rev) => {
             avg += rev.rating;
         });
         if (course) {
-            course.ratings = avg / ((_d = course === null || course === void 0 ? void 0 : course.reviews) === null || _d === void 0 ? void 0 : _d.length);
+            course.ratings = avg / ((_p = course === null || course === void 0 ? void 0 : course.reviews) === null || _p === void 0 ? void 0 : _p.length);
         }
         yield (course === null || course === void 0 ? void 0 : course.save());
         const notification = {
             title: "new review received",
-            message: `${(_e = req.user) === null || _e === void 0 ? void 0 : _e.name} has given a review in ${course === null || course === void 0 ? void 0 : course.name} on your course`,
+            message: `${(_q = req.user) === null || _q === void 0 ? void 0 : _q.name} has given a review in ${course === null || course === void 0 ? void 0 : course.name} on your course`,
         };
         //create notification
         res.status(200).json({
@@ -282,14 +282,14 @@ exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
     }
 }));
 exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _r, _s;
     try {
         const { comment, reviewId, courseId } = req.body;
         const course = yield course_model_1.default.findById(courseId);
         if (!course) {
             return next(new ErrorHandler_1.default("Course not found", 400));
         }
-        const review = (_a = course === null || course === void 0 ? void 0 : course.reviews) === null || _a === void 0 ? void 0 : _a.find((rev) => rev._id.toString() === reviewId);
+        const review = (_r = course === null || course === void 0 ? void 0 : course.reviews) === null || _r === void 0 ? void 0 : _r.find((rev) => rev._id.toString() === reviewId);
         if (!review) {
             return next(new ErrorHandler_1.default("Review not found", 400));
         }
@@ -300,7 +300,7 @@ exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
         if (!review.commentReplies) {
             review.commentReplies = [];
         }
-        (_b = review === null || review === void 0 ? void 0 : review.commentReplies) === null || _b === void 0 ? void 0 : _b.push(replayData);
+        (_s = review === null || review === void 0 ? void 0 : review.commentReplies) === null || _s === void 0 ? void 0 : _s.push(replayData);
         yield (course === null || course === void 0 ? void 0 : course.save());
         res.status(200).json({
             success: true,

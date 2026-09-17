@@ -8,7 +8,6 @@ import {
 const orderRouter = express.Router();
 
 orderRouter.post("/create-order", isAuthenticated, createOrder);
-export default orderRouter;
 
 orderRouter.get(
   "/get-all-order-dashboard",
@@ -16,3 +15,5 @@ orderRouter.get(
   authorizeRoles("admin"),
   getAllOrderDashboard
 );
+
+export default orderRouter;

@@ -54,18 +54,20 @@ exports.updateNotificationStatus = (0, catchAsyncErrors_1.CatchAsyncErrors)((req
         return next(new ErrorHandler_1.default(error, 500));
     }
 }));
-//delete notification ==> admin
-node_cron_1.default.schedule("0 0 0 * * *", () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        yield notificationModel_1.default.deleteMany({
-            status: "read",
-            createdAt: { $lt: thirtyDaysAgo },
-        });
-        console.log("deleted read notifications");
-    }
-    catch (error) {
-        console.log(error);
-    }
-}));
+//delete notification ==> admin (only schedule in long-running node environments, skip in serverless)
+if (process.env.VERCEL !== "1") {
+    node_cron_1.default.schedule("0 0 0 * * *", () => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            yield notificationModel_1.default.deleteMany({
+                status: "read",
+                createdAt: { $lt: thirtyDaysAgo },
+            });
+            console.log("deleted read notifications");
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }));
+}
 //# sourceMappingURL=notification.controller.js.map

@@ -149,8 +149,9 @@ exports.editLayout = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =
 }));
 //get layout by Type
 exports.getLayoutByType = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
-        const { type } = req.body;
+        const type = ((_a = req.query) === null || _a === void 0 ? void 0 : _a.type) || ((_b = req.body) === null || _b === void 0 ? void 0 : _b.type);
         const layout = yield layout_model_1.default.findOne({ type });
         if (!layout) {
             return next(new ErrorHandler_1.default(`${type} does not exist`, 400));

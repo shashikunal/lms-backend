@@ -163,9 +163,9 @@ exports.updateAccessToken = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
 }));
 // getUserInfo
 exports.getUserInfo = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _b;
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id;
         console.log(userId);
         (0, user_service_1.getUserById)(userId, res);
     }
@@ -187,10 +187,10 @@ exports.socialAuth = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =
     }
 }));
 exports.updateUserInfo = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _c;
     try {
         const { name, email } = req.body;
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        const userId = (_c = req.user) === null || _c === void 0 ? void 0 : _c._id;
         const user = yield user_model_1.default.findByIdAndUpdate(userId);
         if (!user) {
             return next(new ErrorHandler_1.default("User not found", 404));
@@ -218,10 +218,10 @@ exports.updateUserInfo = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, nex
     }
 }));
 exports.updatePassword = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _d;
     try {
         const { oldPassword, newPassword } = req.body;
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        const userId = (_d = req.user) === null || _d === void 0 ? void 0 : _d._id;
         const user = yield user_model_1.default.findById(userId).select("+password");
         if ((user === null || user === void 0 ? void 0 : user.password) === undefined) {
             return next(new ErrorHandler_1.default("password not available", 400));
@@ -250,13 +250,13 @@ exports.updatePassword = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, nex
     }
 }));
 exports.updateProfilePicture = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _e, _f;
     try {
         const { avatar } = req.body;
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        const userId = (_e = req.user) === null || _e === void 0 ? void 0 : _e._id;
         const user = yield user_model_1.default.findById(userId);
         if (avatar && user) {
-            if ((_b = userId === null || userId === void 0 ? void 0 : userId.avatar) === null || _b === void 0 ? void 0 : _b.public_id) {
+            if ((_f = userId === null || userId === void 0 ? void 0 : userId.avatar) === null || _f === void 0 ? void 0 : _f.public_id) {
                 //delete old image
                 yield cloudinary_1.default.v2.uploader.destroy(userId.avatar.public_id);
                 //update new image
