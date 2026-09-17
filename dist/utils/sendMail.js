@@ -17,15 +17,21 @@ const ejs_1 = __importDefault(require("ejs"));
 const path_1 = __importDefault(require("path"));
 const config_1 = require("../config");
 const sendMail = (options) => __awaiter(void 0, void 0, void 0, function* () {
-    const transporter = nodemailer_1.default.createTransport({
-        host: config_1.CONFIG.SMTP_HOST,
-        port: Number(config_1.CONFIG.SMTP_PORT || "587"),
-        service: config_1.CONFIG.SMTP_SERVICE,
-        auth: {
+    const transportOptions = {
+        host: config_1.CONFIG.SMTP_HOST || "127.0.0.1",
+        port: Number(config_1.CONFIG.SMTP_PORT || "1025"),
+        secure: Number(config_1.CONFIG.SMTP_PORT) === 465,
+    };
+    if (config_1.CONFIG.SMTP_SERVICE) {
+        transportOptions.service = config_1.CONFIG.SMTP_SERVICE;
+    }
+    if (config_1.CONFIG.SMTP_MAIL && config_1.CONFIG.SMTP_PASSWORD) {
+        transportOptions.auth = {
             user: config_1.CONFIG.SMTP_MAIL,
             pass: config_1.CONFIG.SMTP_PASSWORD,
-        },
-    });
+        };
+    }
+    const transporter = nodemailer_1.default.createTransport(transportOptions);
     const { email, subject, template, data } = options;
     const templatePath = path_1.default.join(__dirname, `../mails`, template);
     const html = yield ejs_1.default.renderFile(templatePath, data);

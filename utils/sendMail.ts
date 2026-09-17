@@ -11,15 +11,24 @@ interface EmailOptions {
 }
 
 const sendMail = async (options: EmailOptions): Promise<void> => {
-  const transporter: Transporter = nodemailer.createTransport({
-    host: CONFIG.SMTP_HOST,
-    port: Number(CONFIG.SMTP_PORT || "587"),
-    service: CONFIG.SMTP_SERVICE,
-    auth: {
+  const transportOptions: any = {
+    host: CONFIG.SMTP_HOST || "127.0.0.1",
+    port: Number(CONFIG.SMTP_PORT || "1025"),
+    secure: Number(CONFIG.SMTP_PORT) === 465,
+  };
+
+  if (CONFIG.SMTP_SERVICE) {
+    transportOptions.service = CONFIG.SMTP_SERVICE;
+  }
+
+  if (CONFIG.SMTP_MAIL && CONFIG.SMTP_PASSWORD) {
+    transportOptions.auth = {
       user: CONFIG.SMTP_MAIL,
       pass: CONFIG.SMTP_PASSWORD,
-    },
-  });
+    };
+  }
+
+  const transporter: Transporter = nodemailer.createTransport(transportOptions);
   const { email, subject, template, data } = options;
 
   const templatePath = path.join(__dirname, `../mails`, template);
