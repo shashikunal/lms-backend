@@ -6,7 +6,7 @@ exports.swaggerDocument = {
     info: {
         title: "Learning Management System (LMS) API",
         version: "1.0.0",
-        description: "Comprehensive RESTful API for LMS backend built with Node.js, Express, TypeScript, and MongoDB. Includes authentication, course management, orders, notifications, analytics, and dynamic layouts.",
+        description: "Comprehensive RESTful API for LMS backend built with Node.js, Express, TypeScript, and MongoDB. Includes authentication, course management, orders, notifications, analytics, and dynamic layouts.\n\n📬 **Test Mailbox URL**: View test activation emails at [https://ethereal.email/messages](https://ethereal.email/messages).",
         contact: {
             name: "API Support",
             email: "support@lms-backend.com",
@@ -238,7 +238,7 @@ exports.swaggerDocument = {
             post: {
                 tags: ["Authentication & Users"],
                 summary: "Register new user",
-                description: "Creates an unverified account and sends a 4-digit activation code to the provided email.",
+                description: "Creates an unverified account and sends a 4-digit activation code to the provided email. For testing, view the email directly at: https://ethereal.email/messages (or the mailUrl returned in the response).",
                 requestBody: {
                     required: true,
                     content: {
@@ -266,6 +266,7 @@ exports.swaggerDocument = {
                                         success: { type: "boolean", example: true },
                                         message: { type: "string", example: "Please check your email: jane@example.com to activate your account!" },
                                         activationToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5..." },
+                                        mailUrl: { type: "string", example: "https://ethereal.email/messages" },
                                     },
                                 },
                             },

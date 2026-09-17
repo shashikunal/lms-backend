@@ -10,7 +10,7 @@ interface EmailOptions {
   data: { [key: string]: any };
 }
 
-const sendMail = async (options: EmailOptions): Promise<void> => {
+const sendMail = async (options: EmailOptions): Promise<string | false> => {
   const transportOptions: any = {
     host: CONFIG.SMTP_HOST || "127.0.0.1",
     port: Number(CONFIG.SMTP_PORT || "1025"),
@@ -40,7 +40,12 @@ const sendMail = async (options: EmailOptions): Promise<void> => {
     subject,
     html,
   };
-  await transporter.sendMail(mailOptions);
+  const info = await transporter.sendMail(mailOptions);
+  const testUrl = nodemailer.getTestMessageUrl(info);
+  if (testUrl) {
+    console.log("✉️  Email Preview URL:", testUrl);
+  }
+  return testUrl;
 };
 
 export default sendMail;

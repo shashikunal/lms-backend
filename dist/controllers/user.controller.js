@@ -42,7 +42,7 @@ exports.registrationUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, n
         const data = { user: { name: user.name }, activationCode };
         const html = yield ejs_1.default.renderFile(path_1.default.join(__dirname, "../mails/activation.email.ejs"), data);
         try {
-            yield (0, sendMail_1.default)({
+            const mailUrl = yield (0, sendMail_1.default)({
                 email: user.email,
                 subject: "Account Activation",
                 template: "activation.email.ejs",
@@ -50,8 +50,9 @@ exports.registrationUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, n
             });
             res.status(201).json({
                 success: true,
-                message: `Please check your ${user.email} address to activate your account! `,
+                message: `Please check your ${user.email} address to activate your account!`,
                 activationToken: activationToken.token,
+                mailUrl: mailUrl || "https://ethereal.email/messages",
             });
         }
         catch (error) {

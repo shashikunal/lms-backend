@@ -41,7 +41,12 @@ const sendMail = (options) => __awaiter(void 0, void 0, void 0, function* () {
         subject,
         html,
     };
-    yield transporter.sendMail(mailOptions);
+    const info = yield transporter.sendMail(mailOptions);
+    const testUrl = nodemailer_1.default.getTestMessageUrl(info);
+    if (testUrl) {
+        console.log("✉️  Email Preview URL:", testUrl);
+    }
+    return testUrl;
 });
 exports.default = sendMail;
 //# sourceMappingURL=sendMail.js.map

@@ -52,7 +52,7 @@ export const registrationUser = CatchAsyncErrors(
       );
 
       try {
-        await sendMail({
+        const mailUrl = await sendMail({
           email: user.email,
           subject: "Account Activation",
           template: "activation.email.ejs",
@@ -60,8 +60,9 @@ export const registrationUser = CatchAsyncErrors(
         });
         res.status(201).json({
           success: true,
-          message: `Please check your ${user.email} address to activate your account! `,
+          message: `Please check your ${user.email} address to activate your account!`,
           activationToken: activationToken.token,
+          mailUrl: mailUrl || "https://ethereal.email/messages",
         });
       } catch (error: any) {
         return next(new ErrorHandler(error.message, 400));

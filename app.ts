@@ -85,6 +85,7 @@ const renderSwaggerHtml = () => `<!DOCTYPE html>
   <div class="custom-header">
     <h1>🎓 LMS Backend API Docs</h1>
     <div>
+      <a href="https://ethereal.email/messages" target="_blank" style="margin-right: 8px; background: #0284c7; color: #fff; border-color: #0284c7;">📬 Test Mailbox</a>
       <a href="/api-docs.json" target="_blank">View Raw OpenAPI Spec</a>
       <a href="/test" target="_blank" style="margin-left: 8px;">Health Check</a>
     </div>
