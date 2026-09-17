@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,6 +26,7 @@ const notification_route_1 = __importDefault(require("./routes/notification.rout
 const analytics_routes_1 = __importDefault(require("./routes/analytics.routes"));
 const layout_routes_1 = __importDefault(require("./routes/layout.routes"));
 const swagger_1 = require("./docs/swagger");
+const db_1 = __importDefault(require("./utils/db"));
 exports.app = (0, express_1.default)();
 // Body parser
 exports.app.use(express_1.default.json({ limit: "50mb" }));
@@ -141,6 +151,26 @@ exports.app.get("/test", (req, res, next) => {
         timestamp: new Date().toISOString(),
     });
 });
+// Ensure DB connection before processing API routes
+exports.app.use((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    // Allow health check, Swagger UI docs, and welcome page without waiting for DB
+    if (req.path === "/" ||
+        req.path === "/test" ||
+        req.path.startsWith("/api-docs") ||
+        req.path.startsWith("/docs")) {
+        return next();
+    }
+    try {
+        yield (0, db_1.default)();
+        next();
+    }
+    catch (err) {
+        return res.status(503).json({
+            success: false,
+            message: `Database connection error: ${(err === null || err === void 0 ? void 0 : err.message) || "Unable to reach database"}. Ensure DB_URI is set and MongoDB Atlas allows 0.0.0.0/0 IP access.`,
+        });
+    }
+}));
 // API Routes
 exports.app.use("/api/v1/auth", user_routes_1.default);
 exports.app.use("/api/v1/course", course_routes_1.default);

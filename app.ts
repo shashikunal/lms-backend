@@ -11,6 +11,7 @@ import notificationRouter from "./routes/notification.route";
 import analyticsRouter from "./routes/analytics.routes";
 import layoutRouter from "./routes/layout.routes";
 import { swaggerDocument } from "./docs/swagger";
+import connectDb from "./utils/db";
 
 export const app = express();
 
@@ -146,6 +147,29 @@ app.get("/test", (req: Request, res: Response, next: NextFunction) => {
     message: "api is working",
     timestamp: new Date().toISOString(),
   });
+});
+
+// Ensure DB connection before processing API routes
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+  // Allow health check, Swagger UI docs, and welcome page without waiting for DB
+  if (
+    req.path === "/" ||
+    req.path === "/test" ||
+    req.path.startsWith("/api-docs") ||
+    req.path.startsWith("/docs")
+  ) {
+    return next();
+  }
+
+  try {
+    await connectDb();
+    next();
+  } catch (err: any) {
+    return res.status(503).json({
+      success: false,
+      message: `Database connection error: ${err?.message || "Unable to reach database"}. Ensure DB_URI is set and MongoDB Atlas allows 0.0.0.0/0 IP access.`,
+    });
+  }
 });
 
 // API Routes

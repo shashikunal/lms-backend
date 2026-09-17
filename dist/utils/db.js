@@ -14,22 +14,38 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const config_1 = require("../config");
-let isConnected = false;
+const cached = global.mongooseCache || { conn: null, promise: null };
+if (!global.mongooseCache) {
+    global.mongooseCache = cached;
+}
 const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
-    if (isConnected || mongoose_1.default.connection.readyState >= 1) {
-        return;
+    if (cached.conn && mongoose_1.default.connection.readyState >= 1) {
+        return cached.conn;
     }
-    if (!config_1.CONFIG.DB_URI) {
-        console.warn("DB_URI is not defined in environment variables. MongoDB connection skipped.");
-        return;
+    const dbUri = config_1.CONFIG.DB_URI || process.env.DB_URI;
+    if (!dbUri) {
+        const msg = "DB_URI is not defined in environment variables.";
+        console.warn(msg);
+        throw new Error(msg);
+    }
+    if (!cached.promise) {
+        const opts = {
+            serverSelectionTimeoutMS: 8000,
+            connectTimeoutMS: 10000,
+        };
+        cached.promise = mongoose_1.default.connect(dbUri, opts).then((m) => {
+            console.log(`MongoDB Connected: ${m.connection.host}`);
+            return m;
+        });
     }
     try {
-        const conn = yield mongoose_1.default.connect(config_1.CONFIG.DB_URI);
-        isConnected = true;
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
+        cached.conn = yield cached.promise;
+        return cached.conn;
     }
     catch (error) {
+        cached.promise = null; // Reset on failure so subsequent requests can retry
         console.error("MongoDB connection error:", error);
+        throw error;
     }
 });
 exports.default = connectDb;
