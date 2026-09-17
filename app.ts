@@ -23,9 +23,17 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 
 // CORS configuration
-const allowedOrigins = CONFIG.ORIGIN
-  ? [CONFIG.ORIGIN, "http://localhost:3000"]
-  : ["http://localhost:3000"];
+const configuredOrigins = CONFIG.ORIGIN
+  ? CONFIG.ORIGIN.split(",").map((o: string) => o.trim())
+  : [];
+const allowedOrigins = Array.from(
+  new Set([
+    ...configuredOrigins,
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://mockapi-mauve.vercel.app",
+  ])
+);
 
 app.use(
   cors({

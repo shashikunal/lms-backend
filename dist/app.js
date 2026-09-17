@@ -34,9 +34,15 @@ exports.app.use(express_1.default.urlencoded({ extended: true, limit: "50mb" }))
 // Cookie parser
 exports.app.use((0, cookie_parser_1.default)());
 // CORS configuration
-const allowedOrigins = config_1.CONFIG.ORIGIN
-    ? [config_1.CONFIG.ORIGIN, "http://localhost:3000"]
-    : ["http://localhost:3000"];
+const configuredOrigins = config_1.CONFIG.ORIGIN
+    ? config_1.CONFIG.ORIGIN.split(",").map((o) => o.trim())
+    : [];
+const allowedOrigins = Array.from(new Set([
+    ...configuredOrigins,
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://mockapi-mauve.vercel.app",
+]));
 exports.app.use((0, cors_1.default)({
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps, curl, Swagger UI) or allowed origins
