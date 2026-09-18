@@ -37,8 +37,25 @@ export const sendToken = (user: IUser, statusCode: number, res: Response) => {
   const accessToken = user.SignAccessToken();
   const refreshToken = user.SignRefreshToken();
 
+  // Strip sensitive fields such as password
+  const userObj: any =
+    typeof (user as any).toObject === "function"
+      ? (user as any).toObject()
+      : { ...user };
+  delete userObj.password;
+
   //upload session for redis
-  redis.set(user._id as string, JSON.stringify(user) as any);
+  try {
+    const redisPromise = redis.set(
+      user._id as string,
+      JSON.stringify(userObj) as any
+    );
+    if (redisPromise && typeof (redisPromise as any).catch === "function") {
+      (redisPromise as any).catch(() => {});
+    }
+  } catch {
+    // Ignore cache write errors
+  }
 
   //only set secure to true in production
   if (CONFIG.NODE_ENV === "production") {
@@ -50,6 +67,6 @@ export const sendToken = (user: IUser, statusCode: number, res: Response) => {
   res.status(statusCode).json({
     success: true,
     accessToken,
-    user,
+    user: userObj,
   });
 };

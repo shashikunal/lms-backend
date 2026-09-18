@@ -4,12 +4,37 @@ import userModel from "../models/user.model";
 
 //get user by id
 export const getUserById = async (id: string, res: Response) => {
-  const userJson = await redis.get(id);
-  if (userJson) {
-    const user = JSON.parse(userJson || "{}");
-    res.status(201).json({
+  try {
+    let user: any = null;
+    const userJson = await redis.get(id);
+    if (userJson) {
+      user = JSON.parse(userJson || "{}");
+    } else {
+      user = await userModel.findById(id).select("-password");
+      if (user) {
+        await redis.set(id, JSON.stringify(user), "EX", 604800).catch(() => {});
+      }
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.password) {
+      delete user.password;
+    }
+
+    return res.status(200).json({
       success: true,
       user,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

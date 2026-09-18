@@ -103,6 +103,7 @@ exports.loginUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
         if (!isPasswordMatched) {
             return next(new ErrorHandler_1.default("Invalid email or password", 401));
         }
+        user.password = undefined;
         (0, jwt_1.sendToken)(user, 200, res);
     }
     catch (error) {
@@ -140,22 +141,33 @@ exports.updateAccessToken = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
         const refresh_token = req.cookies.refresh_token;
         const decoded = jsonwebtoken_1.default.verify(refresh_token, index_1.CONFIG.REFRESH_TOKEN);
         const message = "Please login again to continue";
-        if (!decoded) {
+        if (!decoded || !decoded.id) {
             return next(new ErrorHandler_1.default(message, 401));
         }
+        let userData = null;
         const session = yield redis_1.redis.get(decoded.id);
-        if (!session) {
+        if (session) {
+            userData = JSON.parse(session);
+        }
+        else {
+            userData = yield user_model_1.default.findById(decoded.id).select("-password");
+        }
+        if (!userData) {
             return next(new ErrorHandler_1.default(message, 401));
         }
-        const userData = JSON.parse(session);
-        const accessToken = jsonwebtoken_1.default.sign({ id: userData._id }, index_1.CONFIG.ACCESS_TOKEN, { expiresIn: "5m" });
-        const refreshToken = jsonwebtoken_1.default.sign({ id: userData._id }, index_1.CONFIG.REFRESH_TOKEN, { expiresIn: "3d" });
+        const expire = index_1.CONFIG.ACCESS_TOKEN_EXPIRE;
+        const expiresIn = typeof expire === "string" && !isNaN(Number(expire))
+            ? `${expire}m`
+            : expire || "3d";
+        const accessToken = jsonwebtoken_1.default.sign({ id: (userData._id || userData.id).toString() }, index_1.CONFIG.ACCESS_TOKEN, { expiresIn: expiresIn });
+        const refreshToken = jsonwebtoken_1.default.sign({ id: (userData._id || userData.id).toString() }, index_1.CONFIG.REFRESH_TOKEN, { expiresIn: "7d" });
         req.user = userData;
         res.cookie("access_token", accessToken, jwt_1.accessTokenOptions);
         res.cookie("refresh_token", refreshToken, jwt_1.refreshTokenOptions);
         yield redis_1.redis.set(userData._id, JSON.stringify(userData), "EX", 604800); //7days;
         res.status(200).json({
             success: true,
+            accessToken,
             message: "Access token updated successfully",
         });
     }
@@ -167,9 +179,21 @@ exports.updateAccessToken = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
 exports.getUserInfo = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _b;
     try {
-        const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id;
-        console.log(userId);
-        (0, user_service_1.getUserById)(userId, res);
+        if (req.user) {
+            const userObj = typeof req.user.toObject === "function"
+                ? req.user.toObject()
+                : Object.assign({}, req.user);
+            delete userObj.password;
+            return res.status(200).json({
+                success: true,
+                user: userObj,
+            });
+        }
+        const userId = req.userId || ((_b = req.user) === null || _b === void 0 ? void 0 : _b._id);
+        if (!userId) {
+            return next(new ErrorHandler_1.default("User not found", 404));
+        }
+        yield (0, user_service_1.getUserById)(userId, res);
     }
     catch (error) {
         return next(new ErrorHandler_1.default(error.message, 500));

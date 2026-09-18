@@ -95,13 +95,17 @@ userSchema.pre("save", function (next) {
 });
 //sign access token
 userSchema.methods.SignAccessToken = function () {
-    return jsonwebtoken_1.default.sign({ id: this._id }, index_1.CONFIG.ACCESS_TOKEN, {
-        expiresIn: "5m",
+    const expire = index_1.CONFIG.ACCESS_TOKEN_EXPIRE;
+    const expiresIn = typeof expire === "string" && !isNaN(Number(expire))
+        ? `${expire}m`
+        : expire || "3d";
+    return jsonwebtoken_1.default.sign({ id: this._id.toString() }, index_1.CONFIG.ACCESS_TOKEN, {
+        expiresIn: expiresIn,
     });
 };
 //sign refresh token
 userSchema.methods.SignRefreshToken = function () {
-    return jsonwebtoken_1.default.sign({ id: this._id }, index_1.CONFIG.REFRESH_TOKEN, {
+    return jsonwebtoken_1.default.sign({ id: this._id.toString() }, index_1.CONFIG.REFRESH_TOKEN, {
         expiresIn: "7d",
     });
 };

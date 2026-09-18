@@ -143,6 +143,7 @@ export const loginUser = CatchAsyncErrors(
       if (!isPasswordMatched) {
         return next(new ErrorHandler("Invalid email or password", 401));
       }
+      user.password = undefined as any;
       sendToken(user, 200, res);
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
@@ -187,23 +188,33 @@ export const updateAccessToken = CatchAsyncErrors(
       ) as JwtPayload;
 
       const message = "Please login again to continue";
-      if (!decoded) {
+      if (!decoded || !decoded.id) {
         return next(new ErrorHandler(message, 401));
       }
+      let userData: any = null;
       const session = await redis.get(decoded.id as string);
-      if (!session) {
+      if (session) {
+        userData = JSON.parse(session);
+      } else {
+        userData = await userModel.findById(decoded.id).select("-password");
+      }
+      if (!userData) {
         return next(new ErrorHandler(message, 401));
       }
-      const userData = JSON.parse(session);
+      const expire = CONFIG.ACCESS_TOKEN_EXPIRE;
+      const expiresIn =
+        typeof expire === "string" && !isNaN(Number(expire))
+          ? `${expire}m`
+          : expire || "3d";
       const accessToken = jwt.sign(
-        { id: userData._id },
+        { id: (userData._id || userData.id).toString() },
         CONFIG.ACCESS_TOKEN as string,
-        { expiresIn: "5m" }
+        { expiresIn: expiresIn as any }
       );
       const refreshToken = jwt.sign(
-        { id: userData._id },
+        { id: (userData._id || userData.id).toString() },
         CONFIG.REFRESH_TOKEN as string,
-        { expiresIn: "3d" }
+        { expiresIn: "7d" }
       );
       req.user = userData;
       res.cookie("access_token", accessToken, accessTokenOptions);
@@ -211,6 +222,7 @@ export const updateAccessToken = CatchAsyncErrors(
       await redis.set(userData._id, JSON.stringify(userData), "EX", 604800); //7days;
       res.status(200).json({
         success: true,
+        accessToken,
         message: "Access token updated successfully",
       });
     } catch (error: any) {
@@ -223,9 +235,23 @@ export const updateAccessToken = CatchAsyncErrors(
 export const getUserInfo = CatchAsyncErrors(
   async (req: Request | any, res: Response, next: NextFunction) => {
     try {
-      const userId = req.user?._id;
-      console.log(userId);
-      getUserById(userId, res);
+      if (req.user) {
+        const userObj =
+          typeof req.user.toObject === "function"
+            ? req.user.toObject()
+            : { ...req.user };
+        delete userObj.password;
+        return res.status(200).json({
+          success: true,
+          user: userObj,
+        });
+      }
+
+      const userId = req.userId || req.user?._id;
+      if (!userId) {
+        return next(new ErrorHandler("User not found", 404));
+      }
+      await getUserById(userId, res);
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
     }

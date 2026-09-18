@@ -79,14 +79,19 @@ userSchema.pre<IUser>("save", async function (next) {
 
 //sign access token
 userSchema.methods.SignAccessToken = function () {
-  return jwt.sign({ id: this._id }, CONFIG.ACCESS_TOKEN as string, {
-    expiresIn: "5m",
+  const expire = CONFIG.ACCESS_TOKEN_EXPIRE;
+  const expiresIn =
+    typeof expire === "string" && !isNaN(Number(expire))
+      ? `${expire}m`
+      : expire || "3d";
+  return jwt.sign({ id: this._id.toString() }, CONFIG.ACCESS_TOKEN as string, {
+    expiresIn: expiresIn as any,
   });
 };
 
 //sign refresh token
 userSchema.methods.SignRefreshToken = function () {
-  return jwt.sign({ id: this._id }, CONFIG.REFRESH_TOKEN as string, {
+  return jwt.sign({ id: this._id.toString() }, CONFIG.REFRESH_TOKEN as string, {
     expiresIn: "7d",
   });
 };

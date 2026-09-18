@@ -17,12 +17,36 @@ const redis_1 = require("../utils/redis");
 const user_model_1 = __importDefault(require("../models/user.model"));
 //get user by id
 const getUserById = (id, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userJson = yield redis_1.redis.get(id);
-    if (userJson) {
-        const user = JSON.parse(userJson || "{}");
-        res.status(201).json({
+    try {
+        let user = null;
+        const userJson = yield redis_1.redis.get(id);
+        if (userJson) {
+            user = JSON.parse(userJson || "{}");
+        }
+        else {
+            user = yield user_model_1.default.findById(id).select("-password");
+            if (user) {
+                yield redis_1.redis.set(id, JSON.stringify(user), "EX", 604800).catch(() => { });
+            }
+        }
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+        if (user.password) {
+            delete user.password;
+        }
+        return res.status(200).json({
             success: true,
             user,
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
         });
     }
 });
