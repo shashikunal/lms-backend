@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const ejs_1 = __importDefault(require("ejs"));
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const config_1 = require("../config");
 const sendMail = (options) => __awaiter(void 0, void 0, void 0, function* () {
     const transportOptions = {
@@ -33,7 +34,10 @@ const sendMail = (options) => __awaiter(void 0, void 0, void 0, function* () {
     }
     const transporter = nodemailer_1.default.createTransport(transportOptions);
     const { email, subject, template, data } = options;
-    const templatePath = path_1.default.join(__dirname, `../mails`, template);
+    let templatePath = path_1.default.join(__dirname, `../mails`, template);
+    if (!fs_1.default.existsSync(templatePath)) {
+        templatePath = path_1.default.join(process.cwd(), "mails", template);
+    }
     const html = yield ejs_1.default.renderFile(templatePath, data);
     const mailOptions = {
         from: config_1.CONFIG.SMTP_MAIL,

@@ -9,7 +9,7 @@ import {
 const notificationRouter = express.Router();
 
 notificationRouter.get(
-  "/get-all-notification",
+  ["/get-all-notification", "/get-all-notifications"],
   isAuthenticated,
   authorizeRoles("admin"),
   getNotifications

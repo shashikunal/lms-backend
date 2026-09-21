@@ -9,20 +9,20 @@ import { authorizeRoles, isAuthenticated } from "../middlewares/auth";
 const analyticsRouter = express.Router();
 
 analyticsRouter.get(
-  "/get-users-analytics",
+  ["/get-users-analytics", "/users-analytics"],
   isAuthenticated,
   authorizeRoles("admin"),
   getUserAnalytics
 );
 
 analyticsRouter.get(
-  "/get-course-analytics",
+  ["/get-course-analytics", "/courses-analytics"],
   isAuthenticated,
   authorizeRoles("admin"),
   getCourseAnalytics
 );
 analyticsRouter.get(
-  "/get-order-analytics",
+  ["/get-order-analytics", "/orders-analytics"],
   isAuthenticated,
   authorizeRoles("admin"),
   getOrderAnalytics

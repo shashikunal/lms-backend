@@ -1,0 +1,560 @@
+{
+  "timestamp": "2026-09-21T15:55:28.883Z",
+  "passed": 69,
+  "failed": 0,
+  "total": 69,
+  "report": [
+    {
+      "category": "System",
+      "desc": "Health Check",
+      "method": "GET",
+      "path": "/test",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "System",
+      "desc": "Welcome API Navigation Directory",
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "System",
+      "desc": "Swagger OpenAPI JSON Spec",
+      "method": "GET",
+      "path": "/api-docs.json",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "System",
+      "desc": "Swagger UI HTML Documentation",
+      "method": "GET",
+      "path": "/api-docs",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "System",
+      "desc": "Swagger UI HTML Alias Route",
+      "method": "GET",
+      "path": "/docs",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Auth",
+      "desc": "User Registration (Sends Activation Email)",
+      "method": "POST",
+      "path": "/api/v1/auth/register",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "category": "Auth",
+      "desc": "Get My Profile (/me)",
+      "method": "GET",
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Auth",
+      "desc": "Update User Profile Info",
+      "method": "PUT",
+      "path": "/api/v1/auth/update-user-info",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Auth",
+      "desc": "Admin: Get All Registered Users",
+      "method": "GET",
+      "path": "/api/v1/auth/get-users",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Auth",
+      "desc": "User Logout",
+      "method": "GET",
+      "path": "/api/v1/auth/logout",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "LMS",
+      "desc": "Public: Get All Published Courses",
+      "method": "GET",
+      "path": "/api/v1/course/get-courses",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "category": "LMS",
+      "desc": "Admin: Get Master Course Management List",
+      "method": "GET",
+      "path": "/api/v1/course/get-admin-courses",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Layout",
+      "desc": "Get Layout: Banner",
+      "method": "GET",
+      "path": "/api/v1/layout/get-layout?type=Banner",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "category": "Layout",
+      "desc": "Get Layout: FAQ",
+      "method": "GET",
+      "path": "/api/v1/layout/get-layout?type=FAQ",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "category": "Layout",
+      "desc": "Get Layout: Categories",
+      "method": "GET",
+      "path": "/api/v1/layout/get-layout?type=Categories",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "category": "Analytics",
+      "desc": "Admin: 12-Month User Analytics",
+      "method": "GET",
+      "path": "/api/v1/analytics/users-analytics",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Analytics",
+      "desc": "Admin: Courses Analytics",
+      "method": "GET",
+      "path": "/api/v1/analytics/courses-analytics",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Analytics",
+      "desc": "Admin: Orders Analytics",
+      "method": "GET",
+      "path": "/api/v1/analytics/orders-analytics",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Notifications",
+      "desc": "Admin: Get All In-App Notifications",
+      "method": "GET",
+      "path": "/api/v1/notifications/get-all-notifications",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Catalog",
+      "desc": "Public: Get All Categories",
+      "method": "GET",
+      "path": "/api/v1/category/all",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Catalog",
+      "desc": "Public: Get All Brands",
+      "method": "GET",
+      "path": "/api/v1/category/brands/all",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Catalog",
+      "desc": "Admin: Create Category",
+      "method": "POST",
+      "path": "/api/v1/category/create",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "category": "Catalog",
+      "desc": "Public: Get Single Category by ID",
+      "method": "GET",
+      "path": "/api/v1/category/single/6ab1536bbe6c53ad7f6fa16b",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Catalog",
+      "desc": "Admin: Update Category",
+      "method": "PUT",
+      "path": "/api/v1/category/update/6ab1536bbe6c53ad7f6fa16b",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Catalog",
+      "desc": "Admin: Create Brand",
+      "method": "POST",
+      "path": "/api/v1/category/brand/create",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "category": "Products",
+      "desc": "Public: Get Products List (Search & Filter)",
+      "method": "GET",
+      "path": "/api/v1/product/all?keyword=test&sort=newest",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Products",
+      "desc": "Public: Get Featured Products",
+      "method": "GET",
+      "path": "/api/v1/product/featured",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Products",
+      "desc": "Admin: Create Product",
+      "method": "POST",
+      "path": "/api/v1/product/create",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "category": "Products",
+      "desc": "Public: Get Single Product by ID",
+      "method": "GET",
+      "path": "/api/v1/product/single/6ab1536bbe6c53ad7f6fa178",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Products",
+      "desc": "Public: Get Related Products",
+      "method": "GET",
+      "path": "/api/v1/product/related/6ab1536bbe6c53ad7f6fa178",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Products",
+      "desc": "Admin: Update Product",
+      "method": "PUT",
+      "path": "/api/v1/product/update/6ab1536bbe6c53ad7f6fa178",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Address",
+      "desc": "Auth: Add Shipping Address",
+      "method": "POST",
+      "path": "/api/v1/address/add",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "category": "Address",
+      "desc": "Auth: Get My Saved Addresses",
+      "method": "GET",
+      "path": "/api/v1/address/my-addresses",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Address",
+      "desc": "Auth: Update Address",
+      "method": "PUT",
+      "path": "/api/v1/address/update/6ab1536cbe6c53ad7f6fa182",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Address",
+      "desc": "Auth: Set Default Address",
+      "method": "PUT",
+      "path": "/api/v1/address/set-default/6ab1536cbe6c53ad7f6fa182",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Cart",
+      "desc": "Auth: Get User Shopping Cart",
+      "method": "GET",
+      "path": "/api/v1/cart",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Cart",
+      "desc": "Auth: Add Product to Cart",
+      "method": "POST",
+      "path": "/api/v1/cart/add",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Cart",
+      "desc": "Auth: Update Cart Item Quantity",
+      "method": "PUT",
+      "path": "/api/v1/cart/update-quantity",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Cart",
+      "desc": "Auth: Merge Guest Cart",
+      "method": "POST",
+      "path": "/api/v1/cart/merge",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Wishlist",
+      "desc": "Auth: Get User Wishlist",
+      "method": "GET",
+      "path": "/api/v1/wishlist",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Wishlist",
+      "desc": "Auth: Toggle Item In Wishlist (Add)",
+      "method": "POST",
+      "path": "/api/v1/wishlist/toggle",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Wishlist",
+      "desc": "Auth: Move Wishlist Item to Cart",
+      "method": "POST",
+      "path": "/api/v1/wishlist/move-to-cart/6ab1536bbe6c53ad7f6fa178",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Coupon",
+      "desc": "Admin: Create Promo Coupon",
+      "method": "POST",
+      "path": "/api/v1/coupon/create",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "category": "Coupon",
+      "desc": "Admin: Get All Coupons",
+      "method": "GET",
+      "path": "/api/v1/coupon/all",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Coupon",
+      "desc": "Auth: Apply Valid Coupon to Cart",
+      "method": "POST",
+      "path": "/api/v1/coupon/apply",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Coupon",
+      "desc": "Auth: Remove Coupon from Cart",
+      "method": "POST",
+      "path": "/api/v1/coupon/remove",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Payment",
+      "desc": "Public: Get Razorpay Client Key",
+      "method": "GET",
+      "path": "/api/v1/payment/razorpay-key",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Payment",
+      "desc": "Auth: Create Razorpay Order",
+      "method": "POST",
+      "path": "/api/v1/payment/razorpay-order",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Payment",
+      "desc": "Auth: Verify Signature with invalid hash (Validation check)",
+      "method": "POST",
+      "path": "/api/v1/payment/verify",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "category": "Payment",
+      "desc": "Public: Razorpay Webhook Missing Signature (Validation check)",
+      "method": "POST",
+      "path": "/api/v1/payment/webhook",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "category": "Orders",
+      "desc": "Auth: Create Order (COD)",
+      "method": "POST",
+      "path": "/api/v1/ecommerce/order/create",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "category": "Orders",
+      "desc": "Auth: Get My Orders List",
+      "method": "GET",
+      "path": "/api/v1/ecommerce/order/my-orders",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Orders",
+      "desc": "Auth: Get Single Order Details",
+      "method": "GET",
+      "path": "/api/v1/ecommerce/order/single/6ab1536dbe6c53ad7f6fa1bd",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Orders",
+      "desc": "Auth: Cancel Order",
+      "method": "PUT",
+      "path": "/api/v1/ecommerce/order/cancel/6ab1536dbe6c53ad7f6fa1bd",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Orders",
+      "desc": "Admin: Get All Orders",
+      "method": "GET",
+      "path": "/api/v1/ecommerce/order/admin/all",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Orders",
+      "desc": "Admin: Update Order Status",
+      "method": "PUT",
+      "path": "/api/v1/ecommerce/order/admin/status/6ab1536dbe6c53ad7f6fa1bd",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Reviews",
+      "desc": "Public: Get Reviews for Product",
+      "method": "GET",
+      "path": "/api/v1/product-reviews/product/6ab1536bbe6c53ad7f6fa178",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Reviews",
+      "desc": "Auth: Submit Product Review",
+      "method": "POST",
+      "path": "/api/v1/product-reviews/add",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "category": "Reviews",
+      "desc": "Auth: Vote Review Helpful",
+      "method": "PUT",
+      "path": "/api/v1/product-reviews/helpful/6ab15370be6c53ad7f6fa1df",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Security",
+      "desc": "Block Cart without Auth Header",
+      "method": "GET",
+      "path": "/api/v1/cart",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "category": "Security",
+      "desc": "Block Address Book without Auth",
+      "method": "GET",
+      "path": "/api/v1/address/my-addresses",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "category": "Security",
+      "desc": "Block Order Creation without Auth",
+      "method": "POST",
+      "path": "/api/v1/ecommerce/order/create",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "category": "Security",
+      "desc": "Block Admin Order List from regular user",
+      "method": "GET",
+      "path": "/api/v1/ecommerce/order/admin/all",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "category": "Security",
+      "desc": "Block Admin Category Create from regular user",
+      "method": "POST",
+      "path": "/api/v1/category/create",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "category": "Cleanup",
+      "desc": "Delete Test Review",
+      "method": "DELETE",
+      "path": "/api/v1/product-reviews/delete/6ab15370be6c53ad7f6fa1df",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Cleanup",
+      "desc": "Delete Test Address",
+      "method": "DELETE",
+      "path": "/api/v1/address/delete/6ab1536cbe6c53ad7f6fa182",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Cleanup",
+      "desc": "Delete Test Coupon",
+      "method": "DELETE",
+      "path": "/api/v1/coupon/delete/6ab1536cbe6c53ad7f6fa1ae",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Cleanup",
+      "desc": "Delete Test Product",
+      "method": "DELETE",
+      "path": "/api/v1/product/delete/6ab1536bbe6c53ad7f6fa178",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "category": "Cleanup",
+      "desc": "Delete Test Category",
+      "method": "DELETE",
+      "path": "/api/v1/category/delete/6ab1536bbe6c53ad7f6fa16b",
+      "status": 200,
+      "ok": true
+    }
+  ]
+}

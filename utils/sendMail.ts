@@ -1,6 +1,7 @@
 import nodemailer, { Transporter } from "nodemailer";
 import ejs from "ejs";
 import path from "path";
+import fs from "fs";
 import { CONFIG } from "../config";
 
 interface EmailOptions {
@@ -31,7 +32,10 @@ const sendMail = async (options: EmailOptions): Promise<string | false> => {
   const transporter: Transporter = nodemailer.createTransport(transportOptions);
   const { email, subject, template, data } = options;
 
-  const templatePath = path.join(__dirname, `../mails`, template);
+  let templatePath = path.join(__dirname, `../mails`, template);
+  if (!fs.existsSync(templatePath)) {
+    templatePath = path.join(process.cwd(), "mails", template);
+  }
   const html: string = await ejs.renderFile(templatePath, data);
 
   const mailOptions = {

@@ -18,7 +18,7 @@ userRouter.route("/social-auth").post(user_controller_1.socialAuth);
 userRouter.put("/update-user-info", auth_1.isAuthenticated, user_controller_1.updateUserInfo);
 userRouter.put("/update-user-password", auth_1.isAuthenticated, user_controller_1.updatePassword);
 userRouter.put("/update-user-profile-picture", auth_1.isAuthenticated, user_controller_1.updateProfilePicture);
-userRouter.get("/get-all-user-dashboard", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), user_controller_1.getAllUsersDashboard);
+userRouter.get(["/get-all-user-dashboard", "/get-users"], auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), user_controller_1.getAllUsersDashboard);
 userRouter.put("/update-user-roles", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), user_controller_1.updateUserRoles);
 userRouter.delete("/delete-user/:id", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), user_controller_1.deleteUserByAdmin);
 exports.default = userRouter;

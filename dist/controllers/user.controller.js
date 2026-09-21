@@ -18,8 +18,6 @@ const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const index_1 = require("./../config/index");
-const ejs_1 = __importDefault(require("ejs"));
-const path_1 = __importDefault(require("path"));
 const sendMail_1 = __importDefault(require("../utils/sendMail"));
 const jwt_1 = require("../utils/jwt");
 const redis_1 = require("../utils/redis");
@@ -40,7 +38,6 @@ exports.registrationUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, n
         const activationToken = (0, exports.createActivationToken)(user);
         const activationCode = activationToken.activationCode;
         const data = { user: { name: user.name }, activationCode };
-        const html = yield ejs_1.default.renderFile(path_1.default.join(__dirname, "../mails/activation.email.ejs"), data);
         try {
             const mailUrl = yield (0, sendMail_1.default)({
                 email: user.email,

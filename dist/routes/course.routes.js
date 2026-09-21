@@ -16,7 +16,7 @@ courseRouter.put("/add-question", auth_1.isAuthenticated, course_controller_1.ad
 courseRouter.put("/add-answer", auth_1.isAuthenticated, course_controller_1.addAnswer);
 courseRouter.put("/add-review/:id", auth_1.isAuthenticated, course_controller_1.addReview);
 courseRouter.put("/add-replay", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), course_controller_1.addReplayToReview);
-courseRouter.get("/get-all-course-dashboard", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), course_controller_1.getAllCoursesDashboard);
+courseRouter.get(["/get-all-course-dashboard", "/get-admin-courses"], auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), course_controller_1.getAllCoursesDashboard);
 courseRouter.delete("/delete-course/:id", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), course_controller_1.deleteCourseByAdmin);
 exports.default = courseRouter;
 //# sourceMappingURL=course.routes.js.map

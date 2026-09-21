@@ -1,10 +1,16 @@
+import {
+  ecommerceTags,
+  ecommerceSchemas,
+  ecommercePaths,
+} from "./ecommerce.swagger";
+
 export const swaggerDocument: Record<string, any> = {
   openapi: "3.0.3",
   info: {
-    title: "Learning Management System (LMS) API",
+    title: "Learning Management System (LMS) & E-Commerce API",
     version: "1.0.0",
     description:
-      "Comprehensive RESTful API for LMS backend built with Node.js, Express, TypeScript, and MongoDB. Includes authentication, course management, orders, notifications, analytics, and dynamic layouts.\n\n📬 **Test Mailbox URL**: View test activation emails at [https://ethereal.email/messages](https://ethereal.email/messages).",
+      "Comprehensive RESTful API for LMS and E-Commerce platform built with Node.js, Express, TypeScript, Razorpay, and MongoDB. Includes Authentication, Course Management, E-Commerce Catalog (Categories, Brands, Products), Customer Addresses, Cart, Wishlist, Coupons, Razorpay Payment Processing, Orders, Product Reviews, Notifications, Analytics, and Dynamic Layouts.\n\n📬 **Test Mailbox URL**: View test activation emails at [https://ethereal.email/messages](https://ethereal.email/messages).",
     contact: {
       name: "API Support",
       email: "support@lms-backend.com",
@@ -52,6 +58,7 @@ export const swaggerDocument: Record<string, any> = {
       name: "Layout",
       description: "Manage homepage banner, FAQs, and course categories",
     },
+    ...ecommerceTags,
   ],
   components: {
     securitySchemes: {
@@ -168,6 +175,7 @@ export const swaggerDocument: Record<string, any> = {
           createdAt: { type: "string", format: "date-time" },
         },
       },
+      ...ecommerceSchemas,
     },
   },
   paths: {
@@ -1408,5 +1416,6 @@ export const swaggerDocument: Record<string, any> = {
         },
       },
     },
+    ...ecommercePaths,
   },
 };

@@ -35,7 +35,7 @@ userRouter.put(
 );
 
 userRouter.get(
-  "/get-all-user-dashboard",
+  ["/get-all-user-dashboard", "/get-users"],
   isAuthenticated,
   authorizeRoles("admin"),
   getAllUsersDashboard

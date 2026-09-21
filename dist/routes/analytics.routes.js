@@ -7,8 +7,8 @@ const express_1 = __importDefault(require("express"));
 const analytics_controller_1 = require("../controllers/analytics.controller");
 const auth_1 = require("../middlewares/auth");
 const analyticsRouter = express_1.default.Router();
-analyticsRouter.get("/get-users-analytics", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), analytics_controller_1.getUserAnalytics);
-analyticsRouter.get("/get-course-analytics", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), analytics_controller_1.getCourseAnalytics);
-analyticsRouter.get("/get-order-analytics", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), analytics_controller_1.getOrderAnalytics);
+analyticsRouter.get(["/get-users-analytics", "/users-analytics"], auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), analytics_controller_1.getUserAnalytics);
+analyticsRouter.get(["/get-course-analytics", "/courses-analytics"], auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), analytics_controller_1.getCourseAnalytics);
+analyticsRouter.get(["/get-order-analytics", "/orders-analytics"], auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), analytics_controller_1.getOrderAnalytics);
 exports.default = analyticsRouter;
 //# sourceMappingURL=analytics.routes.js.map

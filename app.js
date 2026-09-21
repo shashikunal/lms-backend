@@ -25,6 +25,15 @@ const order_routes_1 = __importDefault(require("./routes/order.routes"));
 const notification_route_1 = __importDefault(require("./routes/notification.route"));
 const analytics_routes_1 = __importDefault(require("./routes/analytics.routes"));
 const layout_routes_1 = __importDefault(require("./routes/layout.routes"));
+const category_routes_1 = __importDefault(require("./routes/category.routes"));
+const product_routes_1 = __importDefault(require("./routes/product.routes"));
+const address_routes_1 = __importDefault(require("./routes/address.routes"));
+const cart_routes_1 = __importDefault(require("./routes/cart.routes"));
+const wishlist_routes_1 = __importDefault(require("./routes/wishlist.routes"));
+const coupon_routes_1 = __importDefault(require("./routes/coupon.routes"));
+const payment_routes_1 = __importDefault(require("./routes/payment.routes"));
+const ecommerceOrder_routes_1 = __importDefault(require("./routes/ecommerceOrder.routes"));
+const productReview_routes_1 = __importDefault(require("./routes/productReview.routes"));
 const swagger_1 = require("./docs/swagger");
 const db_1 = __importDefault(require("./utils/db"));
 exports.app = (0, express_1.default)();
@@ -145,6 +154,16 @@ exports.app.get("/", (req, res) => {
             notifications: "/api/v1/notifications",
             analytics: "/api/v1/analytics",
             layout: "/api/v1/layout",
+            // E-Commerce Endpoints
+            category: "/api/v1/category",
+            product: "/api/v1/product",
+            address: "/api/v1/address",
+            cart: "/api/v1/cart",
+            wishlist: "/api/v1/wishlist",
+            coupon: "/api/v1/coupon",
+            payment: "/api/v1/payment",
+            ecommerceOrder: "/api/v1/ecommerce/order",
+            productReviews: "/api/v1/product-reviews",
             healthCheck: "/test",
         },
     });
@@ -184,6 +203,16 @@ exports.app.use("/api/v1/order", order_routes_1.default);
 exports.app.use("/api/v1/notifications", notification_route_1.default);
 exports.app.use("/api/v1/analytics", analytics_routes_1.default);
 exports.app.use("/api/v1/layout", layout_routes_1.default);
+// E-Commerce API Routes
+exports.app.use("/api/v1/category", category_routes_1.default);
+exports.app.use("/api/v1/product", product_routes_1.default);
+exports.app.use("/api/v1/address", address_routes_1.default);
+exports.app.use("/api/v1/cart", cart_routes_1.default);
+exports.app.use("/api/v1/wishlist", wishlist_routes_1.default);
+exports.app.use("/api/v1/coupon", coupon_routes_1.default);
+exports.app.use("/api/v1/payment", payment_routes_1.default);
+exports.app.use("/api/v1/ecommerce/order", ecommerceOrder_routes_1.default);
+exports.app.use("/api/v1/product-reviews", productReview_routes_1.default);
 // 404 Handler
 exports.app.all("*", (req, res, next) => {
     const err = new Error(`Route ${req.originalUrl} not found`);

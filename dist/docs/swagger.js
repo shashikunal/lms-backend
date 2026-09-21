@@ -1,12 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.swaggerDocument = void 0;
+const ecommerce_swagger_1 = require("./ecommerce.swagger");
 exports.swaggerDocument = {
     openapi: "3.0.3",
     info: {
-        title: "Learning Management System (LMS) API",
+        title: "Learning Management System (LMS) & E-Commerce API",
         version: "1.0.0",
-        description: "Comprehensive RESTful API for LMS backend built with Node.js, Express, TypeScript, and MongoDB. Includes authentication, course management, orders, notifications, analytics, and dynamic layouts.\n\n📬 **Test Mailbox URL**: View test activation emails at [https://ethereal.email/messages](https://ethereal.email/messages).",
+        description: "Comprehensive RESTful API for LMS and E-Commerce platform built with Node.js, Express, TypeScript, Razorpay, and MongoDB. Includes Authentication, Course Management, E-Commerce Catalog (Categories, Brands, Products), Customer Addresses, Cart, Wishlist, Coupons, Razorpay Payment Processing, Orders, Product Reviews, Notifications, Analytics, and Dynamic Layouts.\n\n📬 **Test Mailbox URL**: View test activation emails at [https://ethereal.email/messages](https://ethereal.email/messages).",
         contact: {
             name: "API Support",
             email: "support@lms-backend.com",
@@ -54,6 +55,7 @@ exports.swaggerDocument = {
             name: "Layout",
             description: "Manage homepage banner, FAQs, and course categories",
         },
+        ...ecommerce_swagger_1.ecommerceTags,
     ],
     components: {
         securitySchemes: {
@@ -70,22 +72,19 @@ exports.swaggerDocument = {
                 description: "Access token stored in HTTP-only cookie",
             },
         },
-        schemas: {
-            ApiResponse: {
+        schemas: Object.assign({ ApiResponse: {
                 type: "object",
                 properties: {
                     success: { type: "boolean", example: true },
                     message: { type: "string", example: "Operation completed successfully" },
                 },
-            },
-            ErrorResponse: {
+            }, ErrorResponse: {
                 type: "object",
                 properties: {
                     success: { type: "boolean", example: false },
                     message: { type: "string", example: "Detailed error message" },
                 },
-            },
-            User: {
+            }, User: {
                 type: "object",
                 properties: {
                     _id: { type: "string", example: "64e00b8a1c9d2f001c9a1b2c" },
@@ -112,8 +111,7 @@ exports.swaggerDocument = {
                     createdAt: { type: "string", format: "date-time" },
                     updatedAt: { type: "string", format: "date-time" },
                 },
-            },
-            Course: {
+            }, Course: {
                 type: "object",
                 properties: {
                     _id: { type: "string", example: "64e00b8a1c9d2f001c9a1b2d" },
@@ -148,8 +146,7 @@ exports.swaggerDocument = {
                     rating: { type: "number", example: 4.8 },
                     purchased: { type: "number", example: 120 },
                 },
-            },
-            Order: {
+            }, Order: {
                 type: "object",
                 properties: {
                     _id: { type: "string", example: "64e00b8a1c9d2f001c9a1b2e" },
@@ -158,8 +155,7 @@ exports.swaggerDocument = {
                     payment_info: { type: "object" },
                     createdAt: { type: "string", format: "date-time" },
                 },
-            },
-            Notification: {
+            }, Notification: {
                 type: "object",
                 properties: {
                     _id: { type: "string", example: "64e00b8a1c9d2f001c9a1b2f" },
@@ -169,11 +165,9 @@ exports.swaggerDocument = {
                     userId: { type: "string", example: "64e00b8a1c9d2f001c9a1b2c" },
                     createdAt: { type: "string", format: "date-time" },
                 },
-            },
-        },
+            } }, ecommerce_swagger_1.ecommerceSchemas),
     },
-    paths: {
-        "/": {
+    paths: Object.assign({ "/": {
             get: {
                 tags: ["System"],
                 summary: "API Root & Navigation",
@@ -198,8 +192,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/test": {
+        }, "/test": {
             get: {
                 tags: ["System"],
                 summary: "Health Check",
@@ -221,8 +214,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api-docs.json": {
+        }, "/api-docs.json": {
             get: {
                 tags: ["System"],
                 summary: "Raw OpenAPI 3.0 Specification",
@@ -233,8 +225,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/auth/register": {
+        }, "/api/v1/auth/register": {
             post: {
                 tags: ["Authentication & Users"],
                 summary: "Register new user",
@@ -276,8 +267,7 @@ exports.swaggerDocument = {
                     400: { description: "Email already exists or invalid data" },
                 },
             },
-        },
-        "/api/v1/auth/activate-user": {
+        }, "/api/v1/auth/activate-user": {
             post: {
                 tags: ["Authentication & Users"],
                 summary: "Activate registered user account",
@@ -315,8 +305,7 @@ exports.swaggerDocument = {
                     400: { description: "Invalid or expired activation code" },
                 },
             },
-        },
-        "/api/v1/auth/login": {
+        }, "/api/v1/auth/login": {
             post: {
                 tags: ["Authentication & Users"],
                 summary: "Login user",
@@ -355,8 +344,7 @@ exports.swaggerDocument = {
                     400: { description: "Invalid email or password" },
                 },
             },
-        },
-        "/api/v1/auth/logout": {
+        }, "/api/v1/auth/logout": {
             get: {
                 tags: ["Authentication & Users"],
                 summary: "Logout current user",
@@ -373,8 +361,7 @@ exports.swaggerDocument = {
                     400: { description: "Not authenticated" },
                 },
             },
-        },
-        "/api/v1/auth/refreshtoken": {
+        }, "/api/v1/auth/refreshtoken": {
             get: {
                 tags: ["Authentication & Users"],
                 summary: "Refresh access token",
@@ -397,8 +384,7 @@ exports.swaggerDocument = {
                     400: { description: "Invalid or expired refresh token" },
                 },
             },
-        },
-        "/api/v1/auth/me": {
+        }, "/api/v1/auth/me": {
             get: {
                 tags: ["Authentication & Users"],
                 summary: "Get current authenticated user profile",
@@ -421,8 +407,7 @@ exports.swaggerDocument = {
                     400: { description: "Not authenticated" },
                 },
             },
-        },
-        "/api/v1/auth/social-auth": {
+        }, "/api/v1/auth/social-auth": {
             post: {
                 tags: ["Authentication & Users"],
                 summary: "Social authentication (Google / GitHub OAuth)",
@@ -461,8 +446,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/auth/update-user-info": {
+        }, "/api/v1/auth/update-user-info": {
             put: {
                 tags: ["Authentication & Users"],
                 summary: "Update current user profile info",
@@ -498,8 +482,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/auth/update-user-password": {
+        }, "/api/v1/auth/update-user-password": {
             put: {
                 tags: ["Authentication & Users"],
                 summary: "Change account password",
@@ -537,8 +520,7 @@ exports.swaggerDocument = {
                     400: { description: "Incorrect old password" },
                 },
             },
-        },
-        "/api/v1/auth/update-user-profile-picture": {
+        }, "/api/v1/auth/update-user-profile-picture": {
             put: {
                 tags: ["Authentication & Users"],
                 summary: "Update user avatar / profile picture",
@@ -574,8 +556,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/auth/get-all-user-dashboard": {
+        }, "/api/v1/auth/get-all-user-dashboard": {
             get: {
                 tags: ["Authentication & Users"],
                 summary: "Get all users for admin dashboard",
@@ -602,8 +583,7 @@ exports.swaggerDocument = {
                     403: { description: "Forbidden: requires admin role" },
                 },
             },
-        },
-        "/api/v1/auth/update-user-roles": {
+        }, "/api/v1/auth/update-user-roles": {
             put: {
                 tags: ["Authentication & Users"],
                 summary: "Update a user's role (Admin only)",
@@ -640,8 +620,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/auth/delete-user/{id}": {
+        }, "/api/v1/auth/delete-user/{id}": {
             delete: {
                 tags: ["Authentication & Users"],
                 summary: "Delete user by ID (Admin only)",
@@ -672,8 +651,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/create-course": {
+        }, "/api/v1/course/create-course": {
             post: {
                 tags: ["Courses"],
                 summary: "Create a new course (Admin only)",
@@ -737,8 +715,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/edit-course/{id}": {
+        }, "/api/v1/course/edit-course/{id}": {
             put: {
                 tags: ["Courses"],
                 summary: "Edit existing course (Admin only)",
@@ -776,8 +753,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/get-course/{id}": {
+        }, "/api/v1/course/get-course/{id}": {
             get: {
                 tags: ["Courses"],
                 summary: "Get public details for a single course",
@@ -806,8 +782,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/get-courses": {
+        }, "/api/v1/course/get-courses": {
             get: {
                 tags: ["Courses"],
                 summary: "Get all public courses",
@@ -831,8 +806,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/get-course-content/{id}": {
+        }, "/api/v1/course/get-course-content/{id}": {
             get: {
                 tags: ["Courses"],
                 summary: "Get full course content for enrolled students",
@@ -863,8 +837,7 @@ exports.swaggerDocument = {
                     404: { description: "You are not enrolled in this course" },
                 },
             },
-        },
-        "/api/v1/course/add-question": {
+        }, "/api/v1/course/add-question": {
             put: {
                 tags: ["Courses"],
                 summary: "Ask a question in course lesson",
@@ -902,8 +875,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/add-answer": {
+        }, "/api/v1/course/add-answer": {
             put: {
                 tags: ["Courses"],
                 summary: "Answer a student question",
@@ -942,8 +914,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/add-review/{id}": {
+        }, "/api/v1/course/add-review/{id}": {
             put: {
                 tags: ["Courses"],
                 summary: "Add review & rating for course",
@@ -988,8 +959,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/add-replay": {
+        }, "/api/v1/course/add-replay": {
             put: {
                 tags: ["Courses"],
                 summary: "Reply to course review (Admin only)",
@@ -1027,8 +997,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/get-all-course-dashboard": {
+        }, "/api/v1/course/get-all-course-dashboard": {
             get: {
                 tags: ["Courses"],
                 summary: "Get all courses for Admin dashboard",
@@ -1053,8 +1022,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/course/delete-course/{id}": {
+        }, "/api/v1/course/delete-course/{id}": {
             delete: {
                 tags: ["Courses"],
                 summary: "Delete course by ID (Admin only)",
@@ -1084,8 +1052,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/order/create-order": {
+        }, "/api/v1/order/create-order": {
             post: {
                 tags: ["Orders"],
                 summary: "Create new course order",
@@ -1125,8 +1092,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/order/get-all-order-dashboard": {
+        }, "/api/v1/order/get-all-order-dashboard": {
             get: {
                 tags: ["Orders"],
                 summary: "Get all orders for Admin dashboard",
@@ -1151,8 +1117,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/notifications/get-all-notification": {
+        }, "/api/v1/notifications/get-all-notification": {
             get: {
                 tags: ["Notifications"],
                 summary: "Get notifications (Admin only)",
@@ -1177,8 +1142,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/notifications/update-notification-status/{id}": {
+        }, "/api/v1/notifications/update-notification-status/{id}": {
             put: {
                 tags: ["Notifications"],
                 summary: "Mark notification as read (Admin only)",
@@ -1211,8 +1175,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/analytics/get-users-analytics": {
+        }, "/api/v1/analytics/get-users-analytics": {
             get: {
                 tags: ["Analytics"],
                 summary: "Get 12-month user signups analytics (Admin only)",
@@ -1248,8 +1211,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/analytics/get-course-analytics": {
+        }, "/api/v1/analytics/get-course-analytics": {
             get: {
                 tags: ["Analytics"],
                 summary: "Get 12-month courses analytics (Admin only)",
@@ -1271,8 +1233,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/analytics/get-order-analytics": {
+        }, "/api/v1/analytics/get-order-analytics": {
             get: {
                 tags: ["Analytics"],
                 summary: "Get 12-month orders analytics (Admin only)",
@@ -1294,8 +1255,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/layout/create-layout": {
+        }, "/api/v1/layout/create-layout": {
             post: {
                 tags: ["Layout"],
                 summary: "Create layout configuration (Admin only)",
@@ -1347,8 +1307,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/layout/update-layout": {
+        }, "/api/v1/layout/update-layout": {
             put: {
                 tags: ["Layout"],
                 summary: "Update layout configuration (Admin only)",
@@ -1378,8 +1337,7 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-        "/api/v1/layout/get-layout": {
+        }, "/api/v1/layout/get-layout": {
             get: {
                 tags: ["Layout"],
                 summary: "Get site layout by type",
@@ -1409,7 +1367,6 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        },
-    },
+        } }, ecommerce_swagger_1.ecommercePaths),
 };
 //# sourceMappingURL=swagger.js.map

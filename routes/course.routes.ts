@@ -45,7 +45,7 @@ courseRouter.put(
 );
 
 courseRouter.get(
-  "/get-all-course-dashboard",
+  ["/get-all-course-dashboard", "/get-admin-courses"],
   isAuthenticated,
   authorizeRoles("admin"),
   getAllCoursesDashboard
