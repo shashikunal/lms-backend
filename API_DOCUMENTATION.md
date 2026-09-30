@@ -7,7 +7,8 @@
 
 This guide is the single source of truth for students. It shows **exactly how to call each endpoint as a `user` vs an `admin`**, with request/response examples. No code was changed — this is documentation only.
 
-> **New? Start with Postman + React:** see [`FRONTEND_POSTMAN_GUIDE.md`](./FRONTEND_POSTMAN_GUIDE.md) for step-by-step Postman setup and ReactJS integration (auth context, user shop flow, admin screens).
+> **Confused? Start here:** [`SIMPLE_GUIDE.md`](./SIMPLE_GUIDE.md) — every endpoint in plain words, numbered Postman clicks, copy-paste bodies.
+> **Postman + React setup:** [`FRONTEND_POSTMAN_GUIDE.md`](./FRONTEND_POSTMAN_GUIDE.md) (auth context, user shop flow, admin screens).
 > **Need every field + response explained?** see [`MODULE_WISE_GUIDE.md`](./MODULE_WISE_GUIDE.md) — full module-wise Auth & Courses documentation (request tables, success/error examples, React snippets).
 
 ---
