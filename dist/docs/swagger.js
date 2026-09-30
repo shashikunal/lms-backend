@@ -1268,7 +1268,7 @@ exports.swaggerDocument = {
                                 type: "object",
                                 required: ["type"],
                                 properties: {
-                                    type: { type: "string", enum: ["Banner", "FAQ", "Categories"], example: "Banner" },
+                                    type: { type: "string", enum: ["banner", "faq", "categories"], example: "faq" },
                                     image: { type: "string", example: "data:image/png;base64,..." },
                                     title: { type: "string", example: "Master Modern Web Development" },
                                     subTitle: { type: "string", example: "Interactive courses taught by industry leaders" },
@@ -1320,7 +1320,7 @@ exports.swaggerDocument = {
                                 type: "object",
                                 required: ["type"],
                                 properties: {
-                                    type: { type: "string", enum: ["Banner", "FAQ", "Categories"] },
+                                    type: { type: "string", enum: ["banner", "faq", "categories"] },
                                 },
                             },
                         },
@@ -1346,8 +1346,8 @@ exports.swaggerDocument = {
                         name: "type",
                         in: "query",
                         required: false,
-                        schema: { type: "string", enum: ["Banner", "FAQ", "Categories"] },
-                        description: "Layout type (can also be passed in body if supported)",
+                        schema: { type: "string", enum: ["banner", "faq", "categories"] },
+                        description: "Layout type (lowercase)",
                     },
                 ],
                 responses: {

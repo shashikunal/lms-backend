@@ -85,7 +85,7 @@ GET  /api/v1/auth/me                      <span class="c">(verify login)</span>
 GET  /api/v1/product/all?page=1&amp;limit=5      <span class="c">(browse shop)</span>
 POST /api/v1/address/add                  <span class="c">(save address, see §6)</span>
 POST /api/v1/cart/add                     <span class="c">{ "productId": "...", "quantity": 2 }</span>
-POST /api/v1/ecommerce/order/create       <span class="c">{ "addressId": "...", "paymentInfo": { "method": "COD" } }</span>
+POST /api/v1/ecommerce/order/create       <span class="c">{ "addressId": "...", "paymentInfo": { "method": "cod" } }</span>
 GET  /api/v1/course/get-courses           <span class="c">(browse courses)</span>
 POST /api/v1/order/create-order           <span class="c">{ "courseId": "...", "payment_info": {...} } (enroll)</span>
 GET  /api/v1/course/get-course-content/:id  <span class="c">(after enrollment)</span></pre>
@@ -173,12 +173,12 @@ api.interceptors.response.use((r) =&gt; r, (e) =&gt; {
 &lt;Route path="/cart" element={&lt;RequireAuth&gt;&lt;Cart/&gt;&lt;/RequireAuth&gt;} /&gt;
 &lt;Route path="/admin" element={&lt;RequireAdmin&gt;&lt;Admin/&gt;&lt;/RequireAdmin&gt;} /&gt;</pre>
 <h3>5.5 User screens</h3>
-<pre>GET  /product/all?page=1&amp;limit=12&amp;sort=newest        <span class="c">(filters: keyword, category, brand, min/maxPrice)</span>
+<pre>GET  /product/all?page=1&amp;limit=12&amp;sort=price-asc        <span class="c">(filters: search, category, brand, min/maxPrice, rating, inStock)</span>
 POST /address/add   <span class="c">{ fullName, phone, addressLine1, city, state, postalCode }</span>
 POST /cart/add      <span class="c">{ productId, quantity }</span>  →  GET /cart/
 PUT  /cart/update-quantity  <span class="c">{ itemId, quantity }</span>  →  DELETE /cart/item/:itemId
 POST /coupon/apply  <span class="c">{ code }</span>
-POST /ecommerce/order/create <span class="c">{ addressId, paymentInfo: { method: "COD" } }</span></pre>
+POST /ecommerce/order/create <span class="c">{ addressId, paymentInfo: { method: "cod" } }</span></pre>
 <h3>5.6 Razorpay (online payment)</h3>
 <pre>GET  /payment/razorpay-key            <span class="c">→ public key for Checkout</span>
 POST /payment/razorpay-order          <span class="c">{ amount } → order id</span>
@@ -229,7 +229,7 @@ PUT  /auth/update-user-roles  <span class="c">{ id, role }</span></pre>
 <table><tr><th>Method</th><th>Endpoint</th><th>Who</th></tr>
 <tr><td>GET</td><td>/category/all · /category/single/:idOrSlug · /category/brands/all</td><td><span class="badge b-public">Public</span></td></tr>
 <tr><td>POST / PUT / DELETE</td><td>/category/create · /category/update/:id · /category/delete/:id · /category/brand/create</td><td><span class="badge b-admin">Admin</span></td></tr>
-<tr><td>GET</td><td>/product/all (?keyword,category,brand,min/maxPrice,rating,sort,page,limit) · /product/featured · /product/single/:idOrSlug · /product/related/:id</td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>GET</td><td>/product/all (?search,category,brand,min/maxPrice,rating,inStock,sort,page,limit) · /product/featured · /product/single/:idOrSlug · /product/related/:id</td><td><span class="badge b-public">Public</span></td></tr>
 <tr><td>POST / PUT / DELETE</td><td>/product/create · /product/update/:id · /product/delete/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
 <tr><td>POST / GET / PUT / DELETE / PUT</td><td>/address/add · /address/my-addresses · /address/update/:id · /address/delete/:id · /address/set-default/:id</td><td><span class="badge b-auth">Auth</span></td></tr>
 <tr><td>GET / POST / PUT / DELETE / DELETE / POST</td><td>/cart/ · /cart/add · /cart/update-quantity · /cart/item/:itemId · /cart/clear · /cart/merge</td><td><span class="badge b-auth">Auth</span></td></tr>
@@ -246,7 +246,7 @@ PUT  /auth/update-user-roles  <span class="c">{ id, role }</span></pre>
 <table><tr><th>Method</th><th>Endpoint</th><th>Who</th></tr>
 <tr><td>GET / PUT</td><td>/notifications/get-all-notification · /update-notification-status/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
 <tr><td>GET</td><td>/analytics/get-users-analytics (alias /users-analytics) · /get-course-analytics · /get-order-analytics</td><td><span class="badge b-admin">Admin</span></td></tr>
-<tr><td>GET</td><td>/layout/get-layout?type=Banner|FAQ|Categories</td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>GET</td><td>/layout/get-layout?type=banner|faq|categories (lowercase)</td><td><span class="badge b-public">Public</span></td></tr>
 <tr><td>POST / PUT</td><td>/layout/create-layout · /layout/update-layout</td><td><span class="badge b-admin">Admin</span></td></tr></table>
 </section>
 

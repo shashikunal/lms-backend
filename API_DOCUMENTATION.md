@@ -8,6 +8,7 @@
 This guide is the single source of truth for students. It shows **exactly how to call each endpoint as a `user` vs an `admin`**, with request/response examples. No code was changed — this is documentation only.
 
 > **New? Start with Postman + React:** see [`FRONTEND_POSTMAN_GUIDE.md`](./FRONTEND_POSTMAN_GUIDE.md) for step-by-step Postman setup and ReactJS integration (auth context, user shop flow, admin screens).
+> **Need every field + response explained?** see [`MODULE_WISE_GUIDE.md`](./MODULE_WISE_GUIDE.md) — full module-wise Auth & Courses documentation (request tables, success/error examples, React snippets).
 
 ---
 
@@ -326,13 +327,13 @@ Base route: `/api/v1/product`
 | `PUT` | `/update/:id` | Admin | Update product (any fields). |
 | `DELETE` | `/delete/:id` | Admin | Delete product. |
 
-**Query params for `GET /all`:** `keyword, category, brand, minPrice, maxPrice, rating, sort, page, limit`
+**Query params for `GET /all`:** `search, category, brand, minPrice, maxPrice, rating, inStock, sort, page, limit`
 
 ```
-GET /api/v1/product/all?keyword=mouse&minPrice=100&maxPrice=2000&sort=price_low&page=1&limit=12
+GET /api/v1/product/all?search=mouse&minPrice=100&maxPrice=2000&sort=price-asc&page=1&limit=12
 ```
 
-`sort` options: `newest | price_low | price_high | rating | popular`.
+`search` matches title/description/tags (case-insensitive). `sort` options: default newest, `price-asc`, `price-desc`, `rating`, `oldest`.
 
 **Admin example — create product:**
 
@@ -492,7 +493,7 @@ Base route: `/api/v1/payment`
 5. POST /api/v1/ecommerce/order/create        → place the order (see §14)
 ```
 
-Cash-on-delivery skips steps 1–4: just call `POST /api/v1/ecommerce/order/create` with `paymentInfo: { method: "COD" }`.
+Cash-on-delivery skips steps 1–4: just call `POST /api/v1/ecommerce/order/create` with `paymentInfo: { method: "cod" }` (lowercase — delivery then auto-marks it paid).
 
 ---
 
@@ -515,7 +516,7 @@ Base route: `/api/v1/ecommerce/order` — all routes need auth. Cart must have i
 POST /api/v1/ecommerce/order/create
 Authorization: Bearer <user_token>
 
-{ "addressId": "<addressId from §9>", "paymentInfo": { "method": "COD" } }
+{ "addressId": "<addressId from §9>", "paymentInfo": { "method": "cod" } }
 ```
 
 **User example — order with new address + online payment:**
@@ -596,12 +597,12 @@ Authorization: Bearer <admin_token>
 
 | Method | Endpoint | Who | What it does |
 |---|---|---|---|
-| `GET` | `/get-layout?type=Banner` | Public | Get layout. `type` = `Banner \| FAQ \| Categories` (query param). |
-| `POST` | `/create-layout` | Admin | Create layout. Body: `{ "type": "Banner", "image": {...}, "title": "...", "subTitle": "..." }` or `{ "type": "FAQ", "faq": [...] }` or `{ "type": "Categories", "categories": [...] }`. |
+| `GET` | `/get-layout?type=banner` | Public | Get layout. `type` is lowercase: `banner`, `faq`, or `categories`. |
+| `POST` | `/create-layout` | Admin | Create layout. Body: `{ "type": "banner", "image": {...}, "title": "...", "subTitle": "..." }` or `{ "type": "faq", "faq": [...] }` or `{ "type": "categories", "categories": [...] }`. |
 | `PUT` | `/update-layout` | Admin | Update layout (same body shape). |
 
 ```
-GET /api/v1/layout/get-layout?type=FAQ
+GET /api/v1/layout/get-layout?type=faq
 ```
 
 ### System

@@ -26,6 +26,7 @@ A production-ready RESTful API backend for an enterprise Learning Management Sys
   - [Layout](#layout)
 - [How to use as User vs Admin](#-how-to-use-as-user-vs-admin)
 - [Postman + ReactJS Guide](./FRONTEND_POSTMAN_GUIDE.md)
+- [Module-Wise Full Docs (Auth & Courses)](./MODULE_WISE_GUIDE.md)
 - [Step-by-Step HTML Guide](./step-by-step-guide.html) (single file, open in browser)
 - [Vercel Deployment Guide](#-vercel-deployment-guide)
   - [Option A: Deploy with Vercel CLI](#option-a-deploy-with-vercel-cli)
@@ -258,7 +259,7 @@ Interactive Swagger documentation is available out of the box.
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/v1/layout/create-layout` | Create Banner, FAQ, or Categories layout | Admin only |
 | `PUT` | `/api/v1/layout/update-layout` | Update Banner, FAQ, or Categories layout | Admin only |
-| `GET` | `/api/v1/layout/get-layout?type=Banner` | Retrieve layout by `type` (`Banner`/`FAQ`/`Categories`) | Public |
+| `GET` | `/api/v1/layout/get-layout?type=faq` | Retrieve layout by lowercase `type` (`banner`/`faq`/`categories`) | Public |
 
 ---
 
@@ -273,7 +274,7 @@ POST /api/v1/auth/login           # { email, password } → save accessToken
 GET  /api/v1/auth/me              # Authorization: Bearer <token>
 GET  /api/v1/product/all
 POST /api/v1/cart/add             # { productId, quantity }
-POST /api/v1/ecommerce/order/create  # { addressId, paymentInfo: { method: "COD" } }
+POST /api/v1/ecommerce/order/create  # { addressId, paymentInfo: { method: "cod" } }
 ```
 
 **Admin — login → manage catalog/users/orders:**

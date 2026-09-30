@@ -100,7 +100,7 @@ GET  {{baseUrl}}/api/v1/cart/
 POST {{baseUrl}}/api/v1/coupon/apply
      { "code": "WELCOME10" }
 POST {{baseUrl}}/api/v1/ecommerce/order/create
-     { "addressId": "<addressId>", "paymentInfo": { "method": "COD" } }
+     { "addressId": "<addressId>", "paymentInfo": { "method": "cod" } }
 GET  {{baseUrl}}/api/v1/ecommerce/order/my-orders
 ```
 
@@ -291,7 +291,7 @@ export function RequireAdmin({ children }) {
 
 ```jsx
 const { data } = await api.get("/product/all", {
-  params: { page: 1, limit: 12, keyword, minPrice, maxPrice, sort: "newest" },
+  params: { page: 1, limit: 12, search: keyword, minPrice, maxPrice, sort: "price-asc" },
 });
 ```
 
@@ -318,7 +318,7 @@ const { data } = await api.get("/cart/");
 ```jsx
 await api.post("/coupon/apply", { code: "WELCOME10" });
 await api.post("/ecommerce/order/create", {
-  addressId, paymentInfo: { method: "COD" },
+  addressId, paymentInfo: { method: "cod" },
 });
 ```
 
