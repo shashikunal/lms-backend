@@ -14,6 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.app = void 0;
 const express_1 = __importDefault(require("express"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
@@ -137,6 +139,23 @@ exports.app.get(["/api-docs", "/docs"], (req, res) => {
     res.setHeader("Content-Type", "text/html");
     res.status(200).send(renderSwaggerHtml());
 });
+// Step-by-step HTML guide (static file, no DB needed)
+exports.app.get(["/guide", "/step-by-step-guide"], (req, res) => {
+    const candidates = [
+        path_1.default.join(__dirname, "step-by-step-guide.html"),
+        path_1.default.join(__dirname, "..", "step-by-step-guide.html"),
+        path_1.default.resolve("step-by-step-guide.html"),
+    ];
+    const file = candidates.find((p) => fs_1.default.existsSync(p));
+    if (!file) {
+        return res.status(404).json({
+            success: false,
+            message: "Guide file not found on server",
+        });
+    }
+    res.setHeader("Content-Type", "text/html");
+    res.status(200).sendFile(file);
+});
 // Also register standard swagger-ui-express route
 exports.app.use("/api-docs-standard", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerDocument));
 // Welcome / Index route
@@ -147,6 +166,7 @@ exports.app.get("/", (req, res) => {
         version: "1.0.0",
         docs: "/api-docs",
         openapi: "/api-docs.json",
+        guide: "/guide",
         endpoints: {
             auth: "/api/v1/auth",
             course: "/api/v1/course",
@@ -181,6 +201,8 @@ exports.app.use((req, res, next) => __awaiter(void 0, void 0, void 0, function* 
     // Allow health check, Swagger UI docs, and welcome page without waiting for DB
     if (req.path === "/" ||
         req.path === "/test" ||
+        req.path === "/guide" ||
+        req.path === "/step-by-step-guide" ||
         req.path.startsWith("/api-docs") ||
         req.path.startsWith("/docs")) {
         return next();

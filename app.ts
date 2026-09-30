@@ -1,4 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
+import path from "path";
+import fs from "fs";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
@@ -134,6 +136,24 @@ app.get(["/api-docs", "/docs"], (req: Request, res: Response) => {
   res.status(200).send(renderSwaggerHtml());
 });
 
+// Step-by-step HTML guide (static file, no DB needed)
+app.get(["/guide", "/step-by-step-guide"], (req: Request, res: Response) => {
+  const candidates = [
+    path.join(__dirname, "step-by-step-guide.html"),
+    path.join(__dirname, "..", "step-by-step-guide.html"),
+    path.resolve("step-by-step-guide.html"),
+  ];
+  const file = candidates.find((p) => fs.existsSync(p));
+  if (!file) {
+    return res.status(404).json({
+      success: false,
+      message: "Guide file not found on server",
+    });
+  }
+  res.setHeader("Content-Type", "text/html");
+  res.status(200).sendFile(file);
+});
+
 // Also register standard swagger-ui-express route
 app.use("/api-docs-standard", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
@@ -145,6 +165,7 @@ app.get("/", (req: Request, res: Response) => {
     version: "1.0.0",
     docs: "/api-docs",
     openapi: "/api-docs.json",
+    guide: "/guide",
     endpoints: {
       auth: "/api/v1/auth",
       course: "/api/v1/course",
@@ -182,6 +203,8 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
   if (
     req.path === "/" ||
     req.path === "/test" ||
+    req.path === "/guide" ||
+    req.path === "/step-by-step-guide" ||
     req.path.startsWith("/api-docs") ||
     req.path.startsWith("/docs")
   ) {

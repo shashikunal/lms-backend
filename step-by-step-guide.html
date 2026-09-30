@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LMS &amp; E-Commerce API — Step by Step Guide</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; color: #1e293b; background: #f8fafc; line-height: 1.6; }
+  header { background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; padding: 28px 32px; }
+  header h1 { margin: 0 0 6px; font-size: 24px; }
+  header p { margin: 4px 0; color: #cbd5e1; font-size: 14px; }
+  header code { background: rgba(255,255,255,.12); color: #7dd3fc; padding: 1px 6px; border-radius: 4px; }
+  .wrap { display: flex; max-width: 1200px; margin: 0 auto; }
+  nav { width: 250px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 20px 16px; background: #fff; border-right: 1px solid #e2e8f0; }
+  nav a { display: block; padding: 6px 10px; font-size: 13.5px; color: #334155; text-decoration: none; border-radius: 6px; }
+  nav a:hover { background: #f1f5f9; color: #0284c7; }
+  nav .nav-h { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin: 14px 0 4px 10px; }
+  main { flex: 1; padding: 28px 36px 80px; min-width: 0; }
+  section { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 22px 24px; margin-bottom: 22px; }
+  h2 { margin-top: 0; font-size: 20px; border-bottom: 2px solid #e0f2fe; padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 12px 0; }
+  th, td { border: 1px solid #e2e8f0; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f1f5f9; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+  pre .c { color: #7dd3fc; }
+  code.inline { background: #f1f5f9; color: #0369a1; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .b-public { background: #dcfce7; color: #166534; }
+  .b-auth { background: #dbeafe; color: #1d4ed8; }
+  .b-admin { background: #fee2e2; color: #991b1b; }
+  .step { background: #f0f9ff; border-left: 4px solid #0284c7; padding: 10px 14px; margin: 10px 0; border-radius: 0 8px 8px 0; }
+  .warn { background: #fffbeb; border-left: 4px solid #d97706; padding: 10px 14px; margin: 10px 0; border-radius: 0 8px 8px 0; font-size: 14px; }
+  ol.steps > li, ul.steps > li { margin-bottom: 10px; }
+  footer { text-align: center; color: #94a3b8; font-size: 13px; padding: 20px; }
+  @media (max-width: 860px) { nav { display: none; } main { padding: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎓 LMS &amp; E-Commerce API — Step by Step Guide</h1>
+  <p>Base URL (Local): <code>http://localhost:8000</code> &nbsp;|&nbsp; Production: <code>https://mockapi-mauve.vercel.app</code></p>
+  <p>Swagger UI: <code>/api-docs</code> &nbsp;|&nbsp; Raw spec: <code>/api-docs.json</code> &nbsp;|&nbsp; Health: <code>/test</code></p>
+</header>
+<div class="wrap">
+<nav>
+  <div class="nav-h">Start here</div>
+  <a href="#how">1. How auth works</a>
+  <a href="#user-flow">2. User flow (5 min)</a>
+  <a href="#admin-flow">3. Admin flow (5 min)</a>
+  <div class="nav-h">Hands-on</div>
+  <a href="#postman">4. Postman step by step</a>
+  <a href="#react">5. ReactJS step by step</a>
+  <div class="nav-h">Reference</div>
+  <a href="#endpoints">6. All endpoints</a>
+  <a href="#trouble">7. Troubleshooting</a>
+</nav>
+<main>
+
+<section id="how">
+<h2>1. How auth works (read first)</h2>
+<div class="step"><b>Step 1 — Register:</b> <code class="inline">POST /api/v1/auth/register</code> with <code class="inline">{ name, email, password }</code> → you get an <code class="inline">activationToken</code> + 6-digit <code class="inline">activationCode</code> (valid 5 min).</div>
+<div class="step"><b>Step 2 — Activate:</b> <code class="inline">POST /api/v1/auth/activate-user</code> with <code class="inline">{ activation_token, activation_code }</code>.</div>
+<div class="step"><b>Step 3 — Login:</b> <code class="inline">POST /api/v1/auth/login</code> with <code class="inline">{ email, password }</code> → returns <code class="inline">accessToken</code> + sets cookies.</div>
+<div class="step"><b>Step 4 — Call protected routes</b> with header <code class="inline">Authorization: Bearer &lt;access_token&gt;</code> (browsers: also works via cookies with <code class="inline">credentials: "include"</code>).</div>
+<div class="step"><b>Step 5 — Token expired?</b> Call <code class="inline">GET /api/v1/auth/refreshtoken</code> (cookies sent automatically) or just login again.</div>
+<p><span class="badge b-public">user</span> default role: shop, enroll, cart, orders, Q&amp;A, reviews. &nbsp; <span class="badge b-admin">admin</span> everything + manage catalog, users, orders, analytics. Promote via <code class="inline">PUT /api/v1/auth/update-user-roles { id, role }</code> (admin only — no self-promote).</p>
+<div class="warn">⚠️ <b>401</b> = token missing/expired → login again. <b>403</b> = you are <code class="inline">user</code> on an admin-only route → get promoted, then login again.</div>
+</section>
+
+<section id="user-flow">
+<h2>2. User flow — copy-paste in order</h2>
+<pre>POST /api/v1/auth/register
+<span class="c">{ "name": "Test Student", "email": "student@example.com", "password": "Pass@123" }</span>
+
+POST /api/v1/auth/activate-user
+<span class="c">{ "activation_token": "&lt;from step 1&gt;", "activation_code": "&lt;from step 1&gt;" }</span>
+
+POST /api/v1/auth/login
+<span class="c">{ "email": "student@example.com", "password": "Pass@123" }</span>
+→ save accessToken, send as  Authorization: Bearer &lt;token&gt;
+
+GET  /api/v1/auth/me                      <span class="c">(verify login)</span>
+GET  /api/v1/product/all?page=1&amp;limit=5      <span class="c">(browse shop)</span>
+POST /api/v1/address/add                  <span class="c">(save address, see §6)</span>
+POST /api/v1/cart/add                     <span class="c">{ "productId": "...", "quantity": 2 }</span>
+POST /api/v1/ecommerce/order/create       <span class="c">{ "addressId": "...", "paymentInfo": { "method": "COD" } }</span>
+GET  /api/v1/course/get-courses           <span class="c">(browse courses)</span>
+POST /api/v1/order/create-order           <span class="c">{ "courseId": "...", "payment_info": {...} } (enroll)</span>
+GET  /api/v1/course/get-course-content/:id  <span class="c">(after enrollment)</span></pre>
+</section>
+
+<section id="admin-flow">
+<h2>3. Admin flow — copy-paste in order</h2>
+<pre>POST /api/v1/auth/login
+<span class="c">{ "email": "admin@example.com", "password": "Admin@123" }</span>  → admin token
+
+POST /api/v1/category/create
+<span class="c">{ "name": "Electronics", "description": "Gadgets" }</span>  → save category _id
+
+POST /api/v1/category/brand/create
+<span class="c">{ "name": "Acme", "description": "Acme brand" }</span>
+
+POST /api/v1/product/create
+<span class="c">{ "title": "Wireless Mouse", "price": 999,
+  "category": "&lt;categoryId&gt;", "stockQuantity": 50 }</span>
+
+POST /api/v1/coupon/create
+<span class="c">{ "code": "WELCOME10", "discountType": "percentage",
+  "discountValue": 10, "minOrderAmount": 500, "endDate": "2026-12-31" }</span>
+
+GET  /api/v1/ecommerce/order/admin/all?status=all&amp;page=1&amp;limit=20
+PUT  /api/v1/ecommerce/order/admin/status/&lt;orderId&gt;  <span class="c">{ "status": "Shipped" }</span>
+GET  /api/v1/auth/get-all-user-dashboard
+PUT  /api/v1/auth/update-user-roles  <span class="c">{ "id": "&lt;userId&gt;", "role": "admin" } (promote)</span></pre>
+</section>
+
+<section id="postman">
+<h2>4. Postman — step by step</h2>
+<ol class="steps">
+<li><b>Create environment</b> <code class="inline">LMS API</code>: <code class="inline">baseUrl</code> = <code class="inline">http://localhost:8000</code>, <code class="inline">token</code> = empty.</li>
+<li><b>Collection → Authorization → Bearer Token</b>, value <code class="inline">{{token}}</code>. Every request URL = <code class="inline">{{baseUrl}}/api/v1/...</code>.</li>
+<li><b>Register → Activate → Login</b> (§2). In the Login request → <b>Tests</b> tab, paste this to auto-save the token:
+<pre>const j = pm.response.json();
+pm.environment.set("token", j.accessToken || j.access_token);</pre></li>
+<li><b>Verify:</b> <code class="inline">GET {{baseUrl}}/api/v1/auth/me</code> → should show your user + role.</li>
+<li><b>Shop as user:</b> product list → address/add → cart/add → cart → coupon/apply → ecommerce/order/create (COD).</li>
+<li><b>Admin:</b> login as admin (repeat step 3, overwrites <code class="inline">token</code>), then run §3 calls.</li>
+</ol>
+<div class="warn">⚠️ Refresh endpoint <code class="inline">GET /auth/refreshtoken</code> needs cookies — enable Postman's cookie jar for that domain, or simply re-login.</div>
+</section>
+
+<section id="react">
+<h2>5. ReactJS — step by step</h2>
+<h3>5.1 Setup</h3>
+<pre>npm create vite@latest lms-frontend -- --template react
+cd lms-frontend
+npm install axios react-router-dom
+npm run dev</pre>
+<p>Create <code class="inline">.env</code>: <code class="inline">VITE_API_URL=http://localhost:8000</code></p>
+<h3>5.2 One API client — <code class="inline">src/api/client.js</code></h3>
+<pre>import axios from "axios";
+export const api = axios.create({
+  baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
+  withCredentials: true, <span class="c">// REQUIRED for cookie refresh</span>
+});
+api.interceptors.request.use((config) =&gt; {
+  const token = localStorage.getItem("accessToken");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+api.interceptors.response.use((r) =&gt; r, (e) =&gt; {
+  if (e.response?.status === 401) {
+    localStorage.removeItem("accessToken");
+    if (!location.pathname.includes("/login")) location.href = "/login";
+  }
+  return Promise.reject(e);
+});</pre>
+<h3>5.3 Auth context — <code class="inline">src/auth/AuthContext.jsx</code></h3>
+<pre>const login = async (email, password) =&gt; {
+  const { data } = await api.post("/auth/login", { email, password });
+  localStorage.setItem("accessToken", data.accessToken || data.access_token);
+  setUser(data.user);
+  return data.user; <span class="c">// user.role === "admin" ? "/admin" : "/shop"</span>
+};
+// register:  await api.post("/auth/register", { name, email, password });
+// activate:  await api.post("/auth/activate-user", { activation_token, activation_code });
+// on reload: GET /auth/me with stored token → setUser / clear bad token</pre>
+<h3>5.4 Route guards</h3>
+<pre><span class="c">// RequireAuth:</span> no user → &lt;Navigate to="/login" /&gt;
+<span class="c">// RequireAdmin:</span> no user → /login; user but role !== "admin" → "403 — Admins only"
+&lt;Route path="/cart" element={&lt;RequireAuth&gt;&lt;Cart/&gt;&lt;/RequireAuth&gt;} /&gt;
+&lt;Route path="/admin" element={&lt;RequireAdmin&gt;&lt;Admin/&gt;&lt;/RequireAdmin&gt;} /&gt;</pre>
+<h3>5.5 User screens</h3>
+<pre>GET  /product/all?page=1&amp;limit=12&amp;sort=newest        <span class="c">(filters: keyword, category, brand, min/maxPrice)</span>
+POST /address/add   <span class="c">{ fullName, phone, addressLine1, city, state, postalCode }</span>
+POST /cart/add      <span class="c">{ productId, quantity }</span>  →  GET /cart/
+PUT  /cart/update-quantity  <span class="c">{ itemId, quantity }</span>  →  DELETE /cart/item/:itemId
+POST /coupon/apply  <span class="c">{ code }</span>
+POST /ecommerce/order/create <span class="c">{ addressId, paymentInfo: { method: "COD" } }</span></pre>
+<h3>5.6 Razorpay (online payment)</h3>
+<pre>GET  /payment/razorpay-key            <span class="c">→ public key for Checkout</span>
+POST /payment/razorpay-order          <span class="c">{ amount } → order id</span>
+<span class="c">// pay in Razorpay Checkout, then:</span>
+POST /payment/verify                  <span class="c">{ razorpay_order_id, razorpay_payment_id, razorpay_signature }</span>
+POST /ecommerce/order/create          <span class="c">{ addressId, paymentInfo: { method: "Razorpay", ...same 3 ids } }</span></pre>
+<h3>5.7 Admin screens</h3>
+<pre>POST /category/create  <span class="c">{ name, description }</span>
+POST /product/create   <span class="c">{ title, price, category, stockQuantity }</span>
+POST /coupon/create    <span class="c">{ code, discountType, discountValue, endDate }</span>
+GET  /ecommerce/order/admin/all?status=all&amp;page=1&amp;limit=20
+PUT  /ecommerce/order/admin/status/:id  <span class="c">{ status: "Shipped" }</span>
+PUT  /auth/update-user-roles  <span class="c">{ id, role }</span></pre>
+<div class="warn">⚠️ Courses ≠ products: enroll via <code class="inline">POST /order/create-order { courseId, payment_info }</code>, then <code class="inline">GET /course/get-course-content/:id</code>. Shop orders use <code class="inline">/ecommerce/order/*</code>.</div>
+</section>
+
+<section id="endpoints">
+<h2>6. All endpoints (method · path · who)</h2>
+<h3>Auth <code class="inline">/api/v1/auth</code></h3>
+<table><tr><th>Method</th><th>Endpoint</th><th>Who</th></tr>
+<tr><td>POST</td><td>/register <code class="inline">{name,email,password}</code></td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>POST</td><td>/activate-user <code class="inline">{activation_token, activation_code}</code></td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>POST</td><td>/login <code class="inline">{email,password}</code></td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>GET</td><td>/logout</td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>GET</td><td>/refreshtoken</td><td><span class="badge b-auth">Cookie</span></td></tr>
+<tr><td>GET</td><td>/me</td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>POST</td><td>/social-auth <code class="inline">{email,name,avatar?}</code></td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>PUT</td><td>/update-user-info <code class="inline">{name}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>PUT</td><td>/update-user-password <code class="inline">{oldPassword,newPassword}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>PUT</td><td>/update-user-profile-picture <code class="inline">{avatar}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>GET</td><td>/get-all-user-dashboard (alias /get-users)</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>PUT</td><td>/update-user-roles <code class="inline">{id, role}</code></td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>DELETE</td><td>/delete-user/:id</td><td><span class="badge b-admin">Admin</span></td></tr></table>
+<h3>Courses <code class="inline">/api/v1/course</code> · Course orders <code class="inline">/api/v1/order</code></h3>
+<table><tr><th>Method</th><th>Endpoint</th><th>Who</th></tr>
+<tr><td>GET</td><td>/course/get-courses · /course/get-course/:id</td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>GET</td><td>/course/get-course-content/:id</td><td><span class="badge b-auth">Enrolled/Admin</span></td></tr>
+<tr><td>POST</td><td>/course/create-course</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>PUT</td><td>/course/edit-course/:id · DELETE /course/delete-course/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>PUT</td><td>/course/add-question <code class="inline">{question,courseId,contentId}</code></td><td><span class="badge b-auth">Enrolled/Admin</span></td></tr>
+<tr><td>PUT</td><td>/course/add-answer <code class="inline">{answer,courseId,contentId,questionId}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>PUT</td><td>/course/add-review/:id <code class="inline">{review,rating}</code></td><td><span class="badge b-auth">Enrolled</span></td></tr>
+<tr><td>PUT</td><td>/course/add-replay <code class="inline">{comment,courseId,reviewId}</code></td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>GET</td><td>/course/get-all-course-dashboard (alias /get-admin-courses)</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>POST</td><td>/order/create-order <code class="inline">{courseId,payment_info}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>GET</td><td>/order/get-all-order-dashboard</td><td><span class="badge b-admin">Admin</span></td></tr></table>
+<h3>Shop <code class="inline">/api/v1/category · /product · /address · /cart · /wishlist · /coupon · /payment · /ecommerce/order · /product-reviews</code></h3>
+<table><tr><th>Method</th><th>Endpoint</th><th>Who</th></tr>
+<tr><td>GET</td><td>/category/all · /category/single/:idOrSlug · /category/brands/all</td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>POST / PUT / DELETE</td><td>/category/create · /category/update/:id · /category/delete/:id · /category/brand/create</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>GET</td><td>/product/all (?keyword,category,brand,min/maxPrice,rating,sort,page,limit) · /product/featured · /product/single/:idOrSlug · /product/related/:id</td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>POST / PUT / DELETE</td><td>/product/create · /product/update/:id · /product/delete/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>POST / GET / PUT / DELETE / PUT</td><td>/address/add · /address/my-addresses · /address/update/:id · /address/delete/:id · /address/set-default/:id</td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>GET / POST / PUT / DELETE / DELETE / POST</td><td>/cart/ · /cart/add · /cart/update-quantity · /cart/item/:itemId · /cart/clear · /cart/merge</td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>GET / POST / POST</td><td>/wishlist/ · /wishlist/toggle · /wishlist/move-to-cart/:productId</td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>POST / POST</td><td>/coupon/apply <code class="inline">{code}</code> · /coupon/remove</td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>POST / GET / DELETE</td><td>/coupon/create · /coupon/all · /coupon/delete/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>GET / POST / POST</td><td>/payment/razorpay-key (public) · /payment/razorpay-order · /payment/verify</td><td><span class="badge b-public">Public</span> / <span class="badge b-auth">Auth</span></td></tr>
+<tr><td>POST</td><td>/payment/webhook (Razorpay calls this)</td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>POST</td><td>/payment/refund</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>POST / GET / GET / PUT</td><td>/ecommerce/order/create · /my-orders · /single/:id · /cancel/:id</td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>GET / PUT</td><td>/ecommerce/order/admin/all · /admin/status/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>GET / POST / PUT / DELETE</td><td>/product-reviews/product/:productId (public) · /add · /helpful/:id · /delete/:id</td><td><span class="badge b-public">Public</span> / <span class="badge b-auth">Auth</span></td></tr></table>
+<h3>Admin extras <code class="inline">/api/v1/notifications · /analytics · /layout</code></h3>
+<table><tr><th>Method</th><th>Endpoint</th><th>Who</th></tr>
+<tr><td>GET / PUT</td><td>/notifications/get-all-notification · /update-notification-status/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>GET</td><td>/analytics/get-users-analytics (alias /users-analytics) · /get-course-analytics · /get-order-analytics</td><td><span class="badge b-admin">Admin</span></td></tr>
+<tr><td>GET</td><td>/layout/get-layout?type=Banner|FAQ|Categories</td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>POST / PUT</td><td>/layout/create-layout · /layout/update-layout</td><td><span class="badge b-admin">Admin</span></td></tr></table>
+</section>
+
+<section id="trouble">
+<h2>7. Troubleshooting</h2>
+<table><tr><th>Symptom</th><th>Fix</th></tr>
+<tr><td>401 Unauthorized</td><td>Token missing/expired → login again; check <code class="inline">Authorization: Bearer</code> header.</td></tr>
+<tr><td>403 Forbidden</td><td>User token on admin route → promote via <code class="inline">update-user-roles</code>, login again.</td></tr>
+<tr><td>Order fails, cart empty</td><td>Add to cart first — ordering reads the server cart.</td></tr>
+<tr><td>Course content blocked</td><td>Enroll first via <code class="inline">POST /order/create-order</code>.</td></tr>
+<tr><td>Activation fails</td><td>Code is 6 digits, expires in 5 min; fields are <code class="inline">activation_token</code> + <code class="inline">activation_code</code>.</td></tr>
+<tr><td>Email change ignored</td><td>By design — <code class="inline">update-user-info</code> only updates <code class="inline">name</code>.</td></tr>
+<tr><td>Cart delete 404</td><td>Use cart <b>item ID</b> (<code class="inline">/cart/item/:itemId</code>), not product ID.</td></tr>
+<tr><td>503 DB error</td><td>Check <code class="inline">DB_URI</code>; Atlas must allow <code class="inline">0.0.0.0/0</code>.</td></tr>
+<tr><td>React CORS error</td><td>Set <code class="inline">withCredentials: true</code>; check <code class="inline">VITE_API_URL</code> has no trailing slash.</td></tr></table>
+<h3>Error format</h3>
+<pre>{ "success": false, "message": "Descriptive error message" }</pre>
+<p>200 OK · 201 Created · 400 Bad request · 401 Unauthorized · 403 Forbidden · 404 Not found · 500 Server error · 503 DB down</p>
+</section>
+
+</main>
+</div>
+<footer>Docs only — no backend code changed. Full markdown versions: API_DOCUMENTATION.md · FRONTEND_POSTMAN_GUIDE.md · README.md</footer>
+</body>
+</html>
