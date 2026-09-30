@@ -154,6 +154,24 @@ app.get(["/guide", "/step-by-step-guide"], (req: Request, res: Response) => {
   res.status(200).sendFile(file);
 });
 
+// Simple step-by-step HTML guide (static file, no DB needed)
+app.get(["/simple", "/simple-guide"], (req: Request, res: Response) => {
+  const candidates = [
+    path.join(__dirname, "simple-guide.html"),
+    path.join(__dirname, "..", "simple-guide.html"),
+    path.resolve("simple-guide.html"),
+  ];
+  const file = candidates.find((p) => fs.existsSync(p));
+  if (!file) {
+    return res.status(404).json({
+      success: false,
+      message: "Guide file not found on server",
+    });
+  }
+  res.setHeader("Content-Type", "text/html");
+  res.status(200).sendFile(file);
+});
+
 // Also register standard swagger-ui-express route
 app.use("/api-docs-standard", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
@@ -166,6 +184,7 @@ app.get("/", (req: Request, res: Response) => {
     docs: "/api-docs",
     openapi: "/api-docs.json",
     guide: "/guide",
+    simpleGuide: "/simple",
     endpoints: {
       auth: "/api/v1/auth",
       course: "/api/v1/course",
@@ -205,6 +224,8 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
     req.path === "/test" ||
     req.path === "/guide" ||
     req.path === "/step-by-step-guide" ||
+    req.path === "/simple" ||
+    req.path === "/simple-guide" ||
     req.path.startsWith("/api-docs") ||
     req.path.startsWith("/docs")
   ) {

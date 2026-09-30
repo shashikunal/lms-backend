@@ -26,6 +26,8 @@ A production-ready RESTful API backend for an enterprise Learning Management Sys
   - [Layout](#layout)
 - [How to use as User vs Admin](#-how-to-use-as-user-vs-admin)
 - [Postman + ReactJS Guide](./FRONTEND_POSTMAN_GUIDE.md)
+- [Simple Guide (easiest, start here)](./SIMPLE_GUIDE.md)
+- [Simple Guide as HTML page](./simple-guide.html) (live: `/simple`)
 - [Module-Wise Full Docs (Auth & Courses)](./MODULE_WISE_GUIDE.md)
 - [Step-by-Step HTML Guide](./step-by-step-guide.html) (single file, open in browser)
 - [Vercel Deployment Guide](#-vercel-deployment-guide)

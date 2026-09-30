@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Guide — Every Endpoint Step by Step</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; color: #1e293b; background: #f8fafc; line-height: 1.7; font-size: 15px; }
+  header { background: linear-gradient(135deg, #047857, #065f46); color: #fff; padding: 28px 32px; }
+  header h1 { margin: 0 0 6px; font-size: 24px; }
+  header p { margin: 4px 0; color: #d1fae5; font-size: 14px; }
+  header code { background: rgba(255,255,255,.15); color: #fff; padding: 1px 6px; border-radius: 4px; }
+  .wrap { display: flex; max-width: 1200px; margin: 0 auto; }
+  nav { width: 230px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 20px 14px; background: #fff; border-right: 1px solid #e2e8f0; }
+  nav a { display: block; padding: 5px 10px; font-size: 13.5px; color: #334155; text-decoration: none; border-radius: 6px; }
+  nav a:hover { background: #ecfdf5; color: #047857; }
+  nav .nav-h { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin: 12px 0 4px 10px; }
+  main { flex: 1; padding: 24px 32px 80px; min-width: 0; }
+  section { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 22px; margin-bottom: 20px; }
+  h2 { margin-top: 0; font-size: 20px; border-bottom: 2px solid #a7f3d0; padding-bottom: 8px; }
+  h3 { font-size: 16px; background: #f0fdf4; padding: 8px 12px; border-radius: 8px; margin: 18px 0 8px; }
+  ol li, ul li { margin-bottom: 6px; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+  code.inline { background: #f1f5f9; color: #047857; padding: 1px 6px; border-radius: 4px; font-size: 13.5px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .b-public { background: #dcfce7; color: #166534; }
+  .b-auth { background: #dbeafe; color: #1d4ed8; }
+  .b-admin { background: #fee2e2; color: #991b1b; }
+  .tip { background: #f0fdf4; border-left: 4px solid #10b981; padding: 8px 14px; margin: 10px 0; border-radius: 0 8px 8px 0; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 12px 0; }
+  th, td { border: 1px solid #e2e8f0; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f1f5f9; }
+  footer { text-align: center; color: #94a3b8; font-size: 13px; padding: 20px; }
+  @media (max-width: 860px) { nav { display: none; } main { padding: 14px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌱 Simple Guide — Every Endpoint, Step by Step</h1>
+  <p>Read top to bottom. Do what each step says. <code>baseUrl</code> = <code>http://localhost:8000</code> or <code>https://mockapi-mauve.vercel.app</code></p>
+  <p><span class="badge b-public">Public</span> no login &nbsp; <span class="badge b-auth">Login needed</span> do A3 first &nbsp; <span class="badge b-admin">Admin needed</span> admin account</p>
+</header>
+<div class="wrap">
+<nav>
+  <div class="nav-h">Setup</div>
+  <a href="#p0">0. Postman setup</a>
+  <div class="nav-h">Account</div>
+  <a href="#pa">A. Account (A1–A13)</a>
+  <div class="nav-h">Learn &amp; shop</div>
+  <a href="#pb">B. Courses</a>
+  <a href="#pc">C. Categories</a>
+  <a href="#pd">D. Products</a>
+  <a href="#pe">E. Address</a>
+  <a href="#pf">F. Cart</a>
+  <a href="#pg">G. Wishlist</a>
+  <a href="#ph">H. Coupons</a>
+  <a href="#pi">I. Payments</a>
+  <a href="#pj">J. Orders</a>
+  <a href="#pk">K. Reviews</a>
+  <a href="#pl">L. Admin extras</a>
+  <a href="#pm">M. Errors</a>
+</nav>
+<main>
+
+<section id="p0">
+<h2>PART 0 — Postman setup (do once)</h2>
+<ol>
+<li>Install Postman from <code class="inline">postman.com/downloads</code> and open it.</li>
+<li><b>Environments → +</b> → name <code class="inline">LMS API</code> → add <code class="inline">baseUrl</code> = <code class="inline">http://localhost:8000</code> and <code class="inline">token</code> = empty → <b>Save</b>. Select it top-right.</li>
+<li><b>Collections → New Collection</b> <code class="inline">LMS</code> → <b>Authorization</b> tab → Type <b>Bearer Token</b> → Token <code class="inline">{{token}}</code> → <b>Save</b>.</li>
+<li>Every request goes inside <code class="inline">LMS</code>, URL starts with <code class="inline">{{baseUrl}}</code>.</li>
+<li>Sending data? Click <b>Body → raw → JSON</b>, paste, click <b>Send</b>.</li>
+</ol>
+</section>
+
+<section id="pa">
+<h2>PART A — Account</h2>
+<h3>A1. Register (create account) <span class="badge b-public">Public</span></h3>
+<ol><li><b>POST</b> <code class="inline">{{baseUrl}}/api/v1/auth/register</code>, Body → JSON:
+<pre>{ "name": "Test Student", "email": "student@example.com", "password": "Pass@123" }</pre></li>
+<li><b>Send.</b> Copy <code class="inline">activationToken</code> + <code class="inline">activationCode</code> (6 digits, dies in 5 min).</li></ol>
+<h3>A2. Activate <span class="badge b-public">Public</span></h3>
+<ol><li><b>POST</b> <code class="inline">{{baseUrl}}/api/v1/auth/activate-user</code>, Body → JSON:
+<pre>{ "activation_token": "PASTE_LONG_TOKEN", "activation_code": "PASTE_6_DIGITS" }</pre></li>
+<li>Good reply: <code class="inline">User activated successfully</code>.</li></ol>
+<h3>A3. Login (get your key) <span class="badge b-public">Public</span></h3>
+<ol><li><b>POST</b> <code class="inline">{{baseUrl}}/api/v1/auth/login</code>, Body → JSON:
+<pre>{ "email": "student@example.com", "password": "Pass@123" }</pre></li>
+<li>Copy <code class="inline">accessToken</code> → paste into environment <code class="inline">token</code> → Save. Or put this in the <b>Tests</b> tab to auto-save:
+<pre>const j = pm.response.json();
+pm.environment.set("token", j.accessToken);</pre></li></ol>
+<h3>A4. My profile <span class="badge b-auth">Login</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/auth/me</code></h3>
+<h3>A5. Logout <span class="badge b-auth">Login</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/auth/logout</code>, then clear <code class="inline">token</code></h3>
+<h3>A6. Refresh key — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/auth/refreshtoken</code> (or just login again)</h3>
+<h3>A7. Google login <span class="badge b-public">Public</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/auth/social-auth</code>:
+<pre>{ "email": "me@gmail.com", "name": "Me" }</pre></h3>
+<h3>A8. Change name <span class="badge b-auth">Login</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/auth/update-user-info</code>:
+<pre>{ "name": "New Name" }</pre></h3>
+<h3>A9. Change password <span class="badge b-auth">Login</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/auth/update-user-password</code>:
+<pre>{ "oldPassword": "Pass@123", "newPassword": "NewPass@456" }</pre></h3>
+<h3>A10. Change photo <span class="badge b-auth">Login</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/auth/update-user-profile-picture</code>:
+<pre>{ "avatar": "PASTE_IMAGE_LINK" }</pre></h3>
+<h3>A11. All users <span class="badge b-admin">Admin</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/auth/get-all-user-dashboard</code></h3>
+<h3>A12. Make admin <span class="badge b-admin">Admin</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/auth/update-user-roles</code>:
+<pre>{ "id": "PASTE_USER_ID", "role": "admin" }</pre>
+<div class="tip">That person must login again after this.</div></h3>
+<h3>A13. Delete user <span class="badge b-admin">Admin</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/auth/delete-user/PASTE_USER_ID</code></h3>
+</section>
+
+<section id="pb">
+<h2>PART B — Courses</h2>
+<h3>B1. All courses <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/course/get-courses</code> (copy a course <code class="inline">_id</code>)</h3>
+<h3>B2. One course <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/course/get-course/PASTE_COURSE_ID</code></h3>
+<h3>B3. Create course <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/course/create-course</code>:
+<pre>{
+  "name": "Full Stack Web Dev",
+  "description": "Learn React, Node and MongoDB.",
+  "price": 59,
+  "tags": "react, javascript, nodejs",
+  "level": "beginner",
+  "demoUrl": "https://www.youtube.com/embed/xyz",
+  "benefits": [{ "title": "Build 5 projects" }],
+  "prerequisites": [{ "title": "Basic HTML" }],
+  "courseData": [{ "title": "1. React basics", "description": "Components",
+    "videoUrl": "https://...", "videoSection": "Frontend", "videoLength": 42 }]
+}</pre></h3>
+<h3>B4. Edit course <span class="badge b-admin">Admin</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/course/edit-course/PASTE_COURSE_ID</code>: <code class="inline">{ "price": 49 }</code></h3>
+<h3>B5. Admin course list <span class="badge b-admin">Admin</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/course/get-all-course-dashboard</code></h3>
+<h3>B6. Delete course <span class="badge b-admin">Admin</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/course/delete-course/PASTE_COURSE_ID</code></h3>
+<h3>B7. Buy course <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/order/create-order</code>:
+<pre>{ "courseId": "PASTE_COURSE_ID", "payment_info": { "id": "pay_123", "status": "success" } }</pre></h3>
+<h3>B8. All course orders <span class="badge b-admin">Admin</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/order/get-all-order-dashboard</code></h3>
+<h3>B9. Watch videos <span class="badge b-auth">Login + owned</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/course/get-course-content/PASTE_COURSE_ID</code> (copy a lesson <code class="inline">_id</code> → your <code class="inline">contentId</code>)</h3>
+<h3>B10. Ask question <span class="badge b-auth">Login</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/course/add-question</code>:
+<pre>{ "question": "What is a closure?", "courseId": "PASTE_COURSE_ID", "contentId": "PASTE_LESSON_ID" }</pre></h3>
+<h3>B11. Answer <span class="badge b-auth">Login</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/course/add-answer</code>:
+<pre>{ "answer": "A function with its outer scope.", "courseId": "PASTE_COURSE_ID",
+  "contentId": "PASTE_LESSON_ID", "questionId": "PASTE_QUESTION_ID" }</pre></h3>
+<h3>B12. Rate course <span class="badge b-auth">Login + owned</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/course/add-review/PASTE_COURSE_ID</code>:
+<pre>{ "review": "Excellent!", "rating": 5 }</pre></h3>
+<h3>B13. Teacher reply <span class="badge b-admin">Admin</span> (spelled <code class="inline">add-replay</code>) — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/course/add-replay</code>:
+<pre>{ "comment": "Thanks!", "courseId": "PASTE_COURSE_ID", "reviewId": "PASTE_REVIEW_ID" }</pre></h3>
+</section>
+
+<section id="pc">
+<h2>PART C — Categories &amp; brands</h2>
+<h3>C1. All categories <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/category/all</code></h3>
+<h3>C2. One category <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/category/single/electronics</code></h3>
+<h3>C3. Create category <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/category/create</code>:
+<pre>{ "name": "Electronics", "description": "Gadgets" }</pre></h3>
+<h3>C4. Edit category <span class="badge b-admin">Admin</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/category/update/PASTE_ID</code>: <code class="inline">{ "description": "New text" }</code></h3>
+<h3>C5. Delete category <span class="badge b-admin">Admin</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/category/delete/PASTE_ID</code></h3>
+<h3>C6. Create brand <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/category/brand/create</code>:
+<pre>{ "name": "Acme", "description": "Acme brand" }</pre></h3>
+<h3>C7. All brands <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/category/brands/all</code></h3>
+</section>
+
+<section id="pd">
+<h2>PART D — Products</h2>
+<h3>D1. See/search <span class="badge b-public">Public</span> — <b>GET</b> one of:</h3>
+<pre>{{baseUrl}}/api/v1/product/all?page=1&amp;limit=12
+{{baseUrl}}/api/v1/product/all?search=mouse
+{{baseUrl}}/api/v1/product/all?sort=price-asc     (cheap first)
+{{baseUrl}}/api/v1/product/all?sort=price-desc    (costly first)
+{{baseUrl}}/api/v1/product/all?sort=rating        (top rated)</pre>
+<h3>D2. Featured <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/product/featured</code></h3>
+<h3>D3. One product <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/product/single/PASTE_PRODUCT_ID</code></h3>
+<h3>D4. Similar <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/product/related/PASTE_PRODUCT_ID</code></h3>
+<h3>D5. Create <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/product/create</code>:
+<pre>{ "title": "Wireless Mouse", "price": 999,
+  "category": "PASTE_CATEGORY_ID", "stockQuantity": 50 }</pre></h3>
+<h3>D6. Edit <span class="badge b-admin">Admin</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/product/update/PASTE_PRODUCT_ID</code>:
+<pre>{ "price": 899, "stockQuantity": 100 }</pre></h3>
+<h3>D7. Delete <span class="badge b-admin">Admin</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/product/delete/PASTE_PRODUCT_ID</code></h3>
+</section>
+
+<section id="pe">
+<h2>PART E — Addresses <span class="badge b-auth">Login needed (all 5)</span></h2>
+<h3>E1. Add</h3>
+<pre>POST {{baseUrl}}/api/v1/address/add
+{ "fullName": "Ravi Kumar", "phone": "9876543210",
+  "addressLine1": "H.No 1-2-3, MG Road", "city": "Hyderabad",
+  "state": "Telangana", "postalCode": "500001", "isDefault": true }</pre>
+<div class="tip">Copy the address <code class="inline">_id</code> — you need it to order.</div>
+<h3>E2. See mine — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/address/my-addresses</code></h3>
+<h3>E3. Edit — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/address/update/PASTE_ADDRESS_ID</code>: <code class="inline">{ "phone": "9123456780" }</code></h3>
+<h3>E4. Delete — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/address/delete/PASTE_ADDRESS_ID</code></h3>
+<h3>E5. Make default — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/address/set-default/PASTE_ADDRESS_ID</code> (no body)</h3>
+</section>
+
+<section id="pf">
+<h2>PART F — Cart <span class="badge b-auth">Login needed (all 6)</span></h2>
+<h3>F1. See cart — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/cart/</code></h3>
+<div class="tip">Each item has its own <code class="inline">_id</code> = <code class="inline">itemId</code> for F3/F4. NOT the product id!</div>
+<h3>F2. Add — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/cart/add</code>:
+<pre>{ "productId": "PASTE_PRODUCT_ID", "quantity": 2 }</pre></h3>
+<h3>F3. Change quantity — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/cart/update-quantity</code>:
+<pre>{ "itemId": "PASTE_CART_ITEM_ID", "quantity": 3 }</pre></h3>
+<h3>F4. Remove one — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/cart/item/PASTE_CART_ITEM_ID</code></h3>
+<h3>F5. Empty all — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/cart/clear</code></h3>
+<h3>F6. Merge guest cart — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/cart/merge</code>:
+<pre>{ "guestItems": [{ "productId": "PASTE_ID", "quantity": 1 }] }</pre></h3>
+</section>
+
+<section id="pg">
+<h2>PART G — Wishlist <span class="badge b-auth">Login needed (all 3)</span></h2>
+<h3>G1. See — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/wishlist/</code></h3>
+<h3>G2. Add/remove (same button) — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/wishlist/toggle</code>:
+<pre>{ "productId": "PASTE_PRODUCT_ID" }</pre>
+Reply says <code class="inline">"added"</code> or <code class="inline">"removed"</code>.</h3>
+<h3>G3. Move to cart — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/wishlist/move-to-cart/PASTE_PRODUCT_ID</code> (no body)</h3>
+</section>
+
+<section id="ph">
+<h2>PART H — Coupons</h2>
+<h3>H1. Create <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/coupon/create</code>:
+<pre>{ "code": "WELCOME10", "discountType": "percentage", "discountValue": 10,
+  "minOrderAmount": 500, "endDate": "2026-12-31" }</pre></h3>
+<h3>H2. See all <span class="badge b-admin">Admin</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/coupon/all</code></h3>
+<h3>H3. Use <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/coupon/apply</code>:
+<pre>{ "code": "WELCOME10" }</pre></h3>
+<h3>H4. Remove <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/coupon/remove</code> (no body)</h3>
+<h3>H5. Delete <span class="badge b-admin">Admin</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/coupon/delete/PASTE_COUPON_ID</code></h3>
+</section>
+
+<section id="pi">
+<h2>PART I — Payments</h2>
+<h3>I1. Shop key <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/payment/razorpay-key</code></h3>
+<h3>I2. Payment order <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/payment/razorpay-order</code>, body <code class="inline">{}</code> (empty — it counts your cart)</h3>
+<h3>I3. Confirm <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/payment/verify</code>:
+<pre>{ "razorpay_order_id": "PASTE", "razorpay_payment_id": "PASTE", "razorpay_signature": "PASTE" }</pre></h3>
+<h3>I4. Webhook — skip (Razorpay's computer calls it)</h3>
+<h3>I5. Refund <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/payment/refund</code>:
+<pre>{ "paymentId": "pay_PASTE_ID" }</pre></h3>
+<div class="tip">Easy choice: skip I1–I3, order with <code class="inline">"method": "cod"</code> (Part J).</div>
+</section>
+
+<section id="pj">
+<h2>PART J — Shop orders</h2>
+<h3>J1. Place order <span class="badge b-auth">Login</span> (cart must NOT be empty!)</h3>
+<pre>POST {{baseUrl}}/api/v1/ecommerce/order/create
+{ "addressId": "PASTE_ADDRESS_ID", "paymentInfo": { "method": "cod" } }</pre>
+<div class="tip">Write down the <code class="inline">orderNumber</code> from the reply.</div>
+<h3>J2. My orders <span class="badge b-auth">Login</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/my-orders</code></h3>
+<h3>J3. One order <span class="badge b-auth">Login</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/single/PASTE_ORDER_ID</code></h3>
+<h3>J4. Cancel <span class="badge b-auth">Login</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/cancel/PASTE_ORDER_ID</code>:
+<pre>{ "reason": "Ordered by mistake" }</pre>
+Only BEFORE shipping.</h3>
+<h3>J5. All orders <span class="badge b-admin">Admin</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/admin/all?status=Processing&amp;page=1&amp;limit=20</code></h3>
+<h3>J6. Change status <span class="badge b-admin">Admin</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/admin/status/PASTE_ORDER_ID</code>:
+<pre>{ "status": "Shipped", "trackingNumber": "TRK123", "courierPartner": "Delhivery" }</pre>
+Then later <code class="inline">{ "status": "Delivered" }</code>.</h3>
+</section>
+
+<section id="pk">
+<h2>PART K — Reviews</h2>
+<h3>K1. See reviews <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/product-reviews/product/PASTE_PRODUCT_ID</code></h3>
+<h3>K2. Write review <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/product-reviews/add</code>:
+<pre>{ "productId": "PASTE_PRODUCT_ID", "rating": 5, "title": "Loved it", "comment": "Value for money" }</pre>
+One per product. Rating 1–5.</h3>
+<h3>K3. Helpful vote <span class="badge b-auth">Login</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/product-reviews/helpful/PASTE_REVIEW_ID</code> (no body)</h3>
+<h3>K4. Delete <span class="badge b-auth">Login (yours/admin)</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/product-reviews/delete/PASTE_REVIEW_ID</code></h3>
+</section>
+
+<section id="pl">
+<h2>PART L — Admin extras</h2>
+<h3>L1. Notifications <span class="badge b-admin">Admin</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/notifications/get-all-notification</code></h3>
+<h3>L2. Mark read <span class="badge b-admin">Admin</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/notifications/update-notification-status/PASTE_ID</code> (no body)</h3>
+<h3>L3–L5. Charts <span class="badge b-admin">Admin</span></h3>
+<pre>GET {{baseUrl}}/api/v1/analytics/users-analytics
+GET {{baseUrl}}/api/v1/analytics/courses-analytics
+GET {{baseUrl}}/api/v1/analytics/orders-analytics</pre>
+<h3>L6. Homepage layout <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/layout/get-layout?type=faq</code></h3>
+<div class="tip">SMALL letters only: <code class="inline">banner</code>, <code class="inline">faq</code>, <code class="inline">categories</code>. Capitals FAIL.</div>
+<h3>L7. Make/edit layout <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/layout/create-layout</code>:
+<pre>{ "type": "faq", "faq": [{ "question": "Refunds?", "answer": "7 days" }] }</pre>
+Edit = same body to <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/layout/update-layout</code></h3>
+</section>
+
+<section id="pm">
+<h2>PART M — Errors in plain words</h2>
+<table>
+<tr><th>You see</th><th>It means</th><th>Do this</th></tr>
+<tr><td>Invalid email or password</td><td>Email or password wrong</td><td>Retype both</td></tr>
+<tr><td>Email already exists</td><td>Email taken</td><td>Use another email</td></tr>
+<tr><td>Invalid activation code</td><td>Wrong 6 digits</td><td>Copy again from register reply</td></tr>
+<tr><td>401 Unauthorized</td><td>Not logged in / key expired</td><td>Login again (A3)</td></tr>
+<tr><td>403 Forbidden</td><td>Logged in but not admin</td><td>Ask admin to do A12</td></tr>
+<tr><td>Cart is empty</td><td>Nothing in cart</td><td>Do F2 first</td></tr>
+<tr><td>Not allowed to access course</td><td>You didn't buy it</td><td>Do B7 first</td></tr>
+<tr><td>Cannot cancel / already purchased</td><td>Too late / done before</td><td>Nothing to do</td></tr>
+<tr><td>... does not exist</td><td>Wrong id or CAPITAL layout type</td><td>Check id / lowercase</td></tr>
+<tr><td>Only N items in stock</td><td>Asked for too many</td><td>Lower quantity</td></tr>
+<tr><td>404 Not found</td><td>Wrong id in URL</td><td>Copy id again</td></tr>
+</table>
+<div class="tip"><b>Golden rules:</b> IDs come from earlier replies. Cart item id ≠ product id. Course buying (<code class="inline">/order/...</code>) and shop buying (<code class="inline">/ecommerce/order/...</code>) are different. <code class="inline">cod</code> and layout types are lowercase.</div>
+</section>
+
+</main>
+</div>
+<footer>Simple version of: SIMPLE_GUIDE.md · MODULE_WISE_GUIDE.md · API_DOCUMENTATION.md</footer>
+</body>
+</html>

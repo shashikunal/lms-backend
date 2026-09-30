@@ -156,6 +156,23 @@ exports.app.get(["/guide", "/step-by-step-guide"], (req, res) => {
     res.setHeader("Content-Type", "text/html");
     res.status(200).sendFile(file);
 });
+// Simple step-by-step HTML guide (static file, no DB needed)
+exports.app.get(["/simple", "/simple-guide"], (req, res) => {
+    const candidates = [
+        path_1.default.join(__dirname, "simple-guide.html"),
+        path_1.default.join(__dirname, "..", "simple-guide.html"),
+        path_1.default.resolve("simple-guide.html"),
+    ];
+    const file = candidates.find((p) => fs_1.default.existsSync(p));
+    if (!file) {
+        return res.status(404).json({
+            success: false,
+            message: "Guide file not found on server",
+        });
+    }
+    res.setHeader("Content-Type", "text/html");
+    res.status(200).sendFile(file);
+});
 // Also register standard swagger-ui-express route
 exports.app.use("/api-docs-standard", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerDocument));
 // Welcome / Index route
@@ -167,6 +184,7 @@ exports.app.get("/", (req, res) => {
         docs: "/api-docs",
         openapi: "/api-docs.json",
         guide: "/guide",
+        simpleGuide: "/simple",
         endpoints: {
             auth: "/api/v1/auth",
             course: "/api/v1/course",
@@ -203,6 +221,8 @@ exports.app.use((req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         req.path === "/test" ||
         req.path === "/guide" ||
         req.path === "/step-by-step-guide" ||
+        req.path === "/simple" ||
+        req.path === "/simple-guide" ||
         req.path.startsWith("/api-docs") ||
         req.path.startsWith("/docs")) {
         return next();
