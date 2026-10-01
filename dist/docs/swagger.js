@@ -1,13 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.swaggerDocument = void 0;
-const ecommerce_swagger_1 = require("./ecommerce.swagger");
 exports.swaggerDocument = {
     openapi: "3.0.3",
     info: {
-        title: "Learning Management System (LMS) & E-Commerce API",
-        version: "1.0.0",
-        description: "Comprehensive RESTful API for LMS and E-Commerce platform built with Node.js, Express, TypeScript, Razorpay, and MongoDB. Includes Authentication, Course Management, E-Commerce Catalog (Categories, Brands, Products), Customer Addresses, Cart, Wishlist, Coupons, Razorpay Payment Processing, Orders, Product Reviews, Notifications, Analytics, and Dynamic Layouts.\n\n📬 **Test Mailbox URL**: View test activation emails at [https://ethereal.email/messages](https://ethereal.email/messages).\n\n📖 **Step-by-step student guide (single page):** open [`/guide`](/guide) — user flow, admin flow, Postman + ReactJS setup, endpoint tables, troubleshooting.\n\n---\n\n## How auth works (read first)\n\n1. `POST /api/v1/auth/register` with `{ name, email, password }` → returns `activationToken` + 6-digit `activationCode` (valid 5 min).\n2. `POST /api/v1/auth/activate-user` with `{ activation_token, activation_code }`.\n3. `POST /api/v1/auth/login` with `{ email, password }` → returns `accessToken` + sets cookies.\n4. Protected routes: send header `Authorization: Bearer <access_token>`. Click **Authorize** above and paste the token.\n5. Token expired? Call `GET /api/v1/auth/refreshtoken` or login again.\n\n**Roles:** `user` (default: shop, enroll, cart, orders, Q&A, reviews) and `admin` (everything + catalog, users, orders, analytics). Promote via `PUT /api/v1/auth/update-user-roles` with `{ id, role }` (admin only). `401` = bad/missing token, `403` = need admin.\n\n---\n\n## Student flow (user)\n\nRegister → Activate → Login → `GET /auth/me` → `GET /product/all` → `POST /address/add` → `POST /cart/add { productId, quantity }` → `POST /ecommerce/order/create { addressId, paymentInfo: { method: COD } }`. Courses: `POST /order/create-order { courseId, payment_info }`, then `GET /course/get-course-content/:id`.\n\n---\n\n## Admin flow\n\nLogin (admin) → `POST /category/create { name }` → `POST /category/brand/create { name }` → `POST /product/create { title, price, category, stockQuantity }` → `POST /coupon/create { code, discountType, discountValue, endDate }` → `GET /ecommerce/order/admin/all` → `PUT /ecommerce/order/admin/status/:id { status: Shipped }`.\n\n---\n\nFull guides in repo: `API_DOCUMENTATION.md` (endpoint reference), `FRONTEND_POSTMAN_GUIDE.md` (Postman + React), `step-by-step-guide.html` (same as `/guide`).",
+        title: "LMS Course Marketplace API",
+        version: "2.0.0",
+        description: "LMS Course Marketplace API (digital courses only).",
         contact: {
             name: "API Support",
             email: "support@lms-backend.com",
@@ -55,7 +54,10 @@ exports.swaggerDocument = {
             name: "Layout",
             description: "Manage homepage banner, FAQs, and course categories",
         },
-        ...ecommerce_swagger_1.ecommerceTags,
+        {
+            name: "LMS Marketplace",
+            description: "Course marketplace, curriculum, lectures, enrollments, payments, wishlist, reviews, coupons, certificates, instructor and admin",
+        },
     ],
     components: {
         securitySchemes: {
@@ -72,25 +74,28 @@ exports.swaggerDocument = {
                 description: "Access token stored in HTTP-only cookie",
             },
         },
-        schemas: Object.assign({ ApiResponse: {
+        schemas: {
+            ApiResponse: {
                 type: "object",
                 properties: {
                     success: { type: "boolean", example: true },
                     message: { type: "string", example: "Operation completed successfully" },
                 },
-            }, ErrorResponse: {
+            },
+            ErrorResponse: {
                 type: "object",
                 properties: {
                     success: { type: "boolean", example: false },
                     message: { type: "string", example: "Detailed error message" },
                 },
-            }, User: {
+            },
+            User: {
                 type: "object",
                 properties: {
                     _id: { type: "string", example: "64e00b8a1c9d2f001c9a1b2c" },
                     name: { type: "string", example: "John Doe" },
                     email: { type: "string", example: "john@example.com" },
-                    role: { type: "string", enum: ["user", "admin"], example: "user" },
+                    role: { type: "string", enum: ["user", "instructor", "admin"], example: "user" },
                     isVerified: { type: "boolean", example: true },
                     courses: {
                         type: "array",
@@ -111,7 +116,8 @@ exports.swaggerDocument = {
                     createdAt: { type: "string", format: "date-time" },
                     updatedAt: { type: "string", format: "date-time" },
                 },
-            }, Course: {
+            },
+            Course: {
                 type: "object",
                 properties: {
                     _id: { type: "string", example: "64e00b8a1c9d2f001c9a1b2d" },
@@ -146,7 +152,8 @@ exports.swaggerDocument = {
                     rating: { type: "number", example: 4.8 },
                     purchased: { type: "number", example: 120 },
                 },
-            }, Order: {
+            },
+            Order: {
                 type: "object",
                 properties: {
                     _id: { type: "string", example: "64e00b8a1c9d2f001c9a1b2e" },
@@ -155,7 +162,8 @@ exports.swaggerDocument = {
                     payment_info: { type: "object" },
                     createdAt: { type: "string", format: "date-time" },
                 },
-            }, Notification: {
+            },
+            Notification: {
                 type: "object",
                 properties: {
                     _id: { type: "string", example: "64e00b8a1c9d2f001c9a1b2f" },
@@ -165,9 +173,31 @@ exports.swaggerDocument = {
                     userId: { type: "string", example: "64e00b8a1c9d2f001c9a1b2c" },
                     createdAt: { type: "string", format: "date-time" },
                 },
-            } }, ecommerce_swagger_1.ecommerceSchemas),
+            },
+            Enrollment: {
+                type: "object",
+                properties: {
+                    _id: { type: "string" },
+                    userId: { type: "string" },
+                    courseId: { type: "string" },
+                    orderId: { type: "string" },
+                    progress: { type: "number", example: 45 },
+                    completed: { type: "boolean", example: false },
+                },
+            },
+            Certificate: {
+                type: "object",
+                properties: {
+                    _id: { type: "string" },
+                    certificateId: { type: "string" },
+                    courseName: { type: "string" },
+                    issuedAt: { type: "string", format: "date-time" },
+                },
+            },
+        },
     },
-    paths: Object.assign({ "/": {
+    paths: {
+        "/": {
             get: {
                 tags: ["System"],
                 summary: "API Root & Navigation",
@@ -192,7 +222,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/test": {
+        },
+        "/test": {
             get: {
                 tags: ["System"],
                 summary: "Health Check",
@@ -214,7 +245,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api-docs.json": {
+        },
+        "/api-docs.json": {
             get: {
                 tags: ["System"],
                 summary: "Raw OpenAPI 3.0 Specification",
@@ -225,11 +257,12 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/auth/register": {
+        },
+        "/api/v1/auth/register": {
             post: {
                 tags: ["Authentication & Users"],
                 summary: "Register new user",
-                description: "Creates an unverified account and sends a 4-digit activation code to the provided email. For testing, view the email directly at: https://ethereal.email/messages (or the mailUrl returned in the response).",
+                description: "Creates an unverified account and emails a 6-digit activation code (Ethereal). Email delivery is best-effort: the 201 response always includes activationToken + activationCode so signup works even when SMTP is unreachable (mailSent:false in that case).",
                 requestBody: {
                     required: true,
                     content: {
@@ -247,8 +280,8 @@ exports.swaggerDocument = {
                     },
                 },
                 responses: {
-                    200: {
-                        description: "Activation email sent",
+                    201: {
+                        description: "Account created (activation credentials always returned)",
                         content: {
                             "application/json": {
                                 schema: {
@@ -258,6 +291,7 @@ exports.swaggerDocument = {
                                         message: { type: "string", example: "Please check your email: jane@example.com to activate your account!" },
                                         activationToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5..." },
                                         activationCode: { type: "string", example: "4921" },
+                                        mailSent: { type: "boolean", example: true },
                                         mailUrl: { type: "string", example: "https://ethereal.email/messages" },
                                     },
                                 },
@@ -267,7 +301,8 @@ exports.swaggerDocument = {
                     400: { description: "Email already exists or invalid data" },
                 },
             },
-        }, "/api/v1/auth/activate-user": {
+        },
+        "/api/v1/auth/activate-user": {
             post: {
                 tags: ["Authentication & Users"],
                 summary: "Activate registered user account",
@@ -305,7 +340,8 @@ exports.swaggerDocument = {
                     400: { description: "Invalid or expired activation code" },
                 },
             },
-        }, "/api/v1/auth/login": {
+        },
+        "/api/v1/auth/login": {
             post: {
                 tags: ["Authentication & Users"],
                 summary: "Login user",
@@ -344,7 +380,8 @@ exports.swaggerDocument = {
                     400: { description: "Invalid email or password" },
                 },
             },
-        }, "/api/v1/auth/logout": {
+        },
+        "/api/v1/auth/logout": {
             get: {
                 tags: ["Authentication & Users"],
                 summary: "Logout current user",
@@ -361,7 +398,8 @@ exports.swaggerDocument = {
                     400: { description: "Not authenticated" },
                 },
             },
-        }, "/api/v1/auth/refreshtoken": {
+        },
+        "/api/v1/auth/refreshtoken": {
             get: {
                 tags: ["Authentication & Users"],
                 summary: "Refresh access token",
@@ -384,7 +422,8 @@ exports.swaggerDocument = {
                     400: { description: "Invalid or expired refresh token" },
                 },
             },
-        }, "/api/v1/auth/me": {
+        },
+        "/api/v1/auth/me": {
             get: {
                 tags: ["Authentication & Users"],
                 summary: "Get current authenticated user profile",
@@ -407,7 +446,8 @@ exports.swaggerDocument = {
                     400: { description: "Not authenticated" },
                 },
             },
-        }, "/api/v1/auth/social-auth": {
+        },
+        "/api/v1/auth/social-auth": {
             post: {
                 tags: ["Authentication & Users"],
                 summary: "Social authentication (Google / GitHub OAuth)",
@@ -446,7 +486,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/auth/update-user-info": {
+        },
+        "/api/v1/auth/update-user-info": {
             put: {
                 tags: ["Authentication & Users"],
                 summary: "Update current user profile info",
@@ -482,7 +523,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/auth/update-user-password": {
+        },
+        "/api/v1/auth/update-user-password": {
             put: {
                 tags: ["Authentication & Users"],
                 summary: "Change account password",
@@ -520,7 +562,8 @@ exports.swaggerDocument = {
                     400: { description: "Incorrect old password" },
                 },
             },
-        }, "/api/v1/auth/update-user-profile-picture": {
+        },
+        "/api/v1/auth/update-user-profile-picture": {
             put: {
                 tags: ["Authentication & Users"],
                 summary: "Update user avatar / profile picture",
@@ -556,7 +599,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/auth/get-all-user-dashboard": {
+        },
+        "/api/v1/auth/get-all-user-dashboard": {
             get: {
                 tags: ["Authentication & Users"],
                 summary: "Get all users for admin dashboard",
@@ -583,7 +627,8 @@ exports.swaggerDocument = {
                     403: { description: "Forbidden: requires admin role" },
                 },
             },
-        }, "/api/v1/auth/update-user-roles": {
+        },
+        "/api/v1/auth/update-user-roles": {
             put: {
                 tags: ["Authentication & Users"],
                 summary: "Update a user's role (Admin only)",
@@ -620,7 +665,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/auth/delete-user/{id}": {
+        },
+        "/api/v1/auth/delete-user/{id}": {
             delete: {
                 tags: ["Authentication & Users"],
                 summary: "Delete user by ID (Admin only)",
@@ -651,7 +697,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/create-course": {
+        },
+        "/api/v1/course/create-course": {
             post: {
                 tags: ["Courses"],
                 summary: "Create a new course (Admin only)",
@@ -715,7 +762,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/edit-course/{id}": {
+        },
+        "/api/v1/course/edit-course/{id}": {
             put: {
                 tags: ["Courses"],
                 summary: "Edit existing course (Admin only)",
@@ -737,8 +785,8 @@ exports.swaggerDocument = {
                     },
                 },
                 responses: {
-                    200: {
-                        description: "Course updated successfully",
+                    201: {
+                        description: "Course updated successfully (returns 201)",
                         content: {
                             "application/json": {
                                 schema: {
@@ -753,7 +801,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/get-course/{id}": {
+        },
+        "/api/v1/course/get-course/{id}": {
             get: {
                 tags: ["Courses"],
                 summary: "Get public details for a single course",
@@ -782,7 +831,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/get-courses": {
+        },
+        "/api/v1/course/get-courses": {
             get: {
                 tags: ["Courses"],
                 summary: "Get all public courses",
@@ -806,7 +856,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/get-course-content/{id}": {
+        },
+        "/api/v1/course/get-course-content/{id}": {
             get: {
                 tags: ["Courses"],
                 summary: "Get full course content for enrolled students",
@@ -837,7 +888,8 @@ exports.swaggerDocument = {
                     404: { description: "You are not enrolled in this course" },
                 },
             },
-        }, "/api/v1/course/add-question": {
+        },
+        "/api/v1/course/add-question": {
             put: {
                 tags: ["Courses"],
                 summary: "Ask a question in course lesson",
@@ -875,7 +927,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/add-answer": {
+        },
+        "/api/v1/course/add-answer": {
             put: {
                 tags: ["Courses"],
                 summary: "Answer a student question",
@@ -914,7 +967,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/add-review/{id}": {
+        },
+        "/api/v1/course/add-review/{id}": {
             put: {
                 tags: ["Courses"],
                 summary: "Add review & rating for course",
@@ -959,7 +1013,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/add-replay": {
+        },
+        "/api/v1/course/add-replay": {
             put: {
                 tags: ["Courses"],
                 summary: "Reply to course review (Admin only)",
@@ -997,7 +1052,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/get-all-course-dashboard": {
+        },
+        "/api/v1/course/get-all-course-dashboard": {
             get: {
                 tags: ["Courses"],
                 summary: "Get all courses for Admin dashboard",
@@ -1022,7 +1078,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/course/delete-course/{id}": {
+        },
+        "/api/v1/course/delete-course/{id}": {
             delete: {
                 tags: ["Courses"],
                 summary: "Delete course by ID (Admin only)",
@@ -1052,7 +1109,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/order/create-order": {
+        },
+        "/api/v1/order/create-order": {
             post: {
                 tags: ["Orders"],
                 summary: "Create new course order",
@@ -1092,7 +1150,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/order/get-all-order-dashboard": {
+        },
+        "/api/v1/order/get-all-order-dashboard": {
             get: {
                 tags: ["Orders"],
                 summary: "Get all orders for Admin dashboard",
@@ -1117,7 +1176,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/notifications/get-all-notification": {
+        },
+        "/api/v1/notifications/get-all-notification": {
             get: {
                 tags: ["Notifications"],
                 summary: "Get notifications (Admin only)",
@@ -1142,7 +1202,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/notifications/update-notification-status/{id}": {
+        },
+        "/api/v1/notifications/update-notification-status/{id}": {
             put: {
                 tags: ["Notifications"],
                 summary: "Mark notification as read (Admin only)",
@@ -1175,7 +1236,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/analytics/get-users-analytics": {
+        },
+        "/api/v1/analytics/get-users-analytics": {
             get: {
                 tags: ["Analytics"],
                 summary: "Get 12-month user signups analytics (Admin only)",
@@ -1211,7 +1273,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/analytics/get-course-analytics": {
+        },
+        "/api/v1/analytics/get-course-analytics": {
             get: {
                 tags: ["Analytics"],
                 summary: "Get 12-month courses analytics (Admin only)",
@@ -1233,7 +1296,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/analytics/get-order-analytics": {
+        },
+        "/api/v1/analytics/get-order-analytics": {
             get: {
                 tags: ["Analytics"],
                 summary: "Get 12-month orders analytics (Admin only)",
@@ -1255,7 +1319,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/layout/create-layout": {
+        },
+        "/api/v1/layout/create-layout": {
             post: {
                 tags: ["Layout"],
                 summary: "Create layout configuration (Admin only)",
@@ -1307,7 +1372,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/layout/update-layout": {
+        },
+        "/api/v1/layout/update-layout": {
             put: {
                 tags: ["Layout"],
                 summary: "Update layout configuration (Admin only)",
@@ -1337,7 +1403,8 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        }, "/api/v1/layout/get-layout": {
+        },
+        "/api/v1/layout/get-layout": {
             get: {
                 tags: ["Layout"],
                 summary: "Get site layout by type",
@@ -1367,6 +1434,446 @@ exports.swaggerDocument = {
                     },
                 },
             },
-        } }, ecommerce_swagger_1.ecommercePaths),
+        },
+        "/api/v1/lms/courses": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "List published courses (marketplace)",
+                responses: {
+                    200: {
+                        description: "Published course catalog",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        success: { type: "boolean", example: true },
+                                        courses: {
+                                            type: "array",
+                                            items: { $ref: "#/components/schemas/Course" },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "/api/v1/lms/my-learning": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get My Learning (enrollments, progress, certificates)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: {
+                    200: { description: "Enrolled courses grouped by progress" },
+                },
+            },
+        },
+        "/api/v1/lms/payments/create": {
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Create course payment (digital, no shipping)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["courseId"],
+                                properties: {
+                                    courseId: { type: "string" },
+                                    couponCode: { type: "string" },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: { description: "Razorpay order created" },
+                },
+            },
+        },
+        "/api/v1/lms/payments/verify": {
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Verify payment and create enrollment",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: [
+                                    "razorpay_order_id",
+                                    "razorpay_payment_id",
+                                    "razorpay_signature",
+                                    "courseId",
+                                ],
+                                properties: {
+                                    razorpay_order_id: { type: "string" },
+                                    razorpay_payment_id: { type: "string" },
+                                    razorpay_signature: { type: "string" },
+                                    courseId: { type: "string" },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    201: { description: "Payment verified, enrollment confirmed" },
+                },
+            },
+        },
+        "/api/v1/lms/categories": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "List course categories with counts",
+                responses: { 200: { description: "Category aggregation" } },
+            },
+        },
+        "/api/v1/lms/search": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Search published courses (?q=)",
+                parameters: [{ name: "q", in: "query", required: false, schema: { type: "string" } }],
+                responses: { 200: { description: "Matching courses" } },
+            },
+        },
+        "/api/v1/lms/home": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Marketplace home (featured, top rated, newest)",
+                responses: { 200: { description: "Curated course lists" } },
+            },
+        },
+        "/api/v1/lms/courses/{courseId}": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get course detail (video URLs hidden for locked lectures)",
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Course detail" }, 404: { description: "Course not found / not published" } },
+            },
+        },
+        "/api/v1/lms/courses/{courseId}/curriculum": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get curriculum with locked flags (enrolled users unlock video URLs)",
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Curriculum list" }, 404: { description: "Course not found" } },
+            },
+        },
+        "/api/v1/lms/courses/{courseId}/sections": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get sections grouped by videoSection",
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Section groups" }, 404: { description: "Course not found" } },
+            },
+        },
+        "/api/v1/lms/sections/{sectionId}": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get section by lecture ID or section title",
+                parameters: [{ name: "sectionId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Section detail" }, 404: { description: "Section not found" } },
+            },
+        },
+        "/api/v1/lms/sections/{sectionId}/lectures": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "List lectures in a section",
+                parameters: [{ name: "sectionId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Lecture list" }, 404: { description: "Section not found" } },
+            },
+        },
+        "/api/v1/lms/lectures/{lectureId}": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get lecture (preview open; locked lectures need enrollment)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "lectureId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Lecture content" }, 403: { description: "Enrollment required" }, 404: { description: "Lecture not found" } },
+            },
+        },
+        "/api/v1/lms/lectures/{lectureId}/access": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Check lecture access for current user",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "lectureId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "{ hasAccess: boolean }" } },
+            },
+        },
+        "/api/v1/lms/lectures/{lectureId}/progress": {
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Save watch progress (enrolled only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "lectureId", in: "path", required: true, schema: { type: "string" } }],
+                requestBody: { required: false, content: { "application/json": { schema: { type: "object", properties: { watchedSeconds: { type: "number", example: 120 } } } } } },
+                responses: { 200: { description: "Progress saved" }, 403: { description: "Enrollment required" } },
+            },
+        },
+        "/api/v1/lms/lectures/{lectureId}/complete": {
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Mark lecture complete (100% of lectures auto-issues certificate)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "lectureId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Updated enrollment with progress" }, 403: { description: "Enrollment required" } },
+            },
+        },
+        "/api/v1/lms/purchases": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "My purchase history (orders)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "User orders" } },
+            },
+        },
+        "/api/v1/lms/orders": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "My course orders",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "User orders" } },
+            },
+        },
+        "/api/v1/lms/orders/{orderId}": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get single order (owner or admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "orderId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Order detail" }, 403: { description: "Not authorized" }, 404: { description: "Order not found" } },
+            },
+        },
+        "/api/v1/lms/enrollments": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "My enrollments",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Enrollment list" } },
+            },
+        },
+        "/api/v1/lms/enrollments/{enrollmentId}": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get enrollment (owner or admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "enrollmentId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Enrollment detail" }, 403: { description: "Not authorized" }, 404: { description: "Not found" } },
+            },
+        },
+        "/api/v1/lms/wishlist": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get my course wishlist",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Wishlisted courses" } },
+            },
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Toggle course in wishlist",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["courseId"], properties: { courseId: { type: "string" } } } } } },
+                responses: { 200: { description: "{ wishlisted: boolean }" } },
+            },
+        },
+        "/api/v1/lms/wishlist/toggle": {
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Toggle course in wishlist (alias)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["courseId"], properties: { courseId: { type: "string" } } } } } },
+                responses: { 200: { description: "{ wishlisted: boolean }" } },
+            },
+        },
+        "/api/v1/lms/reviews/{courseId}": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "List course reviews",
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Review list" }, 404: { description: "Course not found" } },
+            },
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Add course review (enrolled only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["rating"], properties: { rating: { type: "number", minimum: 1, maximum: 5 }, comment: { type: "string" } } } } } },
+                responses: { 201: { description: "Review added" }, 403: { description: "Enrollment required" } },
+            },
+        },
+        "/api/v1/lms/courses/{courseId}/reviews": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "List course reviews (alias)",
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Review list" } },
+            },
+        },
+        "/api/v1/lms/coupons/validate": {
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Validate coupon for a course",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["code", "courseId"], properties: { code: { type: "string" }, courseId: { type: "string" } } } } } },
+                responses: { 200: { description: "{ discount, payable }" }, 400: { description: "Invalid/expired coupon" } },
+            },
+        },
+        "/api/v1/lms/coupons": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "List coupons (Admin only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Coupon list" } },
+            },
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Create coupon (Admin only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["code", "discountType", "discountValue", "endDate"], properties: { code: { type: "string" }, discountType: { type: "string", enum: ["percentage", "fixed"] }, discountValue: { type: "number" }, maxDiscount: { type: "number" }, minPurchaseAmount: { type: "number" }, courseId: { type: "string" }, usageLimit: { type: "number" }, endDate: { type: "string", format: "date-time" } } } } } },
+                responses: { 201: { description: "Coupon created" } },
+            },
+        },
+        "/api/v1/lms/certificates": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "My certificates",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Certificate list" } },
+            },
+        },
+        "/api/v1/lms/certificates/{certificateId}": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Get certificate (owner or admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "certificateId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Certificate detail" }, 403: { description: "Not authorized" }, 404: { description: "Not found" } },
+            },
+        },
+        "/api/v1/lms/instructor/courses": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "My courses (Instructor/Admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Instructor course list" }, 403: { description: "Instructor role required" } },
+            },
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Create course as DRAFT (Instructor/Admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/Course" } } } },
+                responses: { 201: { description: "Draft course created" } },
+            },
+        },
+        "/api/v1/lms/instructor/courses/{courseId}": {
+            put: {
+                tags: ["LMS Marketplace"],
+                summary: "Update own course (Instructor/Admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Course updated" }, 403: { description: "Not authorized" } },
+            },
+        },
+        "/api/v1/lms/instructor/courses/{courseId}/lectures": {
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Add lecture to own course (Instructor/Admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                requestBody: { required: true, content: { "application/json": { schema: { type: "object", properties: { title: { type: "string" }, description: { type: "string" }, videoUrl: { type: "string" }, videoSection: { type: "string" }, videoLength: { type: "number" }, isPreview: { type: "boolean" } } } } } },
+                responses: { 201: { description: "Lecture added" } },
+            },
+        },
+        "/api/v1/lms/instructor/courses/{courseId}/submit": {
+            post: {
+                tags: ["LMS Marketplace"],
+                summary: "Submit course for review (Instructor/Admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "Status -> SUBMITTED" } },
+            },
+        },
+        "/api/v1/lms/instructor/students": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Enrollments in my courses (Instructor/Admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Student enrollments" } },
+            },
+        },
+        "/api/v1/lms/instructor/revenue": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Revenue breakdown (Instructor/Admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "{ totalRevenue, totalEnrollments, byCourse }" } },
+            },
+        },
+        "/api/v1/lms/instructor/analytics": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Teaching analytics (Instructor/Admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Courses, enrollments, completions" } },
+            },
+        },
+        "/api/v1/lms/admin/courses": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "All courses incl. non-published (Admin only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Full course list" } },
+            },
+        },
+        "/api/v1/lms/admin/courses/{courseId}/status": {
+            put: {
+                tags: ["LMS Marketplace"],
+                summary: "Set lifecycle status (Admin only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "courseId", in: "path", required: true, schema: { type: "string" } }],
+                requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["status"], properties: { status: { type: "string", enum: ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "PUBLISHED", "UNPUBLISHED", "ARCHIVED"] } } } } } },
+                responses: { 200: { description: "Status updated" }, 400: { description: "Invalid status" } },
+            },
+        },
+        "/api/v1/lms/admin/instructors": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "List instructors/admins (Admin only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Instructor list" } },
+            },
+        },
+        "/api/v1/lms/admin/orders": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "All course orders (Admin only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Order list" } },
+            },
+        },
+        "/api/v1/lms/admin/enrollments": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "All enrollments (Admin only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Enrollment list" } },
+            },
+        },
+        "/api/v1/lms/admin/analytics": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Marketplace totals (Admin only)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "{ users, courses, orders, enrollments, certificates }" } },
+            },
+        },
+    },
 };
 //# sourceMappingURL=swagger.js.map

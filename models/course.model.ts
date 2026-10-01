@@ -30,17 +30,30 @@ interface ICourseData extends Document {
   links: ILink[];
   suggestion: string;
   questions: IComment[];
+  isPreview?: boolean;
 }
+
+export type CourseStatus =
+  | "DRAFT"
+  | "SUBMITTED"
+  | "UNDER_REVIEW"
+  | "PUBLISHED"
+  | "UNPUBLISHED"
+  | "ARCHIVED";
 
 interface ICourse extends Document {
   name: string;
   description: string;
   price: number;
   estimatedPrice?: number;
+  discountPrice?: number;
   thumbnail: object;
   tags: string;
   level: string;
   demoUrl: string;
+  category?: string;
+  status?: CourseStatus;
+  instructor?: { id: string; name: string };
   benefits: { title: string }[];
   prerequisites: { title: string }[];
   reviews: IReview[];
@@ -74,6 +87,7 @@ const courseDataSchema = new Schema<ICourseData>({
   links: { type: [linkSchema] },
   suggestion: { type: String },
   questions: { type: [commentSchema] },
+  isPreview: { type: Boolean, default: false },
 });
 
 const courseSchema = new Schema<ICourse>(
@@ -82,6 +96,7 @@ const courseSchema = new Schema<ICourse>(
     description: { type: String, required: true },
     price: { type: Number, required: true },
     estimatedPrice: { type: Number },
+    discountPrice: { type: Number },
     thumbnail: {
       public_id: {
         type: String,
@@ -93,6 +108,23 @@ const courseSchema = new Schema<ICourse>(
     tags: { type: String, required: true },
     level: { type: String, required: true },
     demoUrl: { type: String, required: true },
+    category: { type: String, default: "General" },
+    status: {
+      type: String,
+      enum: [
+        "DRAFT",
+        "SUBMITTED",
+        "UNDER_REVIEW",
+        "PUBLISHED",
+        "UNPUBLISHED",
+        "ARCHIVED",
+      ],
+      default: "PUBLISHED",
+    },
+    instructor: {
+      id: { type: String },
+      name: { type: String },
+    },
     benefits: { type: [{ title: String }] },
     prerequisites: { type: [{ title: String }] },
     reviews: { type: [reviewSchema] },

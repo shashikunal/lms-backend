@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -20,8 +43,6 @@ const course_service_1 = require("../services/course.service");
 const course_model_1 = __importDefault(require("../models/course.model"));
 const redis_1 = require("../utils/redis");
 const mongoose_1 = __importDefault(require("mongoose"));
-const ejs_1 = __importDefault(require("ejs"));
-const path_1 = __importDefault(require("path"));
 const sendMail_1 = __importDefault(require("../utils/sendMail"));
 const notificationModel_1 = __importDefault(require("../models/notificationModel"));
 //upload Course
@@ -123,15 +144,28 @@ exports.getAllCourses = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next
         return next(new ErrorHandler_1.default(error.message, 500));
     }
 }));
-//get course content only for valid user
+//get course content only for valid user (enrollment = access control)
 exports.getCourseByUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b, _c;
     try {
         const userCourseList = (_a = req.user) === null || _a === void 0 ? void 0 : _a.courses;
         const courseId = req.params.id;
-        const courseExits = userCourseList.find((course) => course._id === courseId);
-        if (!courseExits) {
-            return next(new ErrorHandler_1.default("You are not allowed to access this course", 403));
+        const legacyEnrolled = (userCourseList || []).some((course) => {
+            var _a, _b;
+            return ((_a = course === null || course === void 0 ? void 0 : course.courseId) === null || _a === void 0 ? void 0 : _a.toString()) === courseId ||
+                ((_b = course === null || course === void 0 ? void 0 : course._id) === null || _b === void 0 ? void 0 : _b.toString()) === courseId ||
+                (course === null || course === void 0 ? void 0 : course.toString()) === courseId;
+        });
+        if (!legacyEnrolled) {
+            // Check canonical Enrollment collection (LMS access control)
+            const { default: EnrollmentModel } = yield Promise.resolve().then(() => __importStar(require("../models/enrollment.model")));
+            const enrollment = yield EnrollmentModel.findOne({
+                userId: (_c = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id) === null || _c === void 0 ? void 0 : _c.toString(),
+                courseId,
+            });
+            if (!enrollment) {
+                return next(new ErrorHandler_1.default("You are not allowed to access this course", 403));
+            }
         }
         const course = yield course_model_1.default.findById(courseId);
         const content = course === null || course === void 0 ? void 0 : course.courseData;
@@ -145,14 +179,14 @@ exports.getCourseByUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, ne
     }
 }));
 exports.addQuestion = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b, _c;
+    var _d, _e;
     try {
         const { question, courseId, contentId } = req.body;
         const course = yield course_model_1.default.findById(courseId);
         if (!mongoose_1.default.Types.ObjectId.isValid(contentId)) {
             return next(new ErrorHandler_1.default("Invalid content id ", 400));
         }
-        const courseContent = (_b = course === null || course === void 0 ? void 0 : course.courseData) === null || _b === void 0 ? void 0 : _b.find((item) => item._id.equals(contentId));
+        const courseContent = (_d = course === null || course === void 0 ? void 0 : course.courseData) === null || _d === void 0 ? void 0 : _d.find((item) => item._id.equals(contentId));
         if (!courseContent) {
             return next(new ErrorHandler_1.default("Invalid content id ", 400));
         }
@@ -166,7 +200,7 @@ exports.addQuestion = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) 
         courseContent.questions.push(newQuestion);
         //add notification to the question
         yield notificationModel_1.default.create({
-            user: (_c = req === null || req === void 0 ? void 0 : req.user) === null || _c === void 0 ? void 0 : _c._id,
+            user: (_e = req === null || req === void 0 ? void 0 : req.user) === null || _e === void 0 ? void 0 : _e._id,
             title: "new question added",
             message: `you have a new question in ${courseContent === null || courseContent === void 0 ? void 0 : courseContent.title}`,
         });
@@ -182,18 +216,18 @@ exports.addQuestion = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) 
     }
 }));
 exports.addAnswer = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _d, _e, _f, _g, _h, _j, _k;
+    var _f, _g, _h, _j, _k, _l, _m;
     try {
         const { answer, courseId, contentId, questionId } = req.body;
         const course = yield course_model_1.default.findById(courseId);
         if (!mongoose_1.default.Types.ObjectId.isValid(contentId)) {
             return next(new ErrorHandler_1.default("Invalid content id ", 400));
         }
-        const courseContent = (_d = course === null || course === void 0 ? void 0 : course.courseData) === null || _d === void 0 ? void 0 : _d.find((item) => item._id.equals(contentId));
+        const courseContent = (_f = course === null || course === void 0 ? void 0 : course.courseData) === null || _f === void 0 ? void 0 : _f.find((item) => item._id.equals(contentId));
         if (!courseContent) {
             return next(new ErrorHandler_1.default("Invalid content id ", 400));
         }
-        const question = (_e = courseContent === null || courseContent === void 0 ? void 0 : courseContent.questions) === null || _e === void 0 ? void 0 : _e.find((item) => item._id.equals(questionId));
+        const question = (_g = courseContent === null || courseContent === void 0 ? void 0 : courseContent.questions) === null || _g === void 0 ? void 0 : _g.find((item) => item._id.equals(questionId));
         if (!question) {
             return next(new ErrorHandler_1.default("Invalid question id ", 400));
         }
@@ -203,12 +237,12 @@ exports.addAnswer = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
             answer,
         };
         //add this answer to our question
-        (_f = question === null || question === void 0 ? void 0 : question.questionReplies) === null || _f === void 0 ? void 0 : _f.push(newAnswer);
+        (_h = question === null || question === void 0 ? void 0 : question.questionReplies) === null || _h === void 0 ? void 0 : _h.push(newAnswer);
         yield (course === null || course === void 0 ? void 0 : course.save());
-        if (((_g = req.user) === null || _g === void 0 ? void 0 : _g._id) === ((_h = question.user) === null || _h === void 0 ? void 0 : _h._id)) {
+        if (((_j = req.user) === null || _j === void 0 ? void 0 : _j._id) === ((_k = question.user) === null || _k === void 0 ? void 0 : _k._id)) {
             //create a notification
             yield notificationModel_1.default.create({
-                user: (_j = req === null || req === void 0 ? void 0 : req.user) === null || _j === void 0 ? void 0 : _j._id,
+                user: (_l = req === null || req === void 0 ? void 0 : req.user) === null || _l === void 0 ? void 0 : _l._id,
                 title: "New Question Replay Received",
                 message: `You have a new answer in ${courseContent.title}`,
             });
@@ -218,17 +252,18 @@ exports.addAnswer = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
                 name: question.user.name,
                 title: courseContent.title,
             };
-            const html = yield ejs_1.default.renderFile(path_1.default.join(__dirname, "../mails/question-replay.ejs"), data);
+            // Reply notification email is best-effort: never hang or fail the
+            // answer when SMTP is unreachable.
             try {
                 yield (0, sendMail_1.default)({
-                    email: (_k = question === null || question === void 0 ? void 0 : question.user) === null || _k === void 0 ? void 0 : _k.email,
+                    email: (_m = question === null || question === void 0 ? void 0 : question.user) === null || _m === void 0 ? void 0 : _m.email,
                     subject: "Question replay",
                     template: "question-replay.ejs",
                     data,
                 });
             }
             catch (error) {
-                return new ErrorHandler_1.default(error.message, 500);
+                console.warn("Question reply email skipped:", (error === null || error === void 0 ? void 0 : error.message) || error);
             }
         }
         res.status(201).json({
@@ -237,18 +272,31 @@ exports.addAnswer = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
         });
     }
     catch (error) {
-        return new ErrorHandler_1.default(error.message, 500);
+        return next(new ErrorHandler_1.default(error.message, 500));
     }
 }));
 exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _l, _m, _o, _p, _q;
+    var _o, _p, _q, _r, _s, _t, _u;
     try {
-        const userCourseList = (_l = req.user) === null || _l === void 0 ? void 0 : _l.courses;
+        const userCourseList = (_o = req.user) === null || _o === void 0 ? void 0 : _o.courses;
         const courseId = req.params.id;
-        //check if course exits in courseList
-        const courseExits = userCourseList === null || userCourseList === void 0 ? void 0 : userCourseList.some((course) => course._id.toString() === courseId);
+        //check if course exits in courseList (supports both legacy shapes)
+        const courseExits = (userCourseList === null || userCourseList === void 0 ? void 0 : userCourseList.some((course) => {
+            var _a, _b;
+            return ((_a = course === null || course === void 0 ? void 0 : course.courseId) === null || _a === void 0 ? void 0 : _a.toString()) === courseId ||
+                ((_b = course === null || course === void 0 ? void 0 : course._id) === null || _b === void 0 ? void 0 : _b.toString()) === courseId ||
+                (course === null || course === void 0 ? void 0 : course.toString()) === courseId;
+        })) || false;
         if (!courseExits) {
-            return next(new ErrorHandler_1.default("You are not allowed to access this course", 403));
+            // Fall back to canonical Enrollment (Order -> Enrollment -> access)
+            const { default: EnrollmentModel } = yield Promise.resolve().then(() => __importStar(require("../models/enrollment.model")));
+            const enrollment = yield EnrollmentModel.findOne({
+                userId: (_q = (_p = req.user) === null || _p === void 0 ? void 0 : _p._id) === null || _q === void 0 ? void 0 : _q.toString(),
+                courseId,
+            });
+            if (!enrollment) {
+                return next(new ErrorHandler_1.default("You are not allowed to access this course", 403));
+            }
         }
         const course = yield course_model_1.default.findById(courseId);
         const { review, rating } = req.body;
@@ -257,18 +305,18 @@ exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
             comment: review,
             rating,
         };
-        (_m = course === null || course === void 0 ? void 0 : course.reviews) === null || _m === void 0 ? void 0 : _m.push(reviewData);
+        (_r = course === null || course === void 0 ? void 0 : course.reviews) === null || _r === void 0 ? void 0 : _r.push(reviewData);
         let avg = 0;
-        (_o = course === null || course === void 0 ? void 0 : course.reviews) === null || _o === void 0 ? void 0 : _o.forEach((rev) => {
+        (_s = course === null || course === void 0 ? void 0 : course.reviews) === null || _s === void 0 ? void 0 : _s.forEach((rev) => {
             avg += rev.rating;
         });
         if (course) {
-            course.ratings = avg / ((_p = course === null || course === void 0 ? void 0 : course.reviews) === null || _p === void 0 ? void 0 : _p.length);
+            course.ratings = avg / ((_t = course === null || course === void 0 ? void 0 : course.reviews) === null || _t === void 0 ? void 0 : _t.length);
         }
         yield (course === null || course === void 0 ? void 0 : course.save());
         const notification = {
             title: "new review received",
-            message: `${(_q = req.user) === null || _q === void 0 ? void 0 : _q.name} has given a review in ${course === null || course === void 0 ? void 0 : course.name} on your course`,
+            message: `${(_u = req.user) === null || _u === void 0 ? void 0 : _u.name} has given a review in ${course === null || course === void 0 ? void 0 : course.name} on your course`,
         };
         //create notification
         res.status(200).json({
@@ -282,14 +330,14 @@ exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
     }
 }));
 exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _r, _s;
+    var _v, _w;
     try {
         const { comment, reviewId, courseId } = req.body;
         const course = yield course_model_1.default.findById(courseId);
         if (!course) {
             return next(new ErrorHandler_1.default("Course not found", 400));
         }
-        const review = (_r = course === null || course === void 0 ? void 0 : course.reviews) === null || _r === void 0 ? void 0 : _r.find((rev) => rev._id.toString() === reviewId);
+        const review = (_v = course === null || course === void 0 ? void 0 : course.reviews) === null || _v === void 0 ? void 0 : _v.find((rev) => rev._id.toString() === reviewId);
         if (!review) {
             return next(new ErrorHandler_1.default("Review not found", 400));
         }
@@ -300,7 +348,7 @@ exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
         if (!review.commentReplies) {
             review.commentReplies = [];
         }
-        (_s = review === null || review === void 0 ? void 0 : review.commentReplies) === null || _s === void 0 ? void 0 : _s.push(replayData);
+        (_w = review === null || review === void 0 ? void 0 : review.commentReplies) === null || _w === void 0 ? void 0 : _w.push(replayData);
         yield (course === null || course === void 0 ? void 0 : course.save());
         res.status(200).json({
             success: true,

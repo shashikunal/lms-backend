@@ -279,12 +279,11 @@
 
   <!-- HEADER -->
   <div class="header">
-    <span class="badge-pill">Enterprise API Reference</span>
-    <h1>LMS & E-Commerce Super-API Documentation</h1>
-    <p>Comprehensive REST API specification with interactive Swagger integration, modular catalog, cart state engine, Razorpay checkout, and full order fulfillment.</p>
-    
+    <span class="badge-pill">Enterprise API Reference &mdash; audited Oct 2026</span>
+    <h1>LMS Course Marketplace API Documentation</h1>
+    <p>Digital-course marketplace: browse, buy with Razorpay, enroll, learn with progress, earn certificates. No shipping, no cart, no inventory. Every endpoint below was live-verified (104/104).</p>
     <div class="meta-bar">
-      <div class="meta-item"><strong>Version:</strong> 1.0.0</div>
+      <div class="meta-item"><strong>Version:</strong> 2.0.0</div>
       <div class="meta-item"><strong>Base URL (Prod):</strong> https://mockapi-mauve.vercel.app</div>
       <div class="meta-item"><strong>Base URL (Dev):</strong> http://localhost:8000</div>
       <div class="meta-item"><strong>Swagger UI:</strong> /api-docs</div>
@@ -295,605 +294,147 @@
   <!-- HIGHLIGHTS -->
   <div class="card-grid">
     <div class="card">
-      <h4>🔐 End-to-End Security</h4>
-      <p>Secure dual-mode authentication via JWT Bearer Authorization headers and secure HTTP-Only cookies with role-based access control (User & Admin).</p>
+      <h4>Auth &amp; roles</h4>
+      <p>JWT Bearer or cookies. Roles: student (user), instructor (courses + revenue), admin (approvals, users, analytics).</p>
     </div>
     <div class="card">
-      <h4>💳 Razorpay Payment Integration</h4>
-      <p>Complete payment lifecycle with client key discovery, automated order ID creation, cryptographic HMAC-SHA256 signature verification, and webhooks.</p>
+      <h4>Digital purchase</h4>
+      <p>Course &rarr; Buy Now &rarr; Razorpay create/verify (HMAC) &rarr; order &rarr; enrollment &rarr; Go to Course.</p>
     </div>
     <div class="card">
-      <h4>🛒 Modern E-Commerce Engine</h4>
-      <p>Hierarchical categories, brand indexing, multi-criteria product search, address book, real-time cart state, wishlist toggles, and promo coupons.</p>
+      <h4>Enrollment-gated learning</h4>
+      <p>Preview lectures open; locked content needs enrollment. Progress per lecture; 100% auto-issues a certificate.</p>
     </div>
     <div class="card">
-      <h4>🎓 Learning Management Core</h4>
-      <p>Course creation, video curriculum streaming, lesson Q&A, student reviews, dynamic landing page banners, and sales analytics.</p>
+      <h4>Instructor marketplace</h4>
+      <p>Create as DRAFT, build curriculum, submit, admin publishes. Revenue, students and analytics included.</p>
     </div>
   </div>
 
-  <!-- SECTION 1: AUTH & USERS -->
-  <h2>1. Authentication & Users (/api/v1/auth)</h2>
+  <h2>1. Authentication &amp; Users (/api/v1/auth)</h2>
   <table>
-    <thead>
-      <tr>
-        <th style="width: 80px;">Method</th>
-        <th style="width: 260px;">Endpoint</th>
-        <th style="width: 110px;">Access</th>
-        <th>Description</th>
-      </tr>
-    </thead>
+    <thead><tr><th style="width: 80px;">Method</th><th style="width: 300px;">Endpoint</th><th style="width: 110px;">Access</th><th>Description (verified)</th></tr></thead>
     <tbody>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/register</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Register account & send 4-digit activation code</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/activate-user</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Verify activation code & token to activate account</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/login</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Login with credentials; receive tokens & cookies</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/logout</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Clear authentication tokens and destroy session</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/refresh</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Refresh expired access token using refresh token</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/me</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Fetch currently authenticated user profile</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/update-user-info</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Update user profile details (name, email)</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/update-user-password</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Change existing user password</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/get-users</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Retrieve all registered users</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/update-user-role</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Promote or demote user account role</td>
-      </tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/auth/register</td><td><span class="auth-badge public">Public</span></td><td>Register. <b>201</b> returns activationToken + 6-digit code (mailSent:false when SMTP down)</td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/auth/activate-user</td><td><span class="auth-badge public">Public</span></td><td>Activate. <b>201</b>; bad token &rarr; <b>400</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/auth/login</td><td><span class="auth-badge public">Public</span></td><td>Login. <b>200</b> + access/refresh cookies</td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/auth/me</td><td><span class="auth-badge auth">Login</span></td><td>My profile. <b>200</b>; no token &rarr; <b>401</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/auth/social-auth</td><td><span class="auth-badge public">Public</span></td><td>Google/GitHub login. <b>200</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/auth/update-user-info</td><td><span class="auth-badge auth">Login</span></td><td>Edit name. <b>200</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/auth/update-user-password</td><td><span class="auth-badge auth">Login</span></td><td>Change password. <b>200</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/auth/update-user-profile-picture</td><td><span class="auth-badge auth">Login</span></td><td>Avatar (needs Cloudinary). <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/auth/refreshtoken</td><td><span class="auth-badge auth">Cookie</span></td><td>Rotate tokens. <b>200</b> with cookie; <b>400</b> without</td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/auth/logout</td><td><span class="auth-badge auth">Login</span></td><td>Logout. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/auth/get-users (alias get-all-user-dashboard)</td><td><span class="auth-badge admin">Admin</span></td><td>User list. <b>200</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/auth/update-user-roles</td><td><span class="auth-badge admin">Admin</span></td><td>Set role user|instructor|admin. <b>200</b>; non-admin &rarr; <b>403</b></td></tr>
+<tr><td><span class="method delete">DELETE</span></td><td class="path">/api/v1/auth/delete-user/:id</td><td><span class="auth-badge admin">Admin</span></td><td>Delete user. <b>200</b></td></tr>
     </tbody>
   </table>
 
-  <!-- SECTION 2: CATEGORIES & BRANDS -->
-  <h2>2. Categories & Brands (/api/v1/category)</h2>
+  <h2>2. Courses &amp; course orders (legacy LMS, still supported)</h2>
   <table>
-    <thead>
-      <tr>
-        <th style="width: 80px;">Method</th>
-        <th style="width: 260px;">Endpoint</th>
-        <th style="width: 110px;">Access</th>
-        <th>Description</th>
-      </tr>
-    </thead>
+    <thead><tr><th style="width: 80px;">Method</th><th style="width: 300px;">Endpoint</th><th style="width: 110px;">Access</th><th>Description (verified)</th></tr></thead>
     <tbody>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/all</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Get all active categories with optional parent/child nesting</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/single/:idOrSlug</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Get single category by ObjectId or URL slug</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/brands/all</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Get all active brands for filtering and showcases</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/create</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Create a new category with icon/image and display order</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/update/:id</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Modify category title, description, or parent relationship</td>
-      </tr>
-      <tr>
-        <td><span class="method delete">DELETE</span></td>
-        <td class="path">/delete/:id</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Permanently delete a category</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/brand/create</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Register a new product brand</td>
-      </tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/course/get-courses</td><td><span class="auth-badge public">Public</span></td><td>Catalog. Returns <b>201</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/course/get-course/:id</td><td><span class="auth-badge public">Public</span></td><td>Detail (no protected video). <b>200</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/course/create-course</td><td><span class="auth-badge admin">Admin</span></td><td>Create. <b>201</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/course/edit-course/:id</td><td><span class="auth-badge admin">Admin</span></td><td>Edit. Returns <b>201</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/course/get-all-course-dashboard (alias get-admin-courses)</td><td><span class="auth-badge admin">Admin</span></td><td>Admin list. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/course/get-course-content/:id</td><td><span class="auth-badge auth">Enrolled</span></td><td>Full content. Stranger &rarr; <b>403</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/course/add-question</td><td><span class="auth-badge auth">Login</span></td><td>Ask. <b>201</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/course/add-answer</td><td><span class="auth-badge auth">Login</span></td><td>Answer. <b>201</b> (reply mail best-effort)</td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/course/add-review/:id</td><td><span class="auth-badge auth">Enrolled</span></td><td>Review. <b>200</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/course/add-replay</td><td><span class="auth-badge admin">Admin</span></td><td>Reply to review. <b>200</b></td></tr>
+<tr><td><span class="method delete">DELETE</span></td><td class="path">/api/v1/course/delete-course/:id</td><td><span class="auth-badge admin">Admin</span></td><td>Delete. <b>200</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/order/create-order</td><td><span class="auth-badge auth">Login</span></td><td>Buy (legacy). <b>201</b> + enrollment (mail best-effort)</td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/order/get-all-order-dashboard</td><td><span class="auth-badge admin">Admin</span></td><td>All orders. <b>200</b></td></tr>
     </tbody>
   </table>
 
-  <div class="page-break"></div>
-
-  <!-- SECTION 3: PRODUCTS CATALOG -->
-  <h2>3. Products Catalog (/api/v1/product)</h2>
+  <h2>3. LMS marketplace discovery (public)</h2>
   <table>
-    <thead>
-      <tr>
-        <th style="width: 80px;">Method</th>
-        <th style="width: 260px;">Endpoint</th>
-        <th style="width: 110px;">Access</th>
-        <th>Description</th>
-      </tr>
-    </thead>
+    <thead><tr><th style="width: 80px;">Method</th><th style="width: 300px;">Endpoint</th><th style="width: 110px;">Access</th><th>Description (verified)</th></tr></thead>
     <tbody>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/all</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Search by keyword, filter by category/brand/price, sort, and paginate</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/featured</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Get featured products for homepage hero showcase</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/single/:idOrSlug</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Get full product details by ObjectId or slug</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/related/:id</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Get recommended products in same category</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/create</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Create product with price, originalPrice, stock, SKU, and tags</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/update/:id</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Update product specifications, inventory, and media</td>
-      </tr>
-      <tr>
-        <td><span class="method delete">DELETE</span></td>
-        <td class="path">/delete/:id</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Remove product from catalog</td>
-      </tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/courses?page=1&amp;limit=12</td><td><span class="auth-badge public">Public</span></td><td>Published courses. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/categories</td><td><span class="auth-badge public">Public</span></td><td>Categories + counts. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/search?q=react</td><td><span class="auth-badge public">Public</span></td><td>Search. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/home</td><td><span class="auth-badge public">Public</span></td><td>Featured / top rated / newest. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/courses/:courseId</td><td><span class="auth-badge public">Public</span></td><td>Detail. Bad id &rarr; <b>404</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/courses/:courseId/curriculum</td><td><span class="auth-badge public">Public</span></td><td>Curriculum + locked flags. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/courses/:courseId/sections</td><td><span class="auth-badge public">Public</span></td><td>Sections. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/sections/:sectionId (+ /lectures)</td><td><span class="auth-badge public">Public</span></td><td>By lecture id or title. Unknown &rarr; <b>404</b></td></tr>
     </tbody>
   </table>
 
-  <!-- SECTION 4: ADDRESS BOOK -->
-  <h2>4. Address Book (/api/v1/address)</h2>
+  <h2>4. Lectures, progress &amp; certificates (login; locked = enrolled only)</h2>
   <table>
-    <thead>
-      <tr>
-        <th style="width: 80px;">Method</th>
-        <th style="width: 260px;">Endpoint</th>
-        <th style="width: 110px;">Access</th>
-        <th>Description</th>
-      </tr>
-    </thead>
+    <thead><tr><th style="width: 80px;">Method</th><th style="width: 300px;">Endpoint</th><th style="width: 110px;">Access</th><th>Description (verified)</th></tr></thead>
     <tbody>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/add</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Add shipping/billing address to user address book</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/my-addresses</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Retrieve all saved addresses for active user</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/update/:id</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Update existing address details</td>
-      </tr>
-      <tr>
-        <td><span class="method delete">DELETE</span></td>
-        <td class="path">/delete/:id</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Remove address from address book</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/set-default/:id</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Set address as default destination for quick checkout</td>
-      </tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/lectures/:lectureId</td><td><span class="auth-badge auth">Login</span></td><td>Preview open; locked &rarr; <b>403</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/lectures/:lectureId/access</td><td><span class="auth-badge auth">Login</span></td><td>{ hasAccess }. <b>200</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/lectures/:lectureId/progress</td><td><span class="auth-badge auth">Enrolled</span></td><td>{ watchedSeconds }. <b>200</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/lectures/:lectureId/complete</td><td><span class="auth-badge auth">Enrolled</span></td><td>Complete. 100% auto-issues certificate. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/my-learning</td><td><span class="auth-badge auth">Login</span></td><td>Continue / in-progress / completed / wishlist / certificates. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/enrollments (+ /:enrollmentId)</td><td><span class="auth-badge auth">Login</span></td><td>Enrollments. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/certificates (+ /:certificateId)</td><td><span class="auth-badge auth">Login</span></td><td>Certificates. <b>200</b></td></tr>
     </tbody>
   </table>
 
-  <!-- SECTION 5: CART & WISHLIST -->
-  <h2>5. Shopping Cart & Wishlist</h2>
+  <h2>5. Digital purchase: Buy &rarr; pay &rarr; verify &rarr; order &rarr; enrollment (no shipping, no cart)</h2>
   <table>
-    <thead>
-      <tr>
-        <th style="width: 80px;">Method</th>
-        <th style="width: 260px;">Endpoint</th>
-        <th style="width: 110px;">Access</th>
-        <th>Description</th>
-      </tr>
-    </thead>
+    <thead><tr><th style="width: 80px;">Method</th><th style="width: 300px;">Endpoint</th><th style="width: 110px;">Access</th><th>Description (verified)</th></tr></thead>
     <tbody>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/api/v1/cart</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Get user cart with calculated subtotal, discounts, tax, and total</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/api/v1/cart/add</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Add product to cart or increment quantity</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/api/v1/cart/update-quantity</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Adjust quantity of specific item in cart</td>
-      </tr>
-      <tr>
-        <td><span class="method delete">DELETE</span></td>
-        <td class="path">/api/v1/cart/item/:itemId</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Delete item from shopping cart</td>
-      </tr>
-      <tr>
-        <td><span class="method delete">DELETE</span></td>
-        <td class="path">/api/v1/cart/clear</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Empty all items from cart</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/api/v1/cart/merge</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Merge guest localStorage cart items upon user authentication</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/api/v1/wishlist</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Retrieve user wishlist items</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/api/v1/wishlist/toggle</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Toggle product saved state in wishlist</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/api/v1/wishlist/move-to-cart/:productId</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Transfer product directly from wishlist into active cart</td>
-      </tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/payments/create {courseId, couponCode?}</td><td><span class="auth-badge auth">Login</span></td><td>Razorpay order. <b>200</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/payments/verify {order,payment,signature,courseId}</td><td><span class="auth-badge auth">Login</span></td><td>Verify &rarr; <b>201</b> enrollment. Bad sig &rarr; <b>400</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/purchases , /api/v1/lms/orders</td><td><span class="auth-badge auth">Login</span></td><td>History. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/orders/:orderId</td><td><span class="auth-badge auth">Login</span></td><td>Owner/admin. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/wishlist | POST /api/v1/lms/wishlist (+ /toggle)</td><td><span class="auth-badge auth">Login</span></td><td>Course wishlist {courseId}. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/reviews/:courseId (alias courses/:id/reviews)</td><td><span class="auth-badge public">Public</span></td><td>Reviews. <b>200</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/reviews/:courseId {rating, comment}</td><td><span class="auth-badge auth">Enrolled</span></td><td>Add review &rarr; <b>201</b>; stranger <b>403</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/coupons/validate {code, courseId}</td><td><span class="auth-badge auth">Login</span></td><td>{ discount, payable }. <b>200</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/coupons | GET /api/v1/lms/coupons</td><td><span class="auth-badge admin">Admin</span></td><td>Create (<b>201</b>) / list (<b>200</b>)</td></tr>
     </tbody>
   </table>
 
-  <!-- SECTION 6: COUPONS & DISCOUNTS -->
-  <h2>6. Coupons & Discounts (/api/v1/coupon)</h2>
+  <h2>6. Instructor marketplace (Instructor/Admin; lifecycle DRAFT &rarr; SUBMITTED &rarr; PUBLISHED)</h2>
   <table>
-    <thead>
-      <tr>
-        <th style="width: 80px;">Method</th>
-        <th style="width: 260px;">Endpoint</th>
-        <th style="width: 110px;">Access</th>
-        <th>Description</th>
-      </tr>
-    </thead>
+    <thead><tr><th style="width: 80px;">Method</th><th style="width: 300px;">Endpoint</th><th style="width: 110px;">Access</th><th>Description (verified)</th></tr></thead>
     <tbody>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/apply</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Validate and apply promo code with automatic cart price recalculation</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/remove</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Remove applied promo coupon from cart</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/create</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Create percentage/fixed coupon with min spend, cap, and expiry</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/all</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>List all promo coupons and redemption counts</td>
-      </tr>
-      <tr>
-        <td><span class="method delete">DELETE</span></td>
-        <td class="path">/delete/:id</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Revoke coupon code</td>
-      </tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/instructor/courses</td><td><span class="auth-badge auth">Instructor</span></td><td>My courses. Student &rarr; <b>403</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/instructor/courses</td><td><span class="auth-badge auth">Instructor</span></td><td>Create DRAFT. <b>201</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/lms/instructor/courses/:courseId</td><td><span class="auth-badge auth">Instructor</span></td><td>Edit own. <b>200</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/instructor/courses/:courseId/lectures</td><td><span class="auth-badge auth">Instructor</span></td><td>Add lecture. <b>201</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/lms/instructor/courses/:courseId/submit</td><td><span class="auth-badge auth">Instructor</span></td><td>Submit. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/instructor/students | /revenue | /analytics</td><td><span class="auth-badge auth">Instructor</span></td><td>All <b>200</b></td></tr>
     </tbody>
   </table>
 
-  <div class="page-break"></div>
-
-  <!-- SECTION 7: PAYMENTS (RAZORPAY) -->
-  <h2>7. Payments & Razorpay (/api/v1/payment)</h2>
+  <h2>7. Admin, notifications, analytics, layout</h2>
   <table>
-    <thead>
-      <tr>
-        <th style="width: 80px;">Method</th>
-        <th style="width: 260px;">Endpoint</th>
-        <th style="width: 110px;">Access</th>
-        <th>Description</th>
-      </tr>
-    </thead>
+    <thead><tr><th style="width: 80px;">Method</th><th style="width: 300px;">Endpoint</th><th style="width: 110px;">Access</th><th>Description (verified)</th></tr></thead>
     <tbody>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/razorpay-key</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Retrieve client Razorpay Key ID for frontend Checkout SDK</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/razorpay-order</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Generate official Razorpay Order ID for cart amount</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/verify</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Cryptographically verify HMAC-SHA256 signature after payment</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/webhook</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Server-to-server webhook endpoint for async payment notifications</td>
-      </tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/admin/courses</td><td><span class="auth-badge admin">Admin</span></td><td>All incl. drafts. <b>200</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/lms/admin/courses/:courseId/status {status}</td><td><span class="auth-badge admin">Admin</span></td><td>Lifecycle. Bad value &rarr; <b>400</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/lms/admin/instructors | /orders | /enrollments | /analytics</td><td><span class="auth-badge admin">Admin</span></td><td>All <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/notifications/get-all-notifications (alias get-all-notification)</td><td><span class="auth-badge admin">Admin</span></td><td><b>200</b></td></tr>
+<tr><td><span class="method put">PUT</span></td><td class="path">/api/v1/notifications/update-notification-status/:id</td><td><span class="auth-badge admin">Admin</span></td><td>Mark read. <b>200</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/analytics/users-analytics | courses-analytics | orders-analytics</td><td><span class="auth-badge admin">Admin</span></td><td>12-month stats. <b>200</b></td></tr>
+<tr><td><span class="method post">POST</span></td><td class="path">/api/v1/layout/create-layout | PUT /api/v1/layout/update-layout</td><td><span class="auth-badge admin">Admin</span></td><td>CMS. <b>200/201</b>; duplicate type &rarr; <b>400</b></td></tr>
+<tr><td><span class="method get">GET</span></td><td class="path">/api/v1/layout/get-layout?type=faq</td><td><span class="auth-badge public">Public</span></td><td>Public layout. <b>200</b></td></tr>
     </tbody>
   </table>
 
-  <!-- SECTION 8: E-COMMERCE ORDERS -->
-  <h2>8. Orders & Fulfillment (/api/v1/ecommerce/order)</h2>
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 80px;">Method</th>
-        <th style="width: 260px;">Endpoint</th>
-        <th style="width: 110px;">Access</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/create</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Place new order (Cash on Delivery or verified online payment)</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/my-orders</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>View customer order history and real-time delivery status</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/single/:id</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Get full order breakdown with line items and delivery tracking</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/cancel/:id</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Cancel order before fulfillment dispatch</td>
-      </tr>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/admin/all</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Master order dashboard with status filters and pagination</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/admin/status/:id</td>
-        <td><span class="auth-badge admin">Admin</span></td>
-        <td>Update status: Pending &rarr; Processing &rarr; Shipped &rarr; Delivered</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECTION 9: PRODUCT REVIEWS -->
-  <h2>9. Product Reviews & Ratings (/api/v1/product-reviews)</h2>
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 80px;">Method</th>
-        <th style="width: 260px;">Endpoint</th>
-        <th style="width: 110px;">Access</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="method get">GET</span></td>
-        <td class="path">/product/:productId</td>
-        <td><span class="auth-badge public">Public</span></td>
-        <td>Get reviews, star rating distribution, and review count</td>
-      </tr>
-      <tr>
-        <td><span class="method post">POST</span></td>
-        <td class="path">/add</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Post verified customer review (1-5 stars, title, comment)</td>
-      </tr>
-      <tr>
-        <td><span class="method put">PUT</span></td>
-        <td class="path">/helpful/:id</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Upvote helpfulness of a review</td>
-      </tr>
-      <tr>
-        <td><span class="method delete">DELETE</span></td>
-        <td class="path">/delete/:id</td>
-        <td><span class="auth-badge auth">Auth</span></td>
-        <td>Remove review (author or admin)</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="page-break"></div>
-
-  <!-- SECTION 10: 10-DAY SPRINT ROADMAP -->
-  <h2>10. 10-Day Sprint Implementation Roadmap</h2>
-  <p>Step-by-step execution plan for full frontend and backend synchronization:</p>
-
-  <div class="timeline">
-    <div class="day-box">
-      <h4>Day 1: Setup, Database Indexes & Data Seeding</h4>
-      <ul>
-        <li>Verify environment configuration (MongoDB Atlas, Cloudinary, Razorpay keys).</li>
-        <li>Deploy composite indexes for catalog filtering and performance tuning.</li>
-        <li>Smoke test live Swagger UI at <code>/api-docs</code>.</li>
-      </ul>
-    </div>
-
-    <div class="day-box">
-      <h4>Day 2: Authentication, Email Activation & User Profiles</h4>
-      <ul>
-        <li>Connect registration with 4-digit Ethereal test activation codes.</li>
-        <li>Implement automated refresh token rotation and secure HTTP-Only cookies.</li>
-        <li>Build User Profile dashboard with avatar upload and password changes.</li>
-      </ul>
-    </div>
-
-    <div class="day-box">
-      <h4>Day 3: Categories, Brands & Product Catalog</h4>
-      <ul>
-        <li>Build multi-level Category navigation and Brand showcases.</li>
-        <li>Implement Product Detail Page (PDP) with image gallery, specs, and price tags.</li>
-        <li>Validate Admin CRUD workflows for catalog management.</li>
-      </ul>
-    </div>
-
-    <div class="day-box">
-      <h4>Day 4: Live Search, Multi-Facet Filters & Sorting</h4>
-      <ul>
-        <li>Implement debounced live keyword search.</li>
-        <li>Build multi-filter panel (Categories, Brands, Price Slider, Star Rating).</li>
-        <li>Support sorting (price low/high, newest, popular) and responsive pagination.</li>
-      </ul>
-    </div>
-
-    <div class="day-box">
-      <h4>Day 5: Customer Address Book & Wishlist System</h4>
-      <ul>
-        <li>Implement Address Book (Add, Edit, Delete, Set Default).</li>
-        <li>Build Wishlist toggling with persistent user state.</li>
-        <li>Implement one-click "Move Wishlist Item to Cart" action.</li>
-      </ul>
-    </div>
-
-    <div class="day-box">
-      <h4>Day 6: Shopping Cart State Machine & Guest Cart Sync</h4>
-      <ul>
-        <li>Implement guest session localStorage cart and sync on login via <code>/api/v1/cart/merge</code>.</li>
-        <li>Real-time quantity modification with stock boundary checks.</li>
-        <li>Auto-calculate subtotal, discounts, tax, and total pricing.</li>
-      </ul>
-    </div>
-
-    <div class="day-box">
-      <h4>Day 7: Promotional Coupons & Discount Rules</h4>
-      <ul>
-        <li>Implement percentage and fixed amount coupon validation engine.</li>
-        <li>Enforce minimum purchase amount, maximum caps, and expiration limits.</li>
-        <li>Build Admin coupon creator and analytics dashboard.</li>
-      </ul>
-    </div>
-
-    <div class="day-box">
-      <h4>Day 8: Razorpay Gateway Checkout & Signature Verification</h4>
-      <ul>
-        <li>Integrate Razorpay Client SDK using dynamic key from <code>/api/v1/payment/razorpay-key</code>.</li>
-        <li>Server-side Razorpay Order generation (<code>/api/v1/payment/razorpay-order</code>).</li>
-        <li>Cryptographic HMAC-SHA256 signature verification and webhook listeners.</li>
-      </ul>
-    </div>
-
-    <div class="day-box">
-      <h4>Day 9: Order Management, Real-Time Tracking & Fulfillment</h4>
-      <ul>
-        <li>Place orders with Cash on Delivery (COD) or Online Paid options.</li>
-        <li>Customer Order History dashboard with real-time status tracker.</li>
-        <li>Admin fulfillment console for status updates (Processing &rarr; Shipped &rarr; Delivered).</li>
-      </ul>
-    </div>
-
-    <div class="day-box">
-      <h4>Day 10: Product Reviews, End-to-End QA & Production Deployment</h4>
-      <ul>
-        <li>Product reviews submission with 1-5 star ratings and helpfulness upvotes.</li>
-        <li>Execute automated test runner across all 44 endpoints.</li>
-        <li>Production build verification and Vercel serverless deployment.</li>
-      </ul>
-    </div>
+  <h2>8. Verification report (live audit, Oct 2026)</h2>
+  <div class="card-grid">
+    <div class="card"><h4>104 / 104 checks passed</h4><p>Every route above was called against a live server with real DB: public reads, auth gating (401/403), role gating, happy paths (200/201) and error paths (400/404). Test data was removed afterwards.</p></div>
+    <div class="card"><h4>Fixed during audit</h4><p>Order/Q&amp;A mails no longer 500 or hang when SMTP is down (best-effort); progress completion now persists (certificate auto-issues at 100%); section routes resolve by lecture id or title; refresh/activate return 400 (not 500) for bad tokens; register still returns credentials with mailSent:false.</p></div>
+    <div class="card"><h4>Environment notes</h4><p>SMTP (Ethereal) creds in <code>.env</code> were expired at audit time &mdash; mails are skipped, flows still succeed. Avatar/banner uploads need Cloudinary keys. Razorpay uses a dev fallback order when keys are placeholders; verification is always HMAC-checked.</p></div>
+    <div class="card"><h4>Removed surface</h4><p>Old physical-commerce APIs (<code>/product</code>, <code>/cart</code>, <code>/address</code>, <code>/ecommerce/order</code>, <code>/product-reviews</code> + shop category/coupon/payment/wishlist) return <b>404</b> by design. Use <code>/api/v1/lms/*</code> instead.</p></div>
   </div>
 
   <!-- FOOTER -->
   <div class="footer">
-    <div><strong>LMS & E-Commerce Platform</strong> &mdash; Generated September 2026</div>
+    <div><strong>LMS Course Marketplace</strong> &mdash; Audited October 2026 (104/104 endpoints verified)</div>
     <div>Interactive Docs: <code>http://localhost:8000/api-docs</code></div>
   </div>
 

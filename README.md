@@ -1,6 +1,8 @@
-# 🎓 Learning Management System (LMS) Backend API
+# 🎓 LMS Course Marketplace Backend API
 
-A production-ready RESTful API backend for an enterprise Learning Management System (LMS). Built with **Node.js**, **Express**, **TypeScript**, and **MongoDB**, featuring full **OpenAPI 3.0 (Swagger)** interactive documentation, JWT & Cookie authentication, Cloudinary media storage, Upstash/Redis caching, and zero-config deployment on **Vercel Serverless**.
+A production-ready RESTful API backend for a **course marketplace** (digital courses only — no shipping, cart, or inventory). Built with **Node.js**, **Express**, **TypeScript**, and **MongoDB**, featuring full **OpenAPI 3.0 (Swagger)** interactive documentation, JWT & Cookie authentication, Cloudinary media storage, Upstash/Redis caching, and zero-config deployment on **Vercel Serverless**.
+
+> **Verified Oct 2026:** 104/104 endpoint checks pass against a live server. Removed legacy physical-commerce APIs (`/product`, `/cart`, `/address`, `/ecommerce/order`, `/product-reviews`, shop category/coupon/payment/wishlist) return `404` — use `/api/v1/lms/*`.
 
 ---
 
@@ -10,17 +12,17 @@ A production-ready RESTful API backend for an enterprise Learning Management Sys
 - [Architecture & Tech Stack](#-architecture--tech-stack)
 - [Quick Start & Local Setup](#-quick-start--local-setup)
 - [Swagger & API Documentation](#-swagger--api-documentation)
-- [API Endpoints Reference](#-api-endpoints-reference) (LMS + E-Commerce, user vs admin)
+- [API Endpoints Reference](#-api-endpoints-reference) (LMS marketplace: student, instructor, admin)
   - [System](#system)
   - [Authentication & Users](#authentication--users)
-  - [Courses](#courses)
-  - [Course Orders (LMS)](#course-orders-lms)
-  - [Categories & Brands](#categories--brands)
-  - [Products](#products)
-  - [Address, Cart, Wishlist](#address-cart-wishlist)
-  - [Coupons & Payments](#coupons--payments)
-  - [E-Commerce Orders](#e-commerce-orders)
-  - [Product Reviews](#product-reviews)
+  - [Courses (legacy, supported)](#courses)
+  - [Course Orders (legacy, supported)](#course-orders-lms)
+  - [LMS Marketplace Discovery](#lms-marketplace-discovery)
+  - [Lectures, Progress & Certificates](#lectures-progress--certificates)
+  - [Purchase & Enrollments](#purchase--enrollments)
+  - [Wishlist, Reviews & Coupons](#wishlist-reviews--coupons)
+  - [Instructor Marketplace](#instructor-marketplace)
+  - [Admin Marketplace](#admin-marketplace)
   - [Notifications](#notifications)
   - [Analytics](#analytics)
   - [Layout](#layout)
@@ -40,10 +42,11 @@ A production-ready RESTful API backend for an enterprise Learning Management Sys
 
 ## ✨ Features
 
-- **Authentication & Security**: Email/password registration with activation codes, OAuth social logins (Google/GitHub), JWT access & refresh tokens, HTTP-only cookie security, and role-based authorization (`user` & `admin`).
+- **Authentication & Security**: Email/password registration with activation codes, OAuth social logins (Google/GitHub), JWT access & refresh tokens, HTTP-only cookie security, and role-based authorization (`user`, `instructor`, `admin`).
 - **Interactive OpenAPI 3.0 / Swagger UI**: Fully documented endpoints with request bodies, schemas, and live testing at `/api-docs`.
 - **Course Management**: Rich course catalog with video lessons, reviews, ratings, question-and-answer discussion threads, and admin content management.
-- **Order & Payments**: Enrolled course order creation, transaction records, and analytics.
+- **Digital Purchase & Enrollment**: Razorpay create/verify (HMAC), orders, and enrollment-gated course access — no address, quantity, or cart.
+- **Learning & Certificates**: Lecture progress, completion tracking, auto-issued certificates, My Learning dashboard, wishlist, and coupons.
 - **Admin Dashboards & Analytics**: 12-month analytics graphs for user growth, courses published, and orders processed.
 - **Dynamic Site Layout**: Editable banner layouts, FAQs, and category configurations.
 - **Serverless & Cloud Native**: Native Vercel serverless function entrypoint with connection pooling and resilient cache fallback.
@@ -123,7 +126,7 @@ Interactive Swagger documentation is available out of the box.
 ## 📡 API Endpoints Reference
 
 > Full in-depth guide with request/response examples for students: [`API_DOCUMENTATION.md`](./API_DOCUMENTATION.md).
-> Auth rule: send `Authorization: Bearer <access_token>` on every protected route. `user` = default role, `admin` = needs promotion via `PUT /api/v1/auth/update-user-roles`.
+> Auth rule: send `Authorization: Bearer <access_token>` on every protected route. Roles: `user` (student), `instructor`, `admin` — promote via `PUT /api/v1/auth/update-user-roles`.
 
 ### System
 | Method | Endpoint | Description | Auth |
@@ -147,7 +150,7 @@ Interactive Swagger documentation is available out of the box.
 | `PUT` | `/api/v1/auth/update-user-password`| Update password (`{ oldPassword, newPassword }`) | User / Admin |
 | `PUT` | `/api/v1/auth/update-user-profile-picture` | Update avatar (`{ avatar }`) | User / Admin |
 | `GET` | `/api/v1/auth/get-all-user-dashboard` (alias `/get-users`) | Get all users | Admin only |
-| `PUT` | `/api/v1/auth/update-user-roles` | Update role (`{ id, role: "user" \| "admin" }`) | Admin only |
+| `PUT` | `/api/v1/auth/update-user-roles` | Update role (`{ id, role: "user" \| "instructor" \| "admin" }`) | Admin only |
 | `DELETE` | `/api/v1/auth/delete-user/:id` | Delete user account by ID | Admin only |
 
 ### Courses
@@ -172,76 +175,89 @@ Interactive Swagger documentation is available out of the box.
 | `GET` | `/api/v1/order/get-all-order-dashboard` | List all course orders | Admin only |
 
 ### Categories & Brands
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/category/all` | Get all active categories | Public |
-| `GET` | `/api/v1/category/single/:idOrSlug` | Get category by ID or slug | Public |
-| `GET` | `/api/v1/category/brands/all` | Get all brands | Public |
-| `POST` | `/api/v1/category/create` | Create category | Admin only |
-| `PUT` | `/api/v1/category/update/:id` | Update category | Admin only |
-| `DELETE` | `/api/v1/category/delete/:id` | Delete category | Admin only |
-| `POST` | `/api/v1/category/brand/create` | Create brand | Admin only |
+
+> Removed. Course categories now come from `GET /api/v1/lms/categories` (aggregated from published courses).
 
 ### Products
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/product/all` | Search/filter/sort/paginate products | Public |
-| `GET` | `/api/v1/product/featured` | Featured products | Public |
-| `GET` | `/api/v1/product/single/:idOrSlug` | Product details by ID or slug | Public |
-| `GET` | `/api/v1/product/related/:id` | Related products in same category | Public |
-| `POST` | `/api/v1/product/create` | Create product | Admin only |
-| `PUT` | `/api/v1/product/update/:id` | Update product | Admin only |
-| `DELETE` | `/api/v1/product/delete/:id` | Delete product | Admin only |
+
+> Removed (`404`). Courses are digital products — see [LMS Marketplace Discovery](#lms-marketplace-discovery).
 
 ### Address, Cart, Wishlist
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/address/add` | Save shipping address | User / Admin |
-| `GET` | `/api/v1/address/my-addresses` | List my addresses | User / Admin |
-| `PUT` | `/api/v1/address/update/:id` | Edit address | User / Admin |
-| `DELETE` | `/api/v1/address/delete/:id` | Delete address | User / Admin |
-| `PUT` | `/api/v1/address/set-default/:id` | Set default address | User / Admin |
-| `GET` | `/api/v1/cart/` | Get my cart with totals | User / Admin |
-| `POST` | `/api/v1/cart/add` | Add product to cart | User / Admin |
-| `PUT` | `/api/v1/cart/update-quantity` | Update cart item quantity | User / Admin |
-| `DELETE` | `/api/v1/cart/item/:itemId` | Remove one cart item | User / Admin |
-| `DELETE` | `/api/v1/cart/clear` | Empty cart | User / Admin |
-| `POST` | `/api/v1/cart/merge` | Merge guest cart after login | User / Admin |
-| `GET` | `/api/v1/wishlist/` | Get my wishlist | User / Admin |
-| `POST` | `/api/v1/wishlist/toggle` | Add/remove wishlist item | User / Admin |
-| `POST` | `/api/v1/wishlist/move-to-cart/:productId` | Move wishlist item to cart | User / Admin |
+
+> Removed (`404`). No shipping addresses, no physical cart. Course wishlist lives at `GET|POST /api/v1/lms/wishlist`.
 
 ### Coupons & Payments
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/coupon/apply` | Apply coupon to my cart | User / Admin |
-| `POST` | `/api/v1/coupon/remove` | Remove coupon from cart | User / Admin |
-| `POST` | `/api/v1/coupon/create` | Create coupon | Admin only |
-| `GET` | `/api/v1/coupon/all` | List all coupons | Admin only |
-| `DELETE` | `/api/v1/coupon/delete/:id` | Delete coupon | Admin only |
-| `GET` | `/api/v1/payment/razorpay-key` | Get Razorpay public key | Public |
-| `POST` | `/api/v1/payment/razorpay-order` | Create Razorpay order | User / Admin |
-| `POST` | `/api/v1/payment/verify` | Verify payment signature | User / Admin |
-| `POST` | `/api/v1/payment/webhook` | Razorpay server webhook | Public |
-| `POST` | `/api/v1/payment/refund` | Process refund | Admin only |
+
+> Shop coupon/payment routes removed (`404`). Course coupons: `POST /api/v1/lms/coupons` (admin), `POST /api/v1/lms/coupons/validate`. Course payments: `POST /api/v1/lms/payments/create` → `POST /api/v1/lms/payments/verify`.
 
 ### E-Commerce Orders
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/ecommerce/order/create` | Place order from cart (COD or Razorpay) | User / Admin |
-| `GET` | `/api/v1/ecommerce/order/my-orders` | My order history | User / Admin |
-| `GET` | `/api/v1/ecommerce/order/single/:id` | Single order details | User / Admin |
-| `PUT` | `/api/v1/ecommerce/order/cancel/:id` | Cancel my pending order | User / Admin |
-| `GET` | `/api/v1/ecommerce/order/admin/all` | All orders (fulfillment dashboard) | Admin only |
-| `PUT` | `/api/v1/ecommerce/order/admin/status/:id` | Update delivery status | Admin only |
+
+> Removed (`404`). Course orders: `GET /api/v1/lms/orders`, `GET /api/v1/lms/purchases`, `GET /api/v1/lms/admin/orders`.
 
 ### Product Reviews
+
+> Removed (`404`). Course reviews: `GET /api/v1/lms/reviews/:courseId`, `POST /api/v1/lms/reviews/:courseId` (enrolled only).
+
+### LMS Marketplace Discovery
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/product-reviews/product/:productId` | Reviews + rating for a product | Public |
-| `POST` | `/api/v1/product-reviews/add` | Post a review | User / Admin |
-| `PUT` | `/api/v1/product-reviews/helpful/:id` | Upvote review as helpful | User / Admin |
-| `DELETE` | `/api/v1/product-reviews/delete/:id` | Delete review (author or admin) | User / Admin |
+| `GET` | `/api/v1/lms/courses` | Published courses (`?page&limit&category&level&search`) | Public |
+| `GET` | `/api/v1/lms/categories` | Categories with counts | Public |
+| `GET` | `/api/v1/lms/search?q=` | Search courses | Public |
+| `GET` | `/api/v1/lms/home` | Featured / top-rated / newest | Public |
+| `GET` | `/api/v1/lms/courses/:courseId` | Course detail | Public |
+| `GET` | `/api/v1/lms/courses/:courseId/curriculum` | Curriculum with locked flags | Public |
+| `GET` | `/api/v1/lms/courses/:courseId/sections` | Sections | Public |
+| `GET` | `/api/v1/lms/sections/:sectionId[/lectures]` | Section by lecture ID or title | Public |
+
+### Lectures, Progress & Certificates
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/lms/lectures/:lectureId` | Lecture (preview open; locked → 403) | User |
+| `GET` | `/api/v1/lms/lectures/:lectureId/access` | `{ hasAccess }` | User |
+| `POST` | `/api/v1/lms/lectures/:lectureId/progress` | Save `{ watchedSeconds }` | Enrolled |
+| `POST` | `/api/v1/lms/lectures/:lectureId/complete` | Complete (100% → certificate) | Enrolled |
+| `GET` | `/api/v1/lms/my-learning` | Continue / in-progress / completed / wishlist / certificates | User |
+| `GET` | `/api/v1/lms/enrollments[/:enrollmentId]` | My enrollments | User |
+| `GET` | `/api/v1/lms/certificates[/:certificateId]` | My certificates | User |
+
+### Purchase & Enrollments
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/lms/payments/create` | Razorpay order (`{ courseId, couponCode? }`) | User |
+| `POST` | `/api/v1/lms/payments/verify` | Verify → `201` enrollment (bad sig → 400) | User |
+| `GET` | `/api/v1/lms/purchases` | Purchase history | User |
+| `GET` | `/api/v1/lms/orders[/:orderId]` | My orders | User |
+
+### Wishlist, Reviews & Coupons
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `GET`/`POST` | `/api/v1/lms/wishlist` (+ `/toggle`) | Course wishlist (`{ courseId }`) | User |
+| `GET` | `/api/v1/lms/reviews/:courseId` (alias `/courses/:id/reviews`) | Reviews | Public |
+| `POST` | `/api/v1/lms/reviews/:courseId` | Add review (`{ rating, comment }`) | Enrolled |
+| `POST` | `/api/v1/lms/coupons/validate` | `{ code, courseId }` → discount | User |
+| `GET`/`POST` | `/api/v1/lms/coupons` | List / create coupons | Admin only |
+
+### Instructor Marketplace
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `GET`/`POST` | `/api/v1/lms/instructor/courses` | My courses / create DRAFT | Instructor/Admin |
+| `PUT` | `/api/v1/lms/instructor/courses/:courseId` | Edit own course | Instructor/Admin |
+| `POST` | `/api/v1/lms/instructor/courses/:courseId/lectures` | Add lecture | Instructor/Admin |
+| `POST` | `/api/v1/lms/instructor/courses/:courseId/submit` | Submit for review | Instructor/Admin |
+| `GET` | `/api/v1/lms/instructor/students` | Enrollments in my courses | Instructor/Admin |
+| `GET` | `/api/v1/lms/instructor/revenue` | Revenue breakdown | Instructor/Admin |
+| `GET` | `/api/v1/lms/instructor/analytics` | Teaching analytics | Instructor/Admin |
+
+### Admin Marketplace
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/lms/admin/courses` | All courses incl. drafts | Admin only |
+| `PUT` | `/api/v1/lms/admin/courses/:courseId/status` | Set lifecycle `{ status }` | Admin only |
+| `GET` | `/api/v1/lms/admin/instructors` | Instructors | Admin only |
+| `GET` | `/api/v1/lms/admin/orders` | All orders | Admin only |
+| `GET` | `/api/v1/lms/admin/enrollments` | All enrollments | Admin only |
+| `GET` | `/api/v1/lms/admin/analytics` | Totals | Admin only |
 
 ### Notifications
 | Method | Endpoint | Description | Auth |
@@ -267,27 +283,37 @@ Interactive Swagger documentation is available out of the box.
 
 ## 👥 How to use as User vs Admin
 
-**Student (user) — register → activate → login → shop/learn:**
+**Student (user) — register → activate → login → browse → buy → learn:**
 
 ```bash
-POST /api/v1/auth/register        # { name, email, password }
+POST /api/v1/auth/register        # { name, email, password } → 201 + activationCode
 POST /api/v1/auth/activate-user   # { activation_token, activation_code }
 POST /api/v1/auth/login           # { email, password } → save accessToken
 GET  /api/v1/auth/me              # Authorization: Bearer <token>
-GET  /api/v1/product/all
-POST /api/v1/cart/add             # { productId, quantity }
-POST /api/v1/ecommerce/order/create  # { addressId, paymentInfo: { method: "cod" } }
+GET  /api/v1/lms/courses          # browse marketplace
+POST /api/v1/lms/payments/create  # { courseId }
+POST /api/v1/lms/payments/verify  # { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId }
+GET  /api/v1/lms/my-learning      # Go to Course
 ```
 
-**Admin — login → manage catalog/users/orders:**
+**Instructor — create → submit → published → revenue:**
 
 ```bash
-POST /api/v1/category/create      # { name, description }
-POST /api/v1/product/create       # { title, price, category, stockQuantity }
-POST /api/v1/coupon/create        # { code, discountType, discountValue, endDate }
+POST /api/v1/lms/instructor/courses                 # DRAFT course
+POST /api/v1/lms/instructor/courses/:id/lectures    # curriculum
+POST /api/v1/lms/instructor/courses/:id/submit      # SUBMITTED
+# (admin publishes)
+GET  /api/v1/lms/instructor/revenue
+```
+
+**Admin — publish → manage:**
+
+```bash
+PUT  /api/v1/lms/admin/courses/:id/status  # { status: "PUBLISHED" }
 GET  /api/v1/auth/get-all-user-dashboard
-PUT  /api/v1/auth/update-user-roles  # { id, role: "admin" }
-GET  /api/v1/ecommerce/order/admin/all
+PUT  /api/v1/auth/update-user-roles  # { id, role: "user" | "instructor" | "admin" }
+GET  /api/v1/lms/admin/orders
+GET  /api/v1/lms/admin/analytics
 ```
 
 See [`API_DOCUMENTATION.md`](./API_DOCUMENTATION.md) for full examples and the "Common student mistakes" section.

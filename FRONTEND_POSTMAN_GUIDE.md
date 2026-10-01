@@ -84,24 +84,23 @@ GET {{baseUrl}}/api/v1/auth/refreshtoken
 
 - No body, no manual token. If `401`, cookies expired → login again.
 
-## A3. Shop as USER in Postman
+## A3. Buy + learn as STUDENT in Postman (digital — no address/cart)
 
 (All need `Bearer {{token}}` of a `user`.)
 
 ```
-GET  {{baseUrl}}/api/v1/product/all?page=1&limit=5
-POST {{baseUrl}}/api/v1/address/add
-     { "fullName": "Ravi Kumar", "phone": "9876543210",
-       "addressLine1": "H.No 1-2-3, MG Road", "city": "Hyderabad",
-       "state": "Telangana", "postalCode": "500001" }
-POST {{baseUrl}}/api/v1/cart/add
-     { "productId": "<productId>", "quantity": 2 }
-GET  {{baseUrl}}/api/v1/cart/
-POST {{baseUrl}}/api/v1/coupon/apply
-     { "code": "WELCOME10" }
-POST {{baseUrl}}/api/v1/ecommerce/order/create
-     { "addressId": "<addressId>", "paymentInfo": { "method": "cod" } }
-GET  {{baseUrl}}/api/v1/ecommerce/order/my-orders
+GET  {{baseUrl}}/api/v1/lms/courses?page=1&limit=5
+GET  {{baseUrl}}/api/v1/lms/courses/<courseId>
+POST {{baseUrl}}/api/v1/lms/coupons/validate
+     { "code": "WELCOME10", "courseId": "<courseId>" }
+POST {{baseUrl}}/api/v1/lms/payments/create
+     { "courseId": "<courseId>", "couponCode": "WELCOME10" }
+POST {{baseUrl}}/api/v1/lms/payments/verify
+     { "razorpay_order_id": "<id>", "razorpay_payment_id": "<id>",
+       "razorpay_signature": "<sig>", "courseId": "<courseId>" }
+GET  {{baseUrl}}/api/v1/lms/my-learning
+GET  {{baseUrl}}/api/v1/lms/lectures/<lectureId>
+POST {{baseUrl}}/api/v1/lms/lectures/<lectureId>/complete
 ```
 
 ## A4. Admin in Postman
@@ -109,30 +108,25 @@ GET  {{baseUrl}}/api/v1/ecommerce/order/my-orders
 (All need `Bearer {{token}}` of an `admin`. Promote once via `PUT /auth/update-user-roles`, then login again.)
 
 ```
-POST {{baseUrl}}/api/v1/category/create
-     { "name": "Electronics", "description": "Gadgets" }
-POST {{baseUrl}}/api/v1/category/brand/create
-     { "name": "Acme", "description": "Acme brand" }
-POST {{baseUrl}}/api/v1/product/create
-     { "title": "Wireless Mouse", "price": 999,
-       "category": "<categoryId>", "stockQuantity": 50 }
-POST {{baseUrl}}/api/v1/coupon/create
+PUT  {{baseUrl}}/api/v1/lms/admin/courses/<courseId>/status
+     { "status": "PUBLISHED" }
+POST {{baseUrl}}/api/v1/lms/coupons
      { "code": "WELCOME10", "discountType": "percentage",
-       "discountValue": 10, "minOrderAmount": 500, "endDate": "2026-12-31" }
-GET  {{baseUrl}}/api/v1/ecommerce/order/admin/all?status=all&page=1&limit=20
-PUT  {{baseUrl}}/api/v1/ecommerce/order/admin/status/<orderId>
-     { "status": "Shipped" }
+       "discountValue": 10, "endDate": "2027-01-01T00:00:00Z" }
+GET  {{baseUrl}}/api/v1/lms/admin/orders
+GET  {{baseUrl}}/api/v1/lms/admin/enrollments
+GET  {{baseUrl}}/api/v1/lms/admin/analytics
 PUT  {{baseUrl}}/api/v1/auth/update-user-roles
-     { "id": "<studentUserId>", "role": "admin" }
+     { "id": "<studentUserId>", "role": "instructor" }
 ```
 
 ## A5. Postman clean points
 
 - Put `{{baseUrl}}` and `{{token}}` in the environment. Never hardcode tokens in URLs.
-- One request per endpoint, named exactly like the docs (`Auth-Login`, `Cart-Add`, …).
+- One request per endpoint, named exactly like the docs (`Auth-Login`, `LMS-Courses`, …).
 - Save example responses so students can compare.
 - `401` = login again. `403` = you need an admin token.
-- Cart remove uses **cart item ID**: `DELETE /api/v1/cart/item/:itemId`, not product ID.
+- Locked lectures need enrollment first: buy via `POST /lms/payments/create` → `POST /lms/payments/verify`.
 
 ---
 
@@ -251,7 +245,8 @@ await api.post("/auth/activate-user", {
 // Login (use context)
 const user = await login(email, password);
 if (user.role === "admin") navigate("/admin");
-else navigate("/shop");
+else if (user.role === "instructor") navigate("/instructor");
+else navigate("/courses");
 ```
 
 Clean points:
@@ -281,76 +276,56 @@ export function RequireAdmin({ children }) {
 ```
 
 ```jsx
-<Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />
-<Route path="/admin/products" element={<RequireAdmin><AdminProducts /></RequireAdmin>} />
+<Route path="/my-learning" element={<RequireAuth><MyLearning /></RequireAuth>} />
+<Route path="/instructor" element={<RequireInstructor><Instructor /></RequireInstructor>} />
+<Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
 ```
 
-## B5. USER screens (shop flow)
+## B5. STUDENT screens (marketplace flow — no cart, no address)
 
-**Product list (Public):**
+**Marketplace (Public):**
 
 ```jsx
-const { data } = await api.get("/product/all", {
-  params: { page: 1, limit: 12, search: keyword, minPrice, maxPrice, sort: "price-asc" },
+const { data } = await api.get("/lms/courses", {
+  params: { page: 1, limit: 12, search: keyword, category, level },
 });
+const detail = await api.get(`/lms/courses/${courseId}`);
 ```
 
-**Addresses:**
+**Buy + enroll (Razorpay):**
 
 ```jsx
-await api.post("/address/add", {
-  fullName, phone, addressLine1, city, state, postalCode,
-});
-const { data } = await api.get("/address/my-addresses");
+await api.post("/lms/coupons/validate", { code: "WELCOME10", courseId });
+const { data: pay } = await api.post("/lms/payments/create", { courseId, couponCode: "WELCOME10" });
+// ... open Razorpay Checkout with pay.order.id ...
+await api.post("/lms/payments/verify", {
+  razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId,
+}); // → enrollment; show "Go to Course"
 ```
 
-**Cart:**
+**Learn:**
 
 ```jsx
-await api.post("/cart/add", { productId, quantity: 1 });
-await api.put("/cart/update-quantity", { itemId, quantity: 3 });
-await api.delete(`/cart/item/${itemId}`);
-const { data } = await api.get("/cart/");
-```
-
-**Coupon + Order (COD simplest):**
-
-```jsx
-await api.post("/coupon/apply", { code: "WELCOME10" });
-await api.post("/ecommerce/order/create", {
-  addressId, paymentInfo: { method: "cod" },
-});
-```
-
-**Razorpay (online payment) order:**
-
-```jsx
-const { data: k } = await api.get("/payment/razorpay-key");
-const { data: o } = await api.post("/payment/razorpay-order", { amount: 999 });
-// ... open Razorpay Checkout with k.key + o.order.id ...
-await api.post("/payment/verify", {
-  razorpay_order_id, razorpay_payment_id, razorpay_signature,
-});
-await api.post("/ecommerce/order/create", {
-  addressId, paymentInfo: { method: "Razorpay", razorpay_order_id, razorpay_payment_id, razorpay_signature },
-});
+const { data: mine } = await api.get("/lms/my-learning");
+const { data: lecture } = await api.get(`/lms/lectures/${lectureId}`); // preview open, locked → 403
+await api.post(`/lms/lectures/${lectureId}/complete`); // 100% → certificate
+await api.post("/lms/wishlist", { courseId }); // toggle
+await api.post(`/lms/reviews/${courseId}`, { rating: 5, comment });
 ```
 
 ## B6. ADMIN screens
 
 ```jsx
 // Promote a user (admin only)
-await api.put("/auth/update-user-roles", { id: studentId, role: "admin" });
+await api.put("/auth/update-user-roles", { id: studentId, role: "instructor" });
 
-// Catalog
-await api.post("/category/create", { name, description });
-await api.post("/product/create", { title, price, category: categoryId, stockQuantity: 50 });
+// Publish a submitted course
+await api.put(`/lms/admin/courses/${courseId}/status`, { status: "PUBLISHED" });
 
-// Orders dashboard
-const { data } = await api.get("/ecommerce/order/admin/all", {
-  params: { status: "all", page: 1, limit: 20 },
-});
-await api.put(`/ecommerce/order/admin/status/${orderId}`, { status: "Shipped" });
+// Marketplace dashboards
+const { data: orders } = await api.get("/lms/admin/orders");
+const { data: enrollments } = await api.get("/lms/admin/enrollments");
+const { data: stats } = await api.get("/lms/admin/analytics");
 ```
 
 Hide admin links in UI unless `isAdmin`:
@@ -366,7 +341,7 @@ Hide admin links in UI unless `isAdmin`:
 1. **One `api` client** (`src/api/client.js`). Never hardcode URLs in components.
 2. **`withCredentials: true` + Bearer interceptor** — set once, forget.
 3. **Token in `localStorage`, user in context.** On reload, validate via `GET /auth/me`.
-4. **Separate LMS vs shop orders:** courses → `POST /order/create-order`; products → `POST /ecommerce/order/create`.
+4. **Enrollment = access:** buying via `POST /lms/payments/verify` (or legacy `POST /order/create-order`) creates the enrollment that unlocks lectures.
 5. **Handle 401 globally** (optional): on 401, clear token → redirect to login.
    ```js
    api.interceptors.response.use(
@@ -390,18 +365,17 @@ Hide admin links in UI unless `isAdmin`:
 ## User checklist (student must demo)
 
 - [ ] Register → activate → login → `/me` works
-- [ ] Browse `GET /product/all`, view `GET /product/single/:id`
-- [ ] Add address, add to cart, view cart
-- [ ] Apply coupon (or handle "invalid coupon" message)
-- [ ] Place COD order, see it in `GET /ecommerce/order/my-orders`
-- [ ] Enroll in course (`POST /order/create-order`), open content, post question + review
+- [ ] Browse `GET /lms/courses`, view detail + curriculum
+- [ ] Validate coupon, create + verify payment, see enrollment in `GET /lms/my-learning`
+- [ ] Open preview lecture, complete lectures, earn certificate
+- [ ] Toggle wishlist, post review (enrolled)
 
 ## Admin checklist
 
 - [ ] Login with admin token
-- [ ] Create category → brand → product (product appears in public list)
-- [ ] Create coupon (user can apply it)
-- [ ] View `GET /ecommerce/order/admin/all`, update status to `Shipped`
+- [ ] As instructor: create DRAFT course → add lectures → submit
+- [ ] As admin: publish course (appears in marketplace), create coupon
+- [ ] View `GET /lms/admin/orders`, `/lms/admin/enrollments`, `/lms/admin/analytics`
 - [ ] View users + analytics
 - [ ] Promote/demote a test user via `PUT /auth/update-user-roles`
 
@@ -414,9 +388,9 @@ Hide admin links in UI unless `isAdmin`:
 | `401 Unauthorized` | Token missing/expired → login again, check `Authorization: Bearer` header or `withCredentials: true`. |
 | `403 Forbidden` | Logged in as `user` on admin route → promote + login again. |
 | CORS error in React | Backend allowslisted `localhost:3000/5173` + permissive fallback; ensure `withCredentials: true` and `VITE_API_URL` has no trailing slash. |
-| Empty cart on order | Add to cart first; ordering reads the server cart, not local state. |
+| Locked lecture 403 | Enroll first (`POST /lms/payments/create` → verify), then open My Learning. |
 | Course content blocked | Enroll first (`POST /order/create-order`). |
 | Activation fails | Code is 6 digits, 5-min expiry; field names are `activation_token` + `activation_code`. |
 | Email change ignored | By design — `update-user-info` only updates `name`. |
-| Cart delete 404 | Use cart **item ID** (`/cart/item/:itemId`), not product ID. |
+| No certificate yet | Complete **every** lecture (`POST /lms/lectures/:id/complete`) — issued at 100%. |
 | `503` DB error | `DB_URI` wrong or Atlas IP not whitelisted (`0.0.0.0/0`). |

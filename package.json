@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsnd --respawn --transpile-only index.ts",
     "start": "nodemon index.ts",
-    "build": "rimraf dist && tsc",
+    "build": "rimraf dist && tsc && node -e \"require('fs').cpSync('mails','dist/mails',{recursive:true})\"",
+    "audit": "node audit-lms-endpoints.js",
     "ts.check": "tsc --project tsconfig.json",
     "add-build": "git add dist"
   },

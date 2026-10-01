@@ -50,11 +50,21 @@ exports.registrationUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, n
                 message: `Please check your ${user.email} address to activate your account!`,
                 activationToken: activationToken.token,
                 activationCode: activationCode,
+                mailSent: true,
                 mailUrl: mailUrl || "https://ethereal.email/messages",
             });
         }
         catch (error) {
-            return next(new ErrorHandler_1.default(error.message, 400));
+            // SMTP delivery is best-effort: still hand out the activation
+            // credentials so signup works when mail is unreachable.
+            console.warn("Activation email skipped:", (error === null || error === void 0 ? void 0 : error.message) || error);
+            res.status(201).json({
+                success: true,
+                message: `Account created for ${user.email}. Use the activation code to activate (email delivery unavailable).`,
+                activationToken: activationToken.token,
+                activationCode: activationCode,
+                mailSent: false,
+            });
         }
     }
     catch (error) {
@@ -86,7 +96,11 @@ exports.activateUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next)
         });
     }
     catch (error) {
-        return next(new ErrorHandler_1.default(error.message, 500));
+        // Invalid/expired activation tokens are client errors, not 500s.
+        const status = (error === null || error === void 0 ? void 0 : error.name) === "JsonWebTokenError" || (error === null || error === void 0 ? void 0 : error.name) === "TokenExpiredError"
+            ? 400
+            : 500;
+        return next(new ErrorHandler_1.default(error.message, status));
     }
 }));
 exports.loginUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -136,6 +150,9 @@ exports.logoutUser = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =
 exports.updateAccessToken = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const refresh_token = req.cookies.refresh_token;
+        if (!refresh_token) {
+            return next(new ErrorHandler_1.default("Please login again to continue", 400));
+        }
         const decoded = jsonwebtoken_1.default.verify(refresh_token, index_1.CONFIG.REFRESH_TOKEN);
         const message = "Please login again to continue";
         if (!decoded || !decoded.id) {

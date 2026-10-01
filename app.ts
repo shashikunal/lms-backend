@@ -12,15 +12,7 @@ import orderRouter from "./routes/order.routes";
 import notificationRouter from "./routes/notification.route";
 import analyticsRouter from "./routes/analytics.routes";
 import layoutRouter from "./routes/layout.routes";
-import categoryRouter from "./routes/category.routes";
-import productRouter from "./routes/product.routes";
-import addressRouter from "./routes/address.routes";
-import cartRouter from "./routes/cart.routes";
-import wishlistRouter from "./routes/wishlist.routes";
-import couponRouter from "./routes/coupon.routes";
-import paymentRouter from "./routes/payment.routes";
-import ecommerceOrderRouter from "./routes/ecommerceOrder.routes";
-import productReviewRouter from "./routes/productReview.routes";
+import lmsRouter from "./routes/lms.routes";
 import { swaggerDocument } from "./docs/swagger";
 import connectDb from "./utils/db";
 
@@ -192,16 +184,8 @@ app.get("/", (req: Request, res: Response) => {
       notifications: "/api/v1/notifications",
       analytics: "/api/v1/analytics",
       layout: "/api/v1/layout",
-      // E-Commerce Endpoints
-      category: "/api/v1/category",
-      product: "/api/v1/product",
-      address: "/api/v1/address",
-      cart: "/api/v1/cart",
-      wishlist: "/api/v1/wishlist",
-      coupon: "/api/v1/coupon",
-      payment: "/api/v1/payment",
-      ecommerceOrder: "/api/v1/ecommerce/order",
-      productReviews: "/api/v1/product-reviews",
+      // LMS Course Marketplace
+      lms: "/api/v1/lms",
       healthCheck: "/test",
     },
   });
@@ -251,16 +235,8 @@ app.use("/api/v1/notifications", notificationRouter);
 app.use("/api/v1/analytics", analyticsRouter);
 app.use("/api/v1/layout", layoutRouter);
 
-// E-Commerce API Routes
-app.use("/api/v1/category", categoryRouter);
-app.use("/api/v1/product", productRouter);
-app.use("/api/v1/address", addressRouter);
-app.use("/api/v1/cart", cartRouter);
-app.use("/api/v1/wishlist", wishlistRouter);
-app.use("/api/v1/coupon", couponRouter);
-app.use("/api/v1/payment", paymentRouter);
-app.use("/api/v1/ecommerce/order", ecommerceOrderRouter);
-app.use("/api/v1/product-reviews", productReviewRouter);
+// LMS Course Marketplace API
+app.use("/api/v1/lms", lmsRouter);
 
 // 404 Handler
 app.all("*", (req: Request, res: Response, next: NextFunction) => {

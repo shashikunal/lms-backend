@@ -40,71 +40,56 @@
 - B13. `PUT /api/v1/course/add-replay` (admin)
 - B14. Full course example end-to-end (admin creates → user enrolls → Q&A → review)
 
-**Module C — Categories & Brands**
-- C1. `GET /api/v1/category/all`
-- C2. `GET /api/v1/category/single/:idOrSlug`
-- C3. `POST /api/v1/category/create` (admin)
-- C4. `PUT /api/v1/category/update/:id` (admin)
-- C5. `DELETE /api/v1/category/delete/:id` (admin)
-- C6. `POST /api/v1/category/brand/create` (admin)
-- C7. `GET /api/v1/category/brands/all`
+**Module C — LMS Marketplace Discovery**
+- C1. `GET /api/v1/lms/courses` (public, filters)
+- C2. `GET /api/v1/lms/categories` (public)
+- C3. `GET /api/v1/lms/search?q=` (public)
+- C4. `GET /api/v1/lms/home` (public)
+- C5. `GET /api/v1/lms/courses/:courseId` (public)
+- C6. `GET /api/v1/lms/courses/:courseId/curriculum` (public)
+- C7. `GET /api/v1/lms/courses/:courseId/sections` + `/lms/sections/:sectionId[/lectures]` (public)
 
-**Module D — Products**
-- D1. `GET /api/v1/product/all` (search/filter/sort/paginate)
-- D2. `GET /api/v1/product/featured`
-- D3. `GET /api/v1/product/single/:idOrSlug`
-- D4. `GET /api/v1/product/related/:id`
-- D5. `POST /api/v1/product/create` (admin)
-- D6. `PUT /api/v1/product/update/:id` (admin)
-- D7. `DELETE /api/v1/product/delete/:id` (admin)
+**Module D — Lectures, Progress & Certificates**
+- D1. `GET /api/v1/lms/lectures/:lectureId` (auth; preview open)
+- D2. `GET /api/v1/lms/lectures/:lectureId/access` (auth)
+- D3. `POST /api/v1/lms/lectures/:lectureId/progress` (enrolled)
+- D4. `POST /api/v1/lms/lectures/:lectureId/complete` (enrolled → certificate at 100%)
 
-**Module E — Address Book**
-- E1. `POST /api/v1/address/add`
-- E2. `GET /api/v1/address/my-addresses`
-- E3. `PUT /api/v1/address/update/:id`
-- E4. `DELETE /api/v1/address/delete/:id`
-- E5. `PUT /api/v1/address/set-default/:id`
+**Module E — Digital Purchase & Enrollments**
+- E1. `POST /api/v1/lms/payments/create` (auth)
+- E2. `POST /api/v1/lms/payments/verify` (auth → 201 enrollment)
+- E3. `GET /api/v1/lms/purchases` + `GET /api/v1/lms/orders[/:orderId]` (auth)
 
-**Module F — Shopping Cart**
-- F1. `GET /api/v1/cart/`
-- F2. `POST /api/v1/cart/add`
-- F3. `PUT /api/v1/cart/update-quantity`
-- F4. `DELETE /api/v1/cart/item/:itemId`
-- F5. `DELETE /api/v1/cart/clear`
-- F6. `POST /api/v1/cart/merge`
+**Module F — My Learning**
+- F1. `GET /api/v1/lms/my-learning` (auth)
+- F2. `GET /api/v1/lms/enrollments[/:enrollmentId]` (auth)
+- F3. `GET /api/v1/lms/certificates[/:certificateId]` (auth)
 
-**Module G — Wishlist**
-- G1. `GET /api/v1/wishlist/`
-- G2. `POST /api/v1/wishlist/toggle`
-- G3. `POST /api/v1/wishlist/move-to-cart/:productId`
+**Module G — Wishlist (courses)**
+- G1. `GET /api/v1/lms/wishlist` (auth)
+- G2. `POST /api/v1/lms/wishlist` + `/wishlist/toggle` (auth)
 
-**Module H — Coupons**
-- H1. `POST /api/v1/coupon/create` (admin)
-- H2. `GET /api/v1/coupon/all` (admin)
-- H3. `POST /api/v1/coupon/apply`
-- H4. `POST /api/v1/coupon/remove`
-- H5. `DELETE /api/v1/coupon/delete/:id` (admin)
+**Module H — Coupons (courses)**
+- H1. `POST /api/v1/lms/coupons` (admin)
+- H2. `GET /api/v1/lms/coupons` (admin)
+- H3. `POST /api/v1/lms/coupons/validate` (auth)
 
-**Module I — Payments (Razorpay)**
-- I1. `GET /api/v1/payment/razorpay-key`
-- I2. `POST /api/v1/payment/razorpay-order`
-- I3. `POST /api/v1/payment/verify`
-- I4. `POST /api/v1/payment/webhook`
-- I5. `POST /api/v1/payment/refund` (admin)
+**Module I — Reviews (courses)**
+- I1. `GET /api/v1/lms/reviews/:courseId` (public, alias `/lms/courses/:courseId/reviews`)
+- I2. `POST /api/v1/lms/reviews/:courseId` (enrolled)
 
-**Module J — E-Commerce Orders**
-- J1. `POST /api/v1/ecommerce/order/create`
-- J2. `GET /api/v1/ecommerce/order/my-orders`
-- J3. `GET /api/v1/ecommerce/order/single/:id`
-- J4. `PUT /api/v1/ecommerce/order/cancel/:id`
-- J5. `GET /api/v1/ecommerce/order/admin/all` (admin)
-- J6. `PUT /api/v1/ecommerce/order/admin/status/:id` (admin)
+**Module J — Instructor Marketplace**
+- J1. `GET /api/v1/lms/instructor/courses` (instructor/admin)
+- J2. `POST /api/v1/lms/instructor/courses` (DRAFT)
+- J3. `PUT /api/v1/lms/instructor/courses/:courseId`
+- J4. `POST /api/v1/lms/instructor/courses/:courseId/lectures`
+- J5. `POST /api/v1/lms/instructor/courses/:courseId/submit`
+- J6. `GET /api/v1/lms/instructor/students|revenue|analytics`
 
-**Module K — Product Reviews**
-- K1. `GET /api/v1/product-reviews/product/:productId`
-- K2. `POST /api/v1/product-reviews/add`
-- K3. `PUT /api/v1/product-reviews/helpful/:id`
-- K4. `DELETE /api/v1/product-reviews/delete/:id`
+**Module K — Admin Marketplace**
+- K1. `GET /api/v1/lms/admin/courses` (admin)
+- K2. `PUT /api/v1/lms/admin/courses/:courseId/status` (admin)
+- K3. `GET /api/v1/lms/admin/instructors|orders|enrollments|analytics` (admin)
 
 **Module L — Notifications, Analytics, Layout**
 - L1. `GET /api/v1/notifications/get-all-notification` (admin)
@@ -362,7 +347,7 @@ Authorization: Bearer <admin_token>
 
 # Module B — Courses (LMS) + Course Orders
 
-Base routes: `/api/v1/course` and `/api/v1/order` (course enrollment — **not** shop products; those are `/api/v1/ecommerce/order/*`).
+Base routes: `/api/v1/course` and `/api/v1/order` (course enrollment; physical shop orders were removed — see Module E).
 
 Course object shape (what admin sends / what public reads):
 
@@ -574,567 +559,265 @@ Authorization: Bearer <admin_token>
 
 ---
 
-# Module C — Categories & Brands
+# Module C — LMS Marketplace Discovery
 
-Base route: `/api/v1/category`. Slugs are auto-generated from names (`"Mobile Phones"` → `"mobile-phones"`); fetching by ID **or** slug works. Public lists show only `isActive: true`.
+> Base: `/api/v1/lms`. All discovery routes are public. Only `PUBLISHED` courses appear.
 
-## C1. List categories — `GET /api/v1/category/all` (Public)
+## C1. List courses — `GET /api/v1/lms/courses` (Public)
 
-Sorted by `displayOrder`, parent populated (`name`, `slug`).
-
-**Success `200`:** `{ "success": true, "count": 2, "categories": [...] }` → save a category `_id` for products (D5).
-
-## C2. Single category — `GET /api/v1/category/single/:idOrSlug` (Public)
-
-24-hex-char strings are treated as Mongo IDs, anything else as slug:
-
-```
-GET /api/v1/category/single/66f0011a2b3c4d5e6f7a8b90   (by ID)
-GET /api/v1/category/single/electronics                 (by slug)
-```
-
-**Errors:** `404 Category not found`.
-
-## C3. Create category — `POST /api/v1/category/create` (Admin)
-
-| Field | Required | Notes |
-|---|---|---|
-| `name` | Yes | Must be unique (slug check) → duplicate = `400 Category with this name already exists` |
-| `description` | No | |
-| `image` | No | Base64/URL string → uploaded to Cloudinary `ecommerce/categories` |
-| `parentCategory` | No | `_id` of parent for sub-categories (e.g. `Laptops` under `Electronics`) |
-| `displayOrder` | No | Number, controls C1 sort order (default `0`) |
+Query: `page` (default 1), `limit` (default 12, max 50), `category`, `level`, `search`.
 
 ```http
-POST /api/v1/category/create
-Authorization: Bearer <admin_token>
-{ "name": "Electronics", "description": "Gadgets", "displayOrder": 1 }
+GET /api/v1/lms/courses?page=1&limit=12&category=Programming
+→ 200 { success, total, page, limit, courses }
 ```
 
-**Success `201`:** `{ "success": true, "message": "Category created successfully", "category": { "_id": "...", "slug": "electronics", ... } }`.
+## C2. Categories — `GET /api/v1/lms/categories` (Public)
 
-```jsx
-const { data } = await api.post("/category/create", { name, description });
-```
+Aggregated from published courses: `[ { title, count } ]`.
 
-## C4. Update category — `PUT /api/v1/category/update/:id` (Admin)
-
-Partial update. Renaming regenerates the slug. Accepts `isActive` (hide without deleting).
+## C3. Search — `GET /api/v1/lms/search?q=` (Public)
 
 ```http
-PUT /api/v1/category/update/<categoryId>
-Authorization: Bearer <admin_token>
-{ "description": "New text", "isActive": true }
+GET /api/v1/lms/search?q=react
+→ 200 { success, courses }
 ```
 
-**Success `200`:** `{ "success": true, "message": "Category updated successfully", "category": {...} }` · **Errors:** `404 Category not found`.
+## C4. Home — `GET /api/v1/lms/home` (Public)
 
-## C5. Delete category — `DELETE /api/v1/category/delete/:id` (Admin)
+Returns `{ featured, topRated, newest }` (6 each).
 
-Deletes the Cloudinary image too. **Success `200`:** `{ "success": true, "message": "Category deleted successfully" }`.
+## C5. Detail — `GET /api/v1/lms/courses/:courseId` (Public)
 
-## C6. Create brand — `POST /api/v1/category/brand/create` (Admin)
+Locked lecture video URLs are stripped. Unknown/unpublished id → `404`.
 
-| Field | Required | Notes |
-|---|---|---|
-| `name` | Yes | Unique → duplicate = `400 Brand already exists` |
-| `description` | No | |
-| `logo` | No | Base64/URL → Cloudinary `ecommerce/brands` |
-| `website` | No | Brand site URL |
+## C6. Curriculum — `GET /api/v1/lms/courses/:courseId/curriculum` (Public)
 
-```http
-POST /api/v1/category/brand/create
-Authorization: Bearer <admin_token>
-{ "name": "Acme", "description": "Acme brand", "website": "https://acme.example" }
-```
+Each lecture carries `locked: true/false` (locked unless enrolled). Enrolled users receive `videoUrl`.
 
-**Success `201`:** `{ "success": true, "message": "Brand created successfully", "brand": {...} }` → save brand `_id` for D5.
+## C7. Sections — `GET /api/v1/lms/courses/:courseId/sections` (Public)
 
-## C7. List brands — `GET /api/v1/category/brands/all` (Public)
-
-Sorted A–Z. **Success `200`:** `{ "success": true, "count": 1, "brands": [...] }`.
+Grouped by `videoSection`. Also: `GET /api/v1/lms/sections/:sectionId` and `GET /api/v1/lms/sections/:sectionId/lectures`, where `:sectionId` is a lecture `_id` or a section title. Unknown → `404`.
 
 ---
 
-# Module D — Products
+# Module D — Lectures, Progress & Certificates
 
-Base route: `/api/v1/product`. Only `isPublished: true` products appear in public reads. Prices: cart/checkout always uses `discountPrice` when set, else `price`.
+> Login required. Locked lectures need enrollment (`403` otherwise); preview lectures are open.
 
-## D1. List / search — `GET /api/v1/product/all` (Public)
-
-> ⚠️ The real query names are `search` and `sort=price-asc|price-desc|rating|oldest` (not `keyword` / `price_low`).
-
-| Param | Notes |
-|---|---|
-| `search` | Case-insensitive match on title, description, tags |
-| `category` / `brand` | Filter by `_id` |
-| `minPrice` / `maxPrice` | Applied on `price` |
-| `rating` | Minimum `ratings` (e.g. `rating=4`) |
-| `inStock` | `true` / `false` |
-| `sort` | default newest (`createdAt` desc) · `price-asc` · `price-desc` · `rating` · `oldest` |
-| `page` / `limit` | Defaults `1` / `12` |
-
-```
-GET /api/v1/product/all?search=mouse&minPrice=100&maxPrice=2000&sort=price-asc&page=1&limit=12
-```
-
-**Success `200`:**
-
-```json
-{ "success": true, "totalProducts": 25, "totalPages": 3, "currentPage": 1, "count": 12, "products": [...] }
-```
-
-```jsx
-const { data } = await api.get("/product/all", { params: { search, page: 1, limit: 12, sort: "price-asc" } });
-```
-
-## D2. Featured — `GET /api/v1/product/featured` (Public)
-
-Products with `isFeatured: true` (max 8) for banners/heroes. **Success `200`:** `{ "success": true, "products": [...] }`.
-
-## D3. Single product — `GET /api/v1/product/single/:idOrSlug` (Public)
-
-ID or slug, category/subCategory/brand populated. **Errors:** `404 Product not found`.
-
-## D4. Related — `GET /api/v1/product/related/:id` (Public)
-
-Up to 6 other published products in the same category. `:id` is the product ID. **Errors:** `404` (source product not found).
-
-## D5. Create product — `POST /api/v1/product/create` (Admin)
-
-| Field | Required | Notes |
-|---|---|---|
-| `title` | Yes | Slug auto-generated (uniquified if taken) |
-| `price` | Yes | Number |
-| `category` | Yes | Category `_id` from C1 |
-| `sku` | No | Upper-cased; auto `SKU-<timestamp>` if omitted; duplicate → `400 Product SKU already exists` |
-| `discountPrice` | No | Sale price used by cart |
-| `description` / `shortDescription` | No | |
-| `subCategory` / `brand` | No | `_id`s |
-| `images` | No | Array of base64 strings (uploaded to `ecommerce/products`) or `[{public_id,url}]` |
-| `variants` | No | Array, e.g. `[{sku, price, stock}]` |
-| `stockQuantity` (alias `stock`) | No | Default `0`; `inStock` auto = `> 0` |
-| `lowStockThreshold` | No | Default `5` |
-| `tags` | No | String array |
-| `specifications` | No | Array, e.g. `[{key, value}]` |
-| `isFeatured` | No | Default `false` |
-| `isPublished` | No | Default `true` (`false` hides from shop but keeps for admin) |
+## D1. Lecture — `GET /api/v1/lms/lectures/:lectureId` (Auth)
 
 ```http
-POST /api/v1/product/create
-Authorization: Bearer <admin_token>
-
-{
-  "title": "Wireless Mouse",
-  "price": 999,
-  "discountPrice": 799,
-  "category": "<categoryId>",
-  "brand": "<brandId>",
-  "description": "Ergonomic 2.4GHz mouse",
-  "stockQuantity": 50,
-  "isFeatured": true,
-  "tags": ["wireless", "mouse"]
-}
+GET /api/v1/lms/lectures/<lectureId>
+Authorization: Bearer <token>
+→ 200 { success, lecture } | 403 { "Enroll in this course…" } | 404 lecture not found
 ```
 
-**Success `201`:** `{ "success": true, "message": "Product created successfully", "product": {...} }` → save `_id`.
-**Errors:** `400 Title, price, and category are required` · `400 Product SKU already exists`.
-
-## D6. Update product — `PUT /api/v1/product/update/:id` (Admin)
-
-Any fields (partial OK). Extras: renaming regenerates slug; `stock` maps to `stockQuantity`; `stockQuantity` flips `inStock` automatically; `newImages: [...]` (base64 array) appends gallery images.
+## D2. Access check — `GET /api/v1/lms/lectures/:lectureId/access` (Auth)
 
 ```http
-PUT /api/v1/product/update/<productId>
-Authorization: Bearer <admin_token>
-{ "price": 899, "stockQuantity": 100 }
+GET /api/v1/lms/lectures/<lectureId>/access
+→ 200 { success, hasAccess: true/false }
 ```
 
-## D7. Delete product — `DELETE /api/v1/product/delete/:id` (Admin)
-
-Removes Cloudinary gallery images too. **Success `200`:** `{ "success": true, "message": "Product deleted successfully" }`.
-
----
-
-# Module E — Address Book
-
-Base route: `/api/v1/address`, all routes Auth (users only ever see their own). First address is auto-made default; deleting the default promotes another.
-
-## E1. Add — `POST /api/v1/address/add` (Auth)
-
-| Field | Required | Notes |
-|---|---|---|
-| `fullName` | Yes | |
-| `phone` (alias `phoneNumber`) | Yes | |
-| `addressLine1` (alias `street`) | Yes | |
-| `city` / `state` | Yes | |
-| `postalCode` (alias `zipCode`) | Yes | |
-| `alternatePhone` / `addressLine2` / `landmark` | No | |
-| `country` | No | Default `"India"` |
-| `addressType` | No | `home` / `work` / `other` (default `home`) |
-| `isDefault` | No | `true` resets all other defaults |
+## D3. Save progress — `POST /api/v1/lms/lectures/:lectureId/progress` (Enrolled)
 
 ```http
-POST /api/v1/address/add
-Authorization: Bearer <user_token>
-
-{ "fullName": "Ravi Kumar", "phone": "9876543210",
-  "addressLine1": "H.No 1-2-3, MG Road", "city": "Hyderabad",
-  "state": "Telangana", "postalCode": "500001", "isDefault": true }
+POST /api/v1/lms/lectures/<lectureId>/progress
+{ "watchedSeconds": 120 }
+→ 200 { success, progress }
 ```
 
-**Success `201`:** `{ "success": true, "message": "Address saved successfully", "address": { "_id": "...", ... } }` → save `_id` as `addressId` for orders (J1).
-**Errors:** `400 Please provide all required address fields`.
+## D4. Complete — `POST /api/v1/lms/lectures/:lectureId/complete` (Enrolled)
 
-## E2. List — `GET /api/v1/address/my-addresses` (Auth)
-
-Default first. **Success `200`:** `{ "success": true, "count": 2, "addresses": [...] }`.
-
-## E3. Edit — `PUT /api/v1/address/update/:id` (Auth)
-
-Any fields; `isDefault: true` resets others. **Errors:** `404 Address not found` (also when it belongs to someone else).
-
-## E4. Delete — `DELETE /api/v1/address/delete/:id` (Auth)
-
-If it was default, the next address becomes default automatically.
-
-## E5. Set default — `PUT /api/v1/address/set-default/:id` (Auth)
-
-**Success `200`:** `{ "success": true, "message": "Default address set successfully", "address": {...} }`.
-
----
-
-# Module F — Shopping Cart
-
-Base route: `/api/v1/cart`, all routes Auth. Money math (returned as `summary` on every cart response): `subtotal` → minus coupon `discount` → +18% GST `tax` → +`shipping` (free over ₹500, else ₹50) = `grandTotal`. Item price snapshot = `discountPrice || price` at add time.
-
-## F1. View — `GET /api/v1/cart/` (Auth)
-
-Auto-creates an empty cart on first call. **Success `200`:** `{ "success": true, "cart": { "items": [...] }, "summary": { "subtotal": 1598, "discount": 0, "tax": 287.64, "shipping": 0, "grandTotal": 1885.64 } }`.
-
-## F2. Add — `POST /api/v1/cart/add` (Auth)
-
-Same product twice **increments** quantity (minus variants tracked separately via `variantSku`).
-
-| Field | Required | Notes |
-|---|---|---|
-| `productId` | Yes | Must exist + `isPublished` |
-| `quantity` | No | Default `1`; must be ≤ `stockQuantity` |
-| `variantSku` | No | For variant products |
+No body. Updates enrollment `progress`; at 100% the enrollment completes and a certificate is auto-issued.
 
 ```http
-POST /api/v1/cart/add
-Authorization: Bearer <user_token>
-{ "productId": "<productId>", "quantity": 2 }
-```
-
-**Success `200`:** `{ "success": true, "message": "Item added to cart", "cart": {...}, "summary": {...} }` → each item has `_id` (`itemId` for F3/F4).
-**Errors:** `404 Product not found or unavailable` · `400 Only N items in stock` / `Cannot add more. Max stock is N`.
-
-## F3. Change quantity — `PUT /api/v1/cart/update-quantity` (Auth)
-
-Uses the cart **item ID**, not the product ID. `quantity: 0` removes the item.
-
-```http
-PUT /api/v1/cart/update-quantity
-Authorization: Bearer <user_token>
-{ "itemId": "<cartItemId>", "quantity": 3 }
-```
-
-**Errors:** `400 Item ID and quantity are required` · `404 Item not found in cart` · `400 Only N items in stock`.
-
-## F4. Remove item — `DELETE /api/v1/cart/item/:itemId` (Auth)
-
-`:itemId` = cart item `_id` from F1/F2 (a frequent student mistake is passing the product ID → item silently stays).
-
-## F5. Clear — `DELETE /api/v1/cart/clear` (Auth)
-
-Empties items **and** removes any applied coupon.
-
-## F6. Merge guest cart — `POST /api/v1/cart/merge` (Auth)
-
-After login, push the pre-login localStorage cart; quantities clamp to stock.
-
-```http
-POST /api/v1/cart/merge
-Authorization: Bearer <user_token>
-{ "guestItems": [{ "productId": "...", "quantity": 1 }] }
-```
-
-**Success `200`:** `{ "success": true, "message": "Cart merged successfully", ... }` · **Errors:** `400 guestItems array is required`.
-
-```jsx
-// React: on login success
-const guest = JSON.parse(localStorage.getItem("guestCart") || "[]");
-if (guest.length) { await api.post("/cart/merge", { guestItems: guest }); localStorage.removeItem("guestCart"); }
+POST /api/v1/lms/lectures/<lectureId>/complete
+→ 200 { success, enrollment: { progress: 100, completed: true, … } }
 ```
 
 ---
 
-# Module G — Wishlist
+# Module E — Digital Purchase & Enrollments
 
-Base route: `/api/v1/wishlist`, all routes Auth.
+> No address, quantity, or cart. Flow: detail → Buy Now → `payments/create` → pay → `payments/verify` → order → enrollment → Go to Course.
 
-## G1. View — `GET /api/v1/wishlist/` (Auth)
-
-**Success `200`:** `{ "success": true, "wishlist": { "products": [...] } }` (product preview populated).
-
-## G2. Toggle — `POST /api/v1/wishlist/toggle` (Auth)
-
-Adds if absent, removes if present — response tells you which happened:
+## E1. Create payment — `POST /api/v1/lms/payments/create` (Auth)
 
 ```http
-POST /api/v1/wishlist/toggle
-Authorization: Bearer <user_token>
-{ "productId": "<productId>" }
+POST /api/v1/lms/payments/create
+{ "courseId": "<courseId>", "couponCode": "WELCOME10" }
+→ 200 { success, order: { id }, amount, currency: "INR", course }
 ```
 
-**Success `200`:** `{ "success": true, "message": "Product added to wishlist", "action": "added", "count": 3 }` (or `"removed"`).
+Already enrolled → `400`. Unpublished course → `404`.
 
-## G3. Move to cart — `POST /api/v1/wishlist/move-to-cart/:productId` (Auth)
+## E2. Verify & enroll — `POST /api/v1/lms/payments/verify` (Auth)
 
-Removes from wishlist, adds (qty 1, or +1 if already in cart) at `discountPrice || price`. Needs stock. **Errors:** `400 Product is not available in stock`.
+```http
+POST /api/v1/lms/payments/verify
+{ "razorpay_order_id": "...", "razorpay_payment_id": "...",
+  "razorpay_signature": "...", "courseId": "<courseId>" }
+→ 201 { success, message: "Payment verified. Enrollment confirmed. Go to Course.", order, enrollment }
+```
+
+Bad signature → `400`. Dev note: with placeholder Razorpay keys the create step returns a mock order id; verification is still HMAC-checked with `RAZORPAY_KEY_SECRET`.
+
+## E3. History — `GET /api/v1/lms/purchases` + `GET /api/v1/lms/orders[/:orderId]` (Auth)
+
+```http
+GET /api/v1/lms/purchases
+GET /api/v1/lms/orders/<orderId>   (owner or admin; else 403)
+```
 
 ---
 
-# Module H — Coupons
+# Module F — My Learning
 
-Base route: `/api/v1/coupon`, all routes Auth; create/list/delete are admin-only. Codes are stored/looked up **UPPERCASE** (`welcome10` works for `WELCOME10`). Math: `percentage` → `subtotal × value / 100` capped by `maxDiscountLimit` (and by subtotal); `fixed` → flat value capped by subtotal.
+> Primary dashboard; orders are history only.
 
-## H1. Create — `POST /api/v1/coupon/create` (Admin)
-
-| Field | Required | Notes |
-|---|---|---|
-| `code` | Yes | Upper-cased; duplicate → `400 Coupon code already exists` |
-| `discountType` | Yes | `"percentage"` or `"fixed"` |
-| `discountValue` (alias `discountAmount`) | Yes | % or ₹ depending on type |
-| `endDate` (aliases `expiryDate`, `expiresAt`) | Yes | ISO date |
-| `minOrderAmount` (alias `minPurchaseAmount`) | No | Default `0` — cart subtotal must reach it |
-| `maxDiscountLimit` (alias `maxDiscountAmount`) | No | Cap for percentage coupons |
-| `startDate` | No | Default now |
-| `usageLimit` | No | Total redemptions allowed |
+## F1. Dashboard — `GET /api/v1/lms/my-learning` (Auth)
 
 ```http
-POST /api/v1/coupon/create
-Authorization: Bearer <admin_token>
+GET /api/v1/lms/my-learning
+→ 200 { success, continueLearning, inProgress, completed, wishlist, certificates }
+```
 
+## F2. Enrollments — `GET /api/v1/lms/enrollments[/:enrollmentId]` (Auth)
+
+Owner or admin (else `403`).
+
+## F3. Certificates — `GET /api/v1/lms/certificates[/:certificateId]` (Auth)
+
+Issued automatically at 100% completion.
+
+---
+
+# Module G — Wishlist (courses)
+
+## G1. View — `GET /api/v1/lms/wishlist` (Auth)
+
+## G2. Toggle — `POST /api/v1/lms/wishlist` (Auth, alias `/lms/wishlist/toggle`)
+
+```http
+POST /api/v1/lms/wishlist
+{ "courseId": "<courseId>" }
+→ 200 { success, wishlisted: true/false, wishlist }
+```
+
+---
+
+# Module H — Coupons (courses)
+
+## H1. Create — `POST /api/v1/lms/coupons` (Admin)
+
+```http
+POST /api/v1/lms/coupons
 { "code": "WELCOME10", "discountType": "percentage", "discountValue": 10,
-  "minOrderAmount": 500, "maxDiscountLimit": 200,
-  "startDate": "2026-01-01", "endDate": "2026-12-31", "usageLimit": 100 }
+  "maxDiscount": 200, "minPurchaseAmount": 0, "courseId?": "...",
+  "usageLimit?": 100, "endDate": "2027-01-01T00:00:00Z" }
+→ 201 { success, coupon }
 ```
 
-**Success `201`:** `{ "success": true, "message": "Coupon created successfully", "coupon": {...} }`.
+`discountType` is `percentage` or `fixed`.
 
-## H2. List — `GET /api/v1/coupon/all` (Admin)
+## H2. List — `GET /api/v1/lms/coupons` (Admin)
 
-Newest first. **Success `200`:** `{ "success": true, "count": N, "coupons": [...] }`.
-
-## H3. Apply — `POST /api/v1/coupon/apply` (Auth)
-
-Validates code → active window → usage limit → non-empty cart → min order amount, then stores `couponDiscount` on the cart (visible in F1 `summary.discount`).
+## H3. Validate — `POST /api/v1/lms/coupons/validate` (Auth)
 
 ```http
-POST /api/v1/coupon/apply
-Authorization: Bearer <user_token>
-{ "code": "WELCOME10" }
-```
-
-**Success `200`:** `{ "success": true, "message": "Coupon 'WELCOME10' applied! You saved ₹160", "discount": 160 }`.
-**Errors:** `404 Invalid coupon code` · `400 Coupon has expired or is not yet active` · `400 Coupon usage limit reached` · `400 Your cart is empty` · `400 Minimum order amount to apply this coupon is ₹500`.
-
-## H4. Remove — `POST /api/v1/coupon/remove` (Auth)
-
-No body. **Success `200`:** `{ "success": true, "message": "Coupon removed successfully" }`.
-
-## H5. Delete — `DELETE /api/v1/coupon/delete/:id` (Admin)
-
-`:id` is the coupon `_id` from H2. **Errors:** `404 Coupon not found`.
-
----
-
-# Module I — Payments (Razorpay)
-
-Base route: `/api/v1/payment`. Amounts are in **INR** (server converts to paise for Razorpay). Without real Razorpay keys the server returns a `order_mock_...` order in non-production — full flow testable end-to-end (signature check uses your configured secret).
-
-## I1. Public key — `GET /api/v1/payment/razorpay-key` (Public)
-
-No auth — frontend needs this before opening Checkout. **Success `200`:** `{ "success": true, "key": "rzp_test_..." }`.
-
-## I2. Create order — `POST /api/v1/payment/razorpay-order` (Auth)
-
-| Field | Required | Notes |
-|---|---|---|
-| `amount` | No | INR. **Omit it** to charge the exact cart total (subtotal − coupon + 18% tax + shipping) — recommended |
-| `receipt` | No | Your reference, default `rcpt_<timestamp>` |
-
-```http
-POST /api/v1/payment/razorpay-order
-Authorization: Bearer <user_token>
-{}
-```
-
-**Success `200`:** `{ "success": true, "order": { "id": "order_...", "amount": 188564, "currency": "INR", ... }, "amount": 1885.64, "currency": "INR" }` → pass `order.id` + key (I1) into Razorpay Checkout.
-**Errors:** `400 Cart is empty`.
-
-## I3. Verify — `POST /api/v1/payment/verify` (Auth)
-
-Confirms the HMAC-SHA256 signature Checkout returned. All three fields required.
-
-```http
-POST /api/v1/payment/verify
-Authorization: Bearer <user_token>
-
-{ "razorpay_order_id": "order_...", "razorpay_payment_id": "pay_...", "razorpay_signature": "..." }
-```
-
-**Success `200`:** `{ "success": true, "message": "Payment successfully verified", "paymentId": "pay_...", "orderId": "order_..." }` → then place shop order (J1).
-**Errors:** `400 Missing required payment verification parameters` · `400 Payment verification failed! Invalid signature`.
-
-## I4. Webhook — `POST /api/v1/payment/webhook` (Public)
-
-Called by **Razorpay servers**, not by students. Verifies `x-razorpay-signature`, marks matching shop orders paid (`payment.captured`) or failed (`payment.failed`). Always replies `{ "status": "ok" }`.
-
-## I5. Refund — `POST /api/v1/payment/refund` (Admin)
-
-| Field | Required | Notes |
-|---|---|---|
-| `paymentId` | Yes | Razorpay `pay_...` id |
-| `amount` | No | Partial refund INR; omit = full |
-
-**Success `200`:** `{ "success": true, "message": "Refund initiated successfully", "refund": {...} }`.
-
-```jsx
-// React Checkout (razorpay checkout.js loaded in index.html)
-const { data: k } = await api.get("/payment/razorpay-key");
-const { data: o } = await api.post("/payment/razorpay-order", {});
-const rzp = new window.Razorpay({ key: k.key, amount: o.order.amount, currency: "INR",
-  order_id: o.order.id, name: "My Shop",
-  handler: async (r) => {
-    await api.post("/payment/verify", { razorpay_order_id: r.razorpay_order_id,
-      razorpay_payment_id: r.razorpay_payment_id, razorpay_signature: r.razorpay_signature });
-    await api.post("/ecommerce/order/create", { addressId,
-      paymentInfo: { method: "Razorpay", orderId: r.razorpay_order_id,
-        id: r.razorpay_payment_id, signature: r.razorpay_signature } });
-  } });
-rzp.open();
+POST /api/v1/lms/coupons/validate
+{ "code": "WELCOME10", "courseId": "<courseId>" }
+→ 200 { success, discount, payable } | 400 invalid/expired/used-up/wrong-course
 ```
 
 ---
 
-# Module J — E-Commerce Orders
+# Module I — Reviews (courses)
 
-Base route: `/api/v1/ecommerce/order`, all routes Auth. Ordering reads the **server cart** (must be non-empty), validates stock, decrements stock, emails confirmation, notifies, then **clears the cart**. Order numbers look like `ORD-1730000000000-4821`.
+## I1. List — `GET /api/v1/lms/reviews/:courseId` (Public)
 
-Payment method strings: Razorpay-paid orders send `paymentInfo: { method: "Razorpay", orderId, id, signature }`; cash-on-delivery sends `paymentInfo: { method: "cod" }` — use **lowercase `cod`** so the Deliver step (J6) auto-marks it paid.
+Alias: `GET /api/v1/lms/courses/:courseId/reviews`.
 
-## J1. Place order — `POST /api/v1/ecommerce/order/create` (Auth)
-
-Two address styles: saved `addressId` (E1) **or** inline `shippingAddress`.
+## I2. Add — `POST /api/v1/lms/reviews/:courseId` (Enrolled)
 
 ```http
-POST /api/v1/ecommerce/order/create
-Authorization: Bearer <user_token>
-{ "addressId": "<addressId>", "paymentInfo": { "method": "cod" } }
-```
-
-```http
-POST /api/v1/ecommerce/order/create
-Authorization: Bearer <user_token>
-
-{
-  "shippingAddress": { "fullName": "Ravi Kumar", "phone": "9876543210",
-    "addressLine1": "H.No 1-2-3, MG Road", "city": "Hyderabad",
-    "state": "Telangana", "postalCode": "500001", "country": "India" },
-  "paymentInfo": { "method": "Razorpay", "orderId": "order_...",
-    "id": "pay_...", "signature": "..." }
-}
-```
-
-**Success `201`:** `{ "success": true, "message": "Order placed successfully", "order": { "orderNumber": "ORD-...", "itemsPrice": 1598, "discountPrice": 160, "taxPrice": 258.84, "shippingPrice": 0, "totalPrice": 1696.84, "orderStatus": "Processing", ... } }`.
-**Errors:** `400 Shipping address is required` · `404 Selected shipping address not found` · `400 Your cart is empty` · `400 Insufficient stock for "X". Available: N`.
-
-## J2. My orders — `GET /api/v1/ecommerce/order/my-orders` (Auth)
-
-Newest first. **Success `200`:** `{ "success": true, "count": 2, "orders": [...] }`.
-
-## J3. Single order — `GET /api/v1/ecommerce/order/single/:id` (Auth)
-
-Owner or admin only. **Errors:** `404 Order not found` · `403 Access denied to this order`.
-
-## J4. Cancel — `PUT /api/v1/ecommerce/order/cancel/:id` (Auth)
-
-Owner or admin. Blocked once `Shipped` / `OutForDelivery` / `Delivered` (or already `Cancelled`); cancelling **restocks** inventory.
-
-```http
-PUT /api/v1/ecommerce/order/cancel/<orderId>
-Authorization: Bearer <user_token>
-{ "reason": "Ordered by mistake" }
-```
-
-**Success `200`:** `{ "success": true, "message": "Order cancelled and items returned to stock", "order": {...} }`.
-
-## J5. All orders — `GET /api/v1/ecommerce/order/admin/all` (Admin)
-
-`status` filters by **exact** `orderStatus` (omit or `all`-style listing needs no filter — note: any `status` value becomes the query, so use real statuses).
-
-```
-GET /api/v1/ecommerce/order/admin/all?status=Processing&page=1&limit=20
-```
-
-**Success `200`:** `{ "success": true, "totalOrders": 42, "totalPages": 3, "orders": [...] }` (buyer `name`/`email` populated).
-
-## J6. Update status — `PUT /api/v1/ecommerce/order/admin/status/:id` (Admin)
-
-Alias `/admin/update-status/:id`. `Delivered` auto-stamps `deliveredAt` and marks `cod` payments paid; `Shipped` stamps `shippedAt`; buyer gets a notification with tracking info.
-
-```http
-PUT /api/v1/ecommerce/order/admin/status/<orderId>
-Authorization: Bearer <admin_token>
-{ "status": "Shipped", "trackingNumber": "TRK123", "courierPartner": "Delhivery" }
+POST /api/v1/lms/reviews/<courseId>
+{ "rating": 5, "comment": "Excellent!" }
+→ 201 { success, reviews } | 403 enroll first
 ```
 
 ---
 
-# Module K — Product Reviews
+# Module J — Instructor Marketplace
 
-Base route: `/api/v1/product-reviews`. Rules from code: **one review per user per product**; `isVerifiedPurchase` is auto-set when the user has a **Delivered** order containing the product; product `ratings`/`numOfReviews` recalculate on add **and** delete.
+> Roles: `instructor` or `admin` (students get `403`). Lifecycle: `DRAFT` → `SUBMITTED` → `UNDER_REVIEW` → `PUBLISHED` → `UNPUBLISHED` / `ARCHIVED`.
 
-## K1. List — `GET /api/v1/product-reviews/product/:productId` (Public)
+## J1. My courses — `GET /api/v1/lms/instructor/courses`
 
-Verified purchases first, then most helpful. `:productId` must be a valid ObjectId.
+## J2. Create — `POST /api/v1/lms/instructor/courses`
 
-```
-GET /api/v1/product-reviews/product/<productId>?page=1&limit=10
-```
-
-**Success `200`:** `{ "success": true, "totalReviews": 4, "totalPages": 1, "reviews": [...] }` · **Errors:** `400 Invalid product ID`.
-
-## K2. Add — `POST /api/v1/product-reviews/add` (Auth)
-
-| Field | Required | Notes |
-|---|---|---|
-| `productId` | Yes | Must exist |
-| `rating` | Yes | Number (1–5) |
-| `comment` | Yes | Review text |
-| `title` | No | Headline |
-| `images` | No | Base64 array → Cloudinary `ecommerce/reviews` |
+Created as `DRAFT` with `instructor: { id, name }` from the token.
 
 ```http
-POST /api/v1/product-reviews/add
-Authorization: Bearer <user_token>
-{ "productId": "<productId>", "rating": 5, "title": "Loved it", "comment": "Value for money" }
+POST /api/v1/lms/instructor/courses
+{ "name": "My Course", "description": "...", "price": 499, "tags": "js",
+  "level": "Beginner", "demoUrl": "https://...", "category": "Programming",
+  "courseData": [{ "title": "L1", "videoSection": "Basics", "videoLength": 10, "isPreview": true }] }
+→ 201 { success, course }
 ```
 
-**Success `201`:** `{ "success": true, "message": "Review submitted successfully", "review": { "isVerifiedPurchase": false, ... } }`.
-**Errors:** `400 Product ID, rating, and comment are required` · `404 Product not found` · `400 You have already reviewed this product`.
+## J3. Edit — `PUT /api/v1/lms/instructor/courses/:courseId`
 
-## K3. Helpful vote — `PUT /api/v1/product-reviews/helpful/:id` (Auth)
+Own course only (others → `403`). Published courses: non-admin edits ignore `status`.
 
-`:id` = review `_id`. **Success `200`:** `{ "success": true, "helpfulVotes": 6 }` · **Errors:** `404 Review not found`.
+## J4. Add lecture — `POST /api/v1/lms/instructor/courses/:courseId/lectures`
 
-## K4. Delete — `DELETE /api/v1/product-reviews/delete/:id` (Auth)
+```http
+{ "title": "Lesson 2", "description": "...", "videoUrl": "https://...",
+  "videoSection": "Basics", "videoLength": 12, "isPreview": false }
+→ 201 { success, courseData }
+```
 
-Author **or** admin (others → `403 Unauthorized to delete this review`). Recalculates product rating.
+## J5. Submit — `POST /api/v1/lms/instructor/courses/:courseId/submit`
+
+Status → `SUBMITTED`. Admin publishes via `PUT /api/v1/lms/admin/courses/:courseId/status`.
+
+## J6. Students / revenue / analytics
+
+```http
+GET /api/v1/lms/instructor/students
+GET /api/v1/lms/instructor/revenue    → { totalRevenue, totalEnrollments, byCourse }
+GET /api/v1/lms/instructor/analytics  → { totalCourses, totalEnrollments, totalCompletions, courses }
+```
+
+---
+
+# Module K — Admin Marketplace
+
+## K1. Courses — `GET /api/v1/lms/admin/courses` (Admin)
+
+All courses including drafts.
+
+## K2. Lifecycle — `PUT /api/v1/lms/admin/courses/:courseId/status` (Admin)
+
+```http
+PUT /api/v1/lms/admin/courses/<courseId>/status
+{ "status": "PUBLISHED" }
+→ 200 { success, course } | 400 invalid status
+```
+
+Allowed: `DRAFT, SUBMITTED, UNDER_REVIEW, PUBLISHED, UNPUBLISHED, ARCHIVED`.
+
+## K3. Instructors / orders / enrollments / analytics (Admin)
+
+```http
+GET /api/v1/lms/admin/instructors
+GET /api/v1/lms/admin/orders
+GET /api/v1/lms/admin/enrollments
+GET /api/v1/lms/admin/analytics   → { users, courses, orders, enrollments, certificates }
+```
 
 ---
 
@@ -1194,9 +877,30 @@ Update = same bodies to `PUT /api/v1/layout/update-layout`.
 
 ---
 
-# Module M — Full shop example end-to-end
+# Module M — Full LMS example end-to-end
 
-**Admin (Postman):** C3 category → C6 brand → D5 product (note `_id`, keep `isFeatured: true` for D2) → H1 coupon `WELCOME10` → H2 verify.
-**Student:** D1 browse (`?search=mouse&sort=price-asc`) → D3 details → D4 related → G2 wishlist toggle → G3 move-to-cart → E1 address → F2 add ×2 → F1 check `summary` → H3 apply coupon → `summary.discount` appears → I1+I2+I3 Razorpay **or** COD → J1 order → J2 history → K2 review → J4 cancel (before ship) **or** wait for admin J6 `Shipped` → `Delivered`.
-**Admin fulfilment:** J5 `?status=Processing` → J6 `Shipped` (+tracking) → J6 `Delivered` (`cod` auto-paid) → L1 notifications show the trail → L3–L5 charts.
-**React pages:** `/shop` (D1) → `/product/:slug` (D3+D4+K1+K2) → `/cart` (F1–F5+H3) → `/checkout` (E2+I+J1) → `/orders` (J2+J3+J4) → `/admin/*` (C/D/H/J5+J6/L, all behind `RequireAdmin`).
+```
+# 1. Student: register → activate → login
+POST /api/v1/auth/register           { name, email, password } → 201 + code
+POST /api/v1/auth/activate-user      { activation_token, activation_code }
+POST /api/v1/auth/login              { email, password } → Bearer token
+
+# 2. Instructor: create → curriculum → submit (promote to instructor first)
+POST /api/v1/lms/instructor/courses  { name, description, price, tags, level, demoUrl }
+POST /api/v1/lms/instructor/courses/<id>/lectures  { title, videoSection, isPreview: true }
+POST /api/v1/lms/instructor/courses/<id>/submit
+
+# 3. Admin: publish + coupon
+PUT  /api/v1/lms/admin/courses/<id>/status   { status: "PUBLISHED" }
+POST /api/v1/lms/coupons  { code, discountType, discountValue, endDate }
+
+# 4. Student: discover → buy → learn → certificate → review
+GET  /api/v1/lms/courses
+POST /api/v1/lms/payments/create     { courseId, couponCode? }
+POST /api/v1/lms/payments/verify     { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId }
+GET  /api/v1/lms/my-learning
+GET  /api/v1/lms/lectures/<lectureId>
+POST /api/v1/lms/lectures/<lectureId>/complete   (× every lecture → certificate)
+GET  /api/v1/lms/certificates
+POST /api/v1/lms/reviews/<courseId>  { rating: 5, comment }
+```

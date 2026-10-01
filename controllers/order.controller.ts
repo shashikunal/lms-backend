@@ -4,8 +4,6 @@ import ErrorHandler from "../utils/ErrorHandler";
 import OrderModel, { IOrder } from "../models/orderModel";
 import userModel from "../models/user.model";
 import CourseModel from "../models/course.model";
-import path from "path";
-import ejs, { name } from "ejs";
 import sendMail from "../utils/sendMail";
 import NotificationModel from "../models/notificationModel";
 import { getAllOrderService, newOrder } from "../services/order.service";
@@ -17,7 +15,10 @@ export const createOrder = CatchAsyncErrors(
       const { courseId, payment_info } = req.body as IOrder;
       const user = await userModel.findById(req.user?._id);
       const courseExistsUser = user?.courses?.some(
-        (course: any) => course._id.toString() === courseId
+        (course: any) =>
+          course?.courseId?.toString() === courseId ||
+          course?._id?.toString() === courseId ||
+          course?.toString() === courseId
       );
       if (courseExistsUser) {
         return next(
@@ -48,10 +49,9 @@ export const createOrder = CatchAsyncErrors(
           }),
         },
       };
-      const html = await ejs.renderFile(
-        path.join(__dirname, "../mails/order-confirmation.ejs"),
-        { order: mailData }
-      );
+      // Order confirmation email is best-effort: never block the purchase
+      // when SMTP is unreachable. sendMail resolves templates from
+      // dist/mails (copied at build) with a cwd fallback.
       try {
         if (user) {
           await sendMail({
@@ -62,7 +62,7 @@ export const createOrder = CatchAsyncErrors(
           });
         }
       } catch (error: any) {
-        return next(new ErrorHandler(error.message, 500));
+        console.warn("Order confirmation email skipped:", error?.message || error);
       }
 
       user?.courses.push(course?._id as any);
@@ -72,6 +72,25 @@ export const createOrder = CatchAsyncErrors(
         title: "New Order",
         message: `You have successfully purchased the course ${course?.name}`,
       });
+      // Canonical LMS enrollment: Order (verified) -> Enrollment -> Course access
+      try {
+        const { default: EnrollmentModel } = await import(
+          "../models/enrollment.model"
+        );
+        await EnrollmentModel.findOneAndUpdate(
+          { userId: user?._id?.toString(), courseId: course?._id?.toString() },
+          {
+            $setOnInsert: {
+              userId: user?._id?.toString(),
+              courseId: course?._id?.toString(),
+              progress: 0,
+            },
+          },
+          { upsert: true, new: true }
+        );
+      } catch {
+        // Enrollment sync is best-effort; order itself already succeeded
+      }
       if (!course?.purchased) course.purchased = 0;
       // Increment the purchased count for the course
       course.purchased += 1;

@@ -47,17 +47,17 @@
   <a href="#p0">0. Postman setup</a>
   <div class="nav-h">Account</div>
   <a href="#pa">A. Account (A1–A13)</a>
-  <div class="nav-h">Learn &amp; shop</div>
+  <div class="nav-h">Marketplace</div>
   <a href="#pb">B. Courses</a>
-  <a href="#pc">C. Categories</a>
-  <a href="#pd">D. Products</a>
-  <a href="#pe">E. Address</a>
-  <a href="#pf">F. Cart</a>
+  <a href="#pc">C. Marketplace</a>
+  <a href="#pd">D. Lectures</a>
+  <a href="#pe">E. Buy course</a>
+  <a href="#pf">F. My Learning</a>
   <a href="#pg">G. Wishlist</a>
   <a href="#ph">H. Coupons</a>
-  <a href="#pi">I. Payments</a>
-  <a href="#pj">J. Orders</a>
-  <a href="#pk">K. Reviews</a>
+  <a href="#pi">I. Reviews</a>
+  <a href="#pj">J. Instructor</a>
+  <a href="#pk">K. Admin market</a>
   <a href="#pl">L. Admin extras</a>
   <a href="#pm">M. Errors</a>
 </nav>
@@ -79,7 +79,7 @@
 <h3>A1. Register (create account) <span class="badge b-public">Public</span></h3>
 <ol><li><b>POST</b> <code class="inline">{{baseUrl}}/api/v1/auth/register</code>, Body → JSON:
 <pre>{ "name": "Test Student", "email": "student@example.com", "password": "Pass@123" }</pre></li>
-<li><b>Send.</b> Copy <code class="inline">activationToken</code> + <code class="inline">activationCode</code> (6 digits, dies in 5 min).</li></ol>
+<li><b>Send.</b> Copy <code class="inline">activationToken</code> + <code class="inline">activationCode</code> (6 digits, dies in 5 min). Reply is <code class="inline">201</code>; if mail is down you still get the code with <code class="inline">mailSent:false</code>.</li></ol>
 <h3>A2. Activate <span class="badge b-public">Public</span></h3>
 <ol><li><b>POST</b> <code class="inline">{{baseUrl}}/api/v1/auth/activate-user</code>, Body → JSON:
 <pre>{ "activation_token": "PASTE_LONG_TOKEN", "activation_code": "PASTE_6_DIGITS" }</pre></li>
@@ -144,123 +144,87 @@ pm.environment.set("token", j.accessToken);</pre></li></ol>
 </section>
 
 <section id="pc">
-<h2>PART C — Categories &amp; brands</h2>
-<h3>C1. All categories <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/category/all</code></h3>
-<h3>C2. One category <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/category/single/electronics</code></h3>
-<h3>C3. Create category <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/category/create</code>:
-<pre>{ "name": "Electronics", "description": "Gadgets" }</pre></h3>
-<h3>C4. Edit category <span class="badge b-admin">Admin</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/category/update/PASTE_ID</code>: <code class="inline">{ "description": "New text" }</code></h3>
-<h3>C5. Delete category <span class="badge b-admin">Admin</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/category/delete/PASTE_ID</code></h3>
-<h3>C6. Create brand <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/category/brand/create</code>:
-<pre>{ "name": "Acme", "description": "Acme brand" }</pre></h3>
-<h3>C7. All brands <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/category/brands/all</code></h3>
+<h2>PART C &mdash; Marketplace (courses are digital: no address, no cart, no quantity)</h2>
+<h3>C1. List courses <span class="badge b-public">Public</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/courses?page=1&amp;limit=12</code> (only PUBLISHED show; copy a course <code class="inline">_id</code>)</h3>
+<h3>C2. Categories <span class="badge b-public">Public</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/categories</code></h3>
+<h3>C3. Search <span class="badge b-public">Public</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/search?q=react</code></h3>
+<h3>C4. Home blocks <span class="badge b-public">Public</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/home</code> (featured / top rated / newest)</h3>
+<h3>C5. Course detail <span class="badge b-public">Public</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/courses/PASTE_COURSE_ID</code> (locked video URLs are hidden)</h3>
+<h3>C6. Curriculum <span class="badge b-public">Public</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/courses/PASTE_COURSE_ID/curriculum</code> (each lecture has <code class="inline">locked:true/false</code>)</h3>
+<h3>C7. Sections &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/courses/PASTE_COURSE_ID/sections</code> or <code class="inline">{{baseUrl}}/api/v1/lms/sections/PASTE_SECTION</code> (+ <code class="inline">/lectures</code> suffix for the lecture list)</h3>
 </section>
 
 <section id="pd">
-<h2>PART D — Products</h2>
-<h3>D1. See/search <span class="badge b-public">Public</span> — <b>GET</b> one of:</h3>
-<pre>{{baseUrl}}/api/v1/product/all?page=1&amp;limit=12
-{{baseUrl}}/api/v1/product/all?search=mouse
-{{baseUrl}}/api/v1/product/all?sort=price-asc     (cheap first)
-{{baseUrl}}/api/v1/product/all?sort=price-desc    (costly first)
-{{baseUrl}}/api/v1/product/all?sort=rating        (top rated)</pre>
-<h3>D2. Featured <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/product/featured</code></h3>
-<h3>D3. One product <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/product/single/PASTE_PRODUCT_ID</code></h3>
-<h3>D4. Similar <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/product/related/PASTE_PRODUCT_ID</code></h3>
-<h3>D5. Create <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/product/create</code>:
-<pre>{ "title": "Wireless Mouse", "price": 999,
-  "category": "PASTE_CATEGORY_ID", "stockQuantity": 50 }</pre></h3>
-<h3>D6. Edit <span class="badge b-admin">Admin</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/product/update/PASTE_PRODUCT_ID</code>:
-<pre>{ "price": 899, "stockQuantity": 100 }</pre></h3>
-<h3>D7. Delete <span class="badge b-admin">Admin</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/product/delete/PASTE_PRODUCT_ID</code></h3>
+<h2>PART D &mdash; Lectures &amp; access (enrollment = key)</h2>
+<h3>D1. Watch preview <span class="badge b-auth">Login</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/lectures/PASTE_LECTURE_ID</code> (preview lectures open to all logged-in users)</h3>
+<h3>D2. Locked lecture <span class="badge b-auth">Login + enrolled</span> &mdash; same URL; strangers get <code class="inline">403 Enroll in this course</code></h3>
+<h3>D3. Am I allowed? &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/lectures/PASTE_LECTURE_ID/access</code> &rarr; <code class="inline">{ "hasAccess": true/false }</code></h3>
+<h3>D4. Save progress <span class="badge b-auth">Login + enrolled</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/lectures/PASTE_LECTURE_ID/progress</code>:
+<pre>{ "watchedSeconds": 120 }</pre></h3>
+<h3>D5. Complete lecture <span class="badge b-auth">Login + enrolled</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/lectures/PASTE_LECTURE_ID/complete</code> (no body). At 100% a certificate is issued automatically.</h3>
 </section>
 
 <section id="pe">
-<h2>PART E — Addresses <span class="badge b-auth">Login needed (all 5)</span></h2>
-<h3>E1. Add</h3>
-<pre>POST {{baseUrl}}/api/v1/address/add
-{ "fullName": "Ravi Kumar", "phone": "9876543210",
-  "addressLine1": "H.No 1-2-3, MG Road", "city": "Hyderabad",
-  "state": "Telangana", "postalCode": "500001", "isDefault": true }</pre>
-<div class="tip">Copy the address <code class="inline">_id</code> — you need it to order.</div>
-<h3>E2. See mine — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/address/my-addresses</code></h3>
-<h3>E3. Edit — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/address/update/PASTE_ADDRESS_ID</code>: <code class="inline">{ "phone": "9123456780" }</code></h3>
-<h3>E4. Delete — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/address/delete/PASTE_ADDRESS_ID</code></h3>
-<h3>E5. Make default — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/address/set-default/PASTE_ADDRESS_ID</code> (no body)</h3>
+<h2>PART E &mdash; Buy course (digital checkout)</h2>
+<div class="tip">Flow: Course detail &rarr; <b>Buy Now</b> &rarr; payment &rarr; verify &rarr; order &rarr; enrollment &rarr; <b>Go to Course</b> in My Learning. No address, no quantity, no cart.</div>
+<h3>E1. Create payment <span class="badge b-auth">Login</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/payments/create</code>:
+<pre>{ "courseId": "PASTE_COURSE_ID", "couponCode": "OPTIONAL_CODE" }</pre>Copy <code class="inline">order.id</code> from the reply.</h3>
+<h3>E2. Verify &amp; enroll <span class="badge b-auth">Login</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/payments/verify</code>:
+<pre>{ "razorpay_order_id": "PASTE_ORDER_ID", "razorpay_payment_id": "PASTE_PAY_ID",
+  "razorpay_signature": "PASTE_SIG", "courseId": "PASTE_COURSE_ID" }</pre>Good reply: <code class="inline">201</code> + enrollment. Bad signature &rarr; <code class="inline">400</code>.</h3>
+<h3>E3. My purchases <span class="badge b-auth">Login</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/purchases</code> and <code class="inline">{{baseUrl}}/api/v1/lms/orders</code></h3>
+<h3>E4. One order <span class="badge b-auth">Login</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/orders/PASTE_ORDER_ID</code></h3>
 </section>
 
 <section id="pf">
-<h2>PART F — Cart <span class="badge b-auth">Login needed (all 6)</span></h2>
-<h3>F1. See cart — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/cart/</code></h3>
-<div class="tip">Each item has its own <code class="inline">_id</code> = <code class="inline">itemId</code> for F3/F4. NOT the product id!</div>
-<h3>F2. Add — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/cart/add</code>:
-<pre>{ "productId": "PASTE_PRODUCT_ID", "quantity": 2 }</pre></h3>
-<h3>F3. Change quantity — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/cart/update-quantity</code>:
-<pre>{ "itemId": "PASTE_CART_ITEM_ID", "quantity": 3 }</pre></h3>
-<h3>F4. Remove one — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/cart/item/PASTE_CART_ITEM_ID</code></h3>
-<h3>F5. Empty all — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/cart/clear</code></h3>
-<h3>F6. Merge guest cart — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/cart/merge</code>:
-<pre>{ "guestItems": [{ "productId": "PASTE_ID", "quantity": 1 }] }</pre></h3>
+<h2>PART F &mdash; My Learning (the primary dashboard; orders are just history)</h2>
+<h3>F1. Dashboard <span class="badge b-auth">Login</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/my-learning</code> (continueLearning / inProgress / completed / wishlist / certificates)</h3>
+<h3>F2. Enrollments <span class="badge b-auth">Login</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/enrollments</code>; one: <code class="inline">{{baseUrl}}/api/v1/lms/enrollments/PASTE_ENROLLMENT_ID</code></h3>
+<h3>F3. Certificates <span class="badge b-auth">Login</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/certificates</code>; one: <code class="inline">{{baseUrl}}/api/v1/lms/certificates/PASTE_CERT_ID</code></h3>
 </section>
 
 <section id="pg">
-<h2>PART G — Wishlist <span class="badge b-auth">Login needed (all 3)</span></h2>
-<h3>G1. See — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/wishlist/</code></h3>
-<h3>G2. Add/remove (same button) — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/wishlist/toggle</code>:
-<pre>{ "productId": "PASTE_PRODUCT_ID" }</pre>
-Reply says <code class="inline">"added"</code> or <code class="inline">"removed"</code>.</h3>
-<h3>G3. Move to cart — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/wishlist/move-to-cart/PASTE_PRODUCT_ID</code> (no body)</h3>
+<h2>PART G &mdash; Wishlist (courses)</h2>
+<h3>G1. Toggle <span class="badge b-auth">Login</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/wishlist</code>:
+<pre>{ "courseId": "PASTE_COURSE_ID" }</pre>Reply: <code class="inline">{ "wishlisted": true/false }</code>. Alias: <code class="inline">POST /api/v1/lms/wishlist/toggle</code> (same body).</h3>
+<h3>G2. See mine <span class="badge b-auth">Login</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/wishlist</code></h3>
 </section>
 
 <section id="ph">
-<h2>PART H — Coupons</h2>
-<h3>H1. Create <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/coupon/create</code>:
-<pre>{ "code": "WELCOME10", "discountType": "percentage", "discountValue": 10,
-  "minOrderAmount": 500, "endDate": "2026-12-31" }</pre></h3>
-<h3>H2. See all <span class="badge b-admin">Admin</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/coupon/all</code></h3>
-<h3>H3. Use <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/coupon/apply</code>:
-<pre>{ "code": "WELCOME10" }</pre></h3>
-<h3>H4. Remove <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/coupon/remove</code> (no body)</h3>
-<h3>H5. Delete <span class="badge b-admin">Admin</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/coupon/delete/PASTE_COUPON_ID</code></h3>
+<h2>PART H &mdash; Coupons (courses)</h2>
+<h3>H1. Create <span class="badge b-admin">Admin</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/coupons</code>:
+<pre>{ "code": "WELCOME10", "discountType": "percentage", "discountValue": 10, "endDate": "2027-01-01T00:00:00Z" }</pre></h3>
+<h3>H2. See all <span class="badge b-admin">Admin</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/coupons</code></h3>
+<h3>H3. Check code <span class="badge b-auth">Login</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/coupons/validate</code>:
+<pre>{ "code": "WELCOME10", "courseId": "PASTE_COURSE_ID" }</pre>Reply: <code class="inline">{ "discount": 49.9, "payable": 449.1 }</code>.</h3>
 </section>
 
 <section id="pi">
-<h2>PART I — Payments</h2>
-<h3>I1. Shop key <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/payment/razorpay-key</code></h3>
-<h3>I2. Payment order <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/payment/razorpay-order</code>, body <code class="inline">{}</code> (empty — it counts your cart)</h3>
-<h3>I3. Confirm <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/payment/verify</code>:
-<pre>{ "razorpay_order_id": "PASTE", "razorpay_payment_id": "PASTE", "razorpay_signature": "PASTE" }</pre></h3>
-<h3>I4. Webhook — skip (Razorpay's computer calls it)</h3>
-<h3>I5. Refund <span class="badge b-admin">Admin</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/payment/refund</code>:
-<pre>{ "paymentId": "pay_PASTE_ID" }</pre></h3>
-<div class="tip">Easy choice: skip I1–I3, order with <code class="inline">"method": "cod"</code> (Part J).</div>
+<h2>PART I &mdash; Reviews (courses)</h2>
+<h3>I1. See reviews <span class="badge b-public">Public</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/reviews/PASTE_COURSE_ID</code> (alias: <code class="inline">GET /api/v1/lms/courses/PASTE_COURSE_ID/reviews</code>)</h3>
+<h3>I2. Write review <span class="badge b-auth">Login + enrolled</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/reviews/PASTE_COURSE_ID</code>:
+<pre>{ "rating": 5, "comment": "Excellent!" }</pre>Strangers get <code class="inline">403</code>.</h3>
 </section>
 
 <section id="pj">
-<h2>PART J — Shop orders</h2>
-<h3>J1. Place order <span class="badge b-auth">Login</span> (cart must NOT be empty!)</h3>
-<pre>POST {{baseUrl}}/api/v1/ecommerce/order/create
-{ "addressId": "PASTE_ADDRESS_ID", "paymentInfo": { "method": "cod" } }</pre>
-<div class="tip">Write down the <code class="inline">orderNumber</code> from the reply.</div>
-<h3>J2. My orders <span class="badge b-auth">Login</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/my-orders</code></h3>
-<h3>J3. One order <span class="badge b-auth">Login</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/single/PASTE_ORDER_ID</code></h3>
-<h3>J4. Cancel <span class="badge b-auth">Login</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/cancel/PASTE_ORDER_ID</code>:
-<pre>{ "reason": "Ordered by mistake" }</pre>
-Only BEFORE shipping.</h3>
-<h3>J5. All orders <span class="badge b-admin">Admin</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/admin/all?status=Processing&amp;page=1&amp;limit=20</code></h3>
-<h3>J6. Change status <span class="badge b-admin">Admin</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/ecommerce/order/admin/status/PASTE_ORDER_ID</code>:
-<pre>{ "status": "Shipped", "trackingNumber": "TRK123", "courierPartner": "Delhivery" }</pre>
-Then later <code class="inline">{ "status": "Delivered" }</code>.</h3>
+<h2>PART J &mdash; Instructor (Instructor or Admin role)</h2>
+<div class="tip">Lifecycle: DRAFT &rarr; SUBMITTED &rarr; UNDER_REVIEW &rarr; PUBLISHED (admin) &rarr; UNPUBLISHED / ARCHIVED. Only PUBLISHED shows in the marketplace.</div>
+<h3>J1. My courses &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/instructor/courses</code></h3>
+<h3>J2. Create (DRAFT) &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/instructor/courses</code>: same course body as B3</h3>
+<h3>J3. Edit &mdash; <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/lms/instructor/courses/PASTE_COURSE_ID</code>: <code class="inline">{ "price": 499 }</code></h3>
+<h3>J4. Add lecture &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/instructor/courses/PASTE_COURSE_ID/lectures</code>:
+<pre>{ "title": "Lesson 1", "videoSection": "Basics", "videoLength": 10, "isPreview": true }</pre></h3>
+<h3>J5. Submit for review &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/instructor/courses/PASTE_COURSE_ID/submit</code> (no body)</h3>
+<h3>J6. Students / revenue / analytics &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/instructor/students</code>, <code class="inline">.../revenue</code>, <code class="inline">.../analytics</code></h3>
 </section>
 
 <section id="pk">
-<h2>PART K — Reviews</h2>
-<h3>K1. See reviews <span class="badge b-public">Public</span> — <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/product-reviews/product/PASTE_PRODUCT_ID</code></h3>
-<h3>K2. Write review <span class="badge b-auth">Login</span> — <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/product-reviews/add</code>:
-<pre>{ "productId": "PASTE_PRODUCT_ID", "rating": 5, "title": "Loved it", "comment": "Value for money" }</pre>
-One per product. Rating 1–5.</h3>
-<h3>K3. Helpful vote <span class="badge b-auth">Login</span> — <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/product-reviews/helpful/PASTE_REVIEW_ID</code> (no body)</h3>
-<h3>K4. Delete <span class="badge b-auth">Login (yours/admin)</span> — <b>DELETE</b> <code class="inline">{{baseUrl}}/api/v1/product-reviews/delete/PASTE_REVIEW_ID</code></h3>
+<h2>PART K &mdash; Admin marketplace</h2>
+<h3>K1. All courses (any status) &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/admin/courses</code></h3>
+<h3>K2. Publish / unpublish &mdash; <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/lms/admin/courses/PASTE_COURSE_ID/status</code>:
+<pre>{ "status": "PUBLISHED" }</pre></h3>
+<h3>K3. Instructors &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/admin/instructors</code></h3>
+<h3>K4. Orders / enrollments / analytics &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/admin/orders</code>, <code class="inline">.../enrollments</code>, <code class="inline">.../analytics</code></h3>
 </section>
 
 <section id="pl">
@@ -287,14 +251,13 @@ Edit = same body to <b>PUT</b> <code class="inline">{{baseUrl}}/api/v1/layout/up
 <tr><td>Invalid activation code</td><td>Wrong 6 digits</td><td>Copy again from register reply</td></tr>
 <tr><td>401 Unauthorized</td><td>Not logged in / key expired</td><td>Login again (A3)</td></tr>
 <tr><td>403 Forbidden</td><td>Logged in but not admin</td><td>Ask admin to do A12</td></tr>
-<tr><td>Cart is empty</td><td>Nothing in cart</td><td>Do F2 first</td></tr>
-<tr><td>Not allowed to access course</td><td>You didn't buy it</td><td>Do B7 first</td></tr>
-<tr><td>Cannot cancel / already purchased</td><td>Too late / done before</td><td>Nothing to do</td></tr>
+<tr><td>You are not allowed / Enroll first</td><td>Lecture is locked, no enrollment</td><td>Buy via E1–E2, then F1</td></tr>
+<tr><td>Already enrolled / purchased</td><td>Bought before</td><td>Open F1 My Learning</td></tr>
 <tr><td>... does not exist</td><td>Wrong id or CAPITAL layout type</td><td>Check id / lowercase</td></tr>
-<tr><td>Only N items in stock</td><td>Asked for too many</td><td>Lower quantity</td></tr>
+<tr><td>404 on /product /cart /address</td><td>Removed shop APIs</td><td>Use /api/v1/lms/* instead</td></tr>
 <tr><td>404 Not found</td><td>Wrong id in URL</td><td>Copy id again</td></tr>
 </table>
-<div class="tip"><b>Golden rules:</b> IDs come from earlier replies. Cart item id ≠ product id. Course buying (<code class="inline">/order/...</code>) and shop buying (<code class="inline">/ecommerce/order/...</code>) are different. <code class="inline">cod</code> and layout types are lowercase.</div>
+<div class="tip"><b>Golden rules:</b> IDs come from earlier replies. Enrollment = access (locked lectures need E1–E2 first). Courses are digital: no address, no quantity, no cart. Layout types are lowercase.</div>
 </section>
 
 </main>

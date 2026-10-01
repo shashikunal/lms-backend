@@ -7,8 +7,6 @@ import CourseModel from "../models/course.model";
 import { redis } from "../utils/redis";
 import mongoose from "mongoose";
 
-import ejs from "ejs";
-import path from "path";
 import sendMail from "../utils/sendMail";
 import NotificationModel from "../models/notificationModel";
 
@@ -126,19 +124,32 @@ export const getAllCourses = CatchAsyncErrors(
   }
 );
 
-//get course content only for valid user
+//get course content only for valid user (enrollment = access control)
 export const getCourseByUser = CatchAsyncErrors(
   async (req: Request | any, res: Response, next: NextFunction) => {
     try {
       const userCourseList = req.user?.courses;
       const courseId = req.params.id;
-      const courseExits = userCourseList.find(
-        (course: any) => course._id === courseId
+      const legacyEnrolled = (userCourseList || []).some(
+        (course: any) =>
+          course?.courseId?.toString() === courseId ||
+          course?._id?.toString() === courseId ||
+          course?.toString() === courseId
       );
-      if (!courseExits) {
-        return next(
-          new ErrorHandler("You are not allowed to access this course", 403)
+      if (!legacyEnrolled) {
+        // Check canonical Enrollment collection (LMS access control)
+        const { default: EnrollmentModel } = await import(
+          "../models/enrollment.model"
         );
+        const enrollment = await EnrollmentModel.findOne({
+          userId: req.user?._id?.toString(),
+          courseId,
+        });
+        if (!enrollment) {
+          return next(
+            new ErrorHandler("You are not allowed to access this course", 403)
+          );
+        }
       }
       const course = await CourseModel.findById(courseId);
       const content = course?.courseData;
@@ -255,10 +266,8 @@ export const addAnswer = CatchAsyncErrors(
           name: question.user.name,
           title: courseContent.title,
         };
-        const html = await ejs.renderFile(
-          path.join(__dirname, "../mails/question-replay.ejs"),
-          data
-        );
+        // Reply notification email is best-effort: never hang or fail the
+        // answer when SMTP is unreachable.
         try {
           await sendMail({
             email: question?.user?.email,
@@ -267,7 +276,7 @@ export const addAnswer = CatchAsyncErrors(
             data,
           });
         } catch (error: any) {
-          return new ErrorHandler(error.message, 500);
+          console.warn("Question reply email skipped:", error?.message || error);
         }
       }
       res.status(201).json({
@@ -275,7 +284,7 @@ export const addAnswer = CatchAsyncErrors(
         message: "Answer added successfully",
       });
     } catch (error: any) {
-      return new ErrorHandler(error.message, 500);
+      return next(new ErrorHandler(error.message, 500));
     }
   }
 );
@@ -292,14 +301,28 @@ export const addReview = CatchAsyncErrors(
     try {
       const userCourseList = req.user?.courses;
       const courseId = req.params.id;
-      //check if course exits in courseList
-      const courseExits = userCourseList?.some(
-        (course: any) => course._id.toString() === courseId
-      );
+      //check if course exits in courseList (supports both legacy shapes)
+      const courseExits =
+        userCourseList?.some(
+          (course: any) =>
+            course?.courseId?.toString() === courseId ||
+            course?._id?.toString() === courseId ||
+            course?.toString() === courseId
+        ) || false;
       if (!courseExits) {
-        return next(
-          new ErrorHandler("You are not allowed to access this course", 403)
+        // Fall back to canonical Enrollment (Order -> Enrollment -> access)
+        const { default: EnrollmentModel } = await import(
+          "../models/enrollment.model"
         );
+        const enrollment = await EnrollmentModel.findOne({
+          userId: req.user?._id?.toString(),
+          courseId,
+        });
+        if (!enrollment) {
+          return next(
+            new ErrorHandler("You are not allowed to access this course", 403)
+          );
+        }
       }
       const course: any = await CourseModel.findById(courseId);
       const { review, rating } = req.body as IAddReviewData;

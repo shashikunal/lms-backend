@@ -198,229 +198,157 @@ Now the token saves itself every login.
 
 ---
 
-## PART C — Shop categories & brands
+## PART C — Marketplace (courses are digital: no address, no cart, no quantity)
 
-### C1. See all categories — Public
-1. **GET** → `{{baseUrl}}/api/v1/category/all` → **Send**. Copy a category `_id`.
+### C1. List courses — Public
+1. **GET** → `{{baseUrl}}/api/v1/lms/courses?page=1&limit=12` → **Send** (only PUBLISHED show; copy a course `_id`).
 
-### C2. See one category — Public
-1. **GET** → `{{baseUrl}}/api/v1/category/single/electronics` (name-link works) or `/single/PASTE_ID_HERE` → **Send**.
+### C2. Categories — Public
+1. **GET** → `{{baseUrl}}/api/v1/lms/categories` → **Send**.
 
-### C3. Create a category — Admin needed
-1. **POST** → `{{baseUrl}}/api/v1/category/create`, Body JSON: `{ "name": "Electronics", "description": "Gadgets" }` → copy the new `_id`.
+### C3. Search — Public
+1. **GET** → `{{baseUrl}}/api/v1/lms/search?q=react` → **Send**.
 
-### C4. Edit a category — Admin needed
-1. **PUT** → `{{baseUrl}}/api/v1/category/update/PASTE_ID_HERE`, Body JSON: `{ "description": "New text" }`
+### C4. Home blocks — Public
+1. **GET** → `{{baseUrl}}/api/v1/lms/home` → **Send** (featured / top rated / newest).
 
-### C5. Delete a category — Admin needed
-1. **DELETE** → `{{baseUrl}}/api/v1/category/delete/PASTE_ID_HERE` → **Send**.
+### C5. Course detail — Public
+1. **GET** → `{{baseUrl}}/api/v1/lms/courses/PASTE_COURSE_ID` → **Send** (locked video URLs stay hidden).
 
-### C6. Create a brand — Admin needed
-1. **POST** → `{{baseUrl}}/api/v1/category/brand/create`, Body JSON: `{ "name": "Acme", "description": "Acme brand" }` → copy the new `_id`.
+### C6. Curriculum — Public
+1. **GET** → `{{baseUrl}}/api/v1/lms/courses/PASTE_COURSE_ID/curriculum` → **Send** (each lecture has `locked: true/false`).
 
-### C7. See all brands — Public
-1. **GET** → `{{baseUrl}}/api/v1/category/brands/all` → **Send**.
-
----
-
-## PART D — Products (shop items)
-
-### D1. See/search products — Public
-1. **GET** → paste one of these → **Send**:
-- All: `{{baseUrl}}/api/v1/product/all?page=1&limit=12`
-- Search: `{{baseUrl}}/api/v1/product/all?search=mouse`
-- Cheap first: `{{baseUrl}}/api/v1/product/all?sort=price-asc`
-- Costly first: `{{baseUrl}}/api/v1/product/all?sort=price-desc`
-- Top rated: `{{baseUrl}}/api/v1/product/all?sort=rating`
-2. Copy a product `_id` for later steps.
-
-### D2. Featured products (homepage) — Public
-1. **GET** → `{{baseUrl}}/api/v1/product/featured` → **Send**.
-
-### D3. See one product — Public
-1. **GET** → `{{baseUrl}}/api/v1/product/single/PASTE_PRODUCT_ID_HERE` → **Send**.
-
-### D4. Similar products — Public
-1. **GET** → `{{baseUrl}}/api/v1/product/related/PASTE_PRODUCT_ID_HERE` → **Send**.
-
-### D5. Create a product — Admin needed
-1. **POST** → `{{baseUrl}}/api/v1/product/create`, Body JSON (only `title`, `price`, `category` are a must):
-```json
-{ "title": "Wireless Mouse", "price": 999, "category": "PASTE_CATEGORY_ID", "stockQuantity": 50 }
-```
-2. Copy the new product `_id`.
-
-### D6. Edit a product — Admin needed
-1. **PUT** → `{{baseUrl}}/api/v1/product/update/PASTE_PRODUCT_ID_HERE`, Body JSON: `{ "price": 899, "stockQuantity": 100 }`
-
-### D7. Delete a product — Admin needed
-1. **DELETE** → `{{baseUrl}}/api/v1/product/delete/PASTE_PRODUCT_ID_HERE` → **Send**.
+### C7. Sections — Public
+1. **GET** → `{{baseUrl}}/api/v1/lms/courses/PASTE_COURSE_ID/sections` → **Send**.
+2. Or by title/lecture: `{{baseUrl}}/api/v1/lms/sections/Basics` (+ `/lectures` for the lecture list).
 
 ---
 
-## PART E — My addresses (login needed for all 5)
+## PART D — Lectures & access (enrollment = key, login needed)
 
-### E1. Add address
-1. **POST** → `{{baseUrl}}/api/v1/address/add`, Body JSON:
-```json
-{ "fullName": "Ravi Kumar", "phone": "9876543210",
-  "addressLine1": "H.No 1-2-3, MG Road", "city": "Hyderabad",
-  "state": "Telangana", "postalCode": "500001", "isDefault": true }
-```
-2. Copy the address `_id` — you need it to order (Part J).
+### D1. Watch preview lecture
+1. **GET** → `{{baseUrl}}/api/v1/lms/lectures/PASTE_LECTURE_ID` → **Send** (preview lectures are open).
 
-### E2. See my addresses
-1. **GET** → `{{baseUrl}}/api/v1/address/my-addresses` → **Send**.
+### D2. Locked lecture
+1. Same URL without enrollment → `403 Enroll in this course`. Buy first (PART E).
 
-### E3. Edit address
-1. **PUT** → `{{baseUrl}}/api/v1/address/update/PASTE_ADDRESS_ID_HERE`, Body JSON: `{ "phone": "9123456780" }`
+### D3. Am I allowed?
+1. **GET** → `{{baseUrl}}/api/v1/lms/lectures/PASTE_LECTURE_ID/access` → **Send** → `{ "hasAccess": true/false }`.
 
-### E4. Delete address
-1. **DELETE** → `{{baseUrl}}/api/v1/address/delete/PASTE_ADDRESS_ID_HERE` → **Send**.
+### D4. Save progress — enrolled
+1. **POST** → `{{baseUrl}}/api/v1/lms/lectures/PASTE_LECTURE_ID/progress`, Body JSON: `{ "watchedSeconds": 120 }`.
 
-### E5. Make default address
-1. **PUT** → `{{baseUrl}}/api/v1/address/set-default/PASTE_ADDRESS_ID_HERE` → **Send** (no body needed).
+### D5. Complete lecture — enrolled
+1. **POST** → `{{baseUrl}}/api/v1/lms/lectures/PASTE_LECTURE_ID/complete` → **Send** (no body). At 100% a certificate is issued automatically.
 
 ---
 
-## PART F — Cart (login needed for all 6)
+## PART E — Buy course (digital checkout, login needed)
 
-### F1. See my cart
-1. **GET** → `{{baseUrl}}/api/v1/cart/` → **Send**. You see items + `summary` (subtotal, discount, tax, shipping, grandTotal). Each item has its own `_id` — that is the `itemId` for F3/F4 (NOT the product id!).
+> Flow: detail → **Buy Now** → payment → verify → order → enrollment → **Go to Course** in My Learning.
 
-### F2. Add to cart
-1. **POST** → `{{baseUrl}}/api/v1/cart/add`, Body JSON: `{ "productId": "PASTE_PRODUCT_ID", "quantity": 2 }`
+### E1. Create payment
+1. **POST** → `{{baseUrl}}/api/v1/lms/payments/create`, Body JSON: `{ "courseId": "PASTE_COURSE_ID" }` (optional `"couponCode"`).
+2. Copy `order.id` from the reply.
 
-### F3. Change quantity
-1. **PUT** → `{{baseUrl}}/api/v1/cart/update-quantity`, Body JSON: `{ "itemId": "PASTE_CART_ITEM_ID", "quantity": 3 }` (use `0` to remove).
+### E2. Verify & enroll
+1. **POST** → `{{baseUrl}}/api/v1/lms/payments/verify`, Body JSON: `{ "razorpay_order_id": "PASTE", "razorpay_payment_id": "PASTE", "razorpay_signature": "PASTE", "courseId": "PASTE_COURSE_ID" }`.
+2. Good reply: `201` + enrollment. Bad signature → `400`.
 
-### F4. Remove one item
-1. **DELETE** → `{{baseUrl}}/api/v1/cart/item/PASTE_CART_ITEM_ID_HERE` → **Send**.
+### E3. My purchases
+1. **GET** → `{{baseUrl}}/api/v1/lms/purchases` → **Send**.
+2. **GET** → `{{baseUrl}}/api/v1/lms/orders` → **Send**.
 
-### F5. Empty the whole cart
-1. **DELETE** → `{{baseUrl}}/api/v1/cart/clear` → **Send**.
-
-### F6. Merge guest cart (after login)
-1. **POST** → `{{baseUrl}}/api/v1/cart/merge`, Body JSON: `{ "guestItems": [{ "productId": "PASTE_ID", "quantity": 1 }] }`
-
----
-
-## PART G — Wishlist (login needed for all 3)
-
-### G1. See my wishlist
-1. **GET** → `{{baseUrl}}/api/v1/wishlist/` → **Send**.
-
-### G2. Add/remove (same button)
-1. **POST** → `{{baseUrl}}/api/v1/wishlist/toggle`, Body JSON: `{ "productId": "PASTE_PRODUCT_ID" }`
-2. Reply says `"action": "added"` or `"removed"`. Click Send again to undo.
-
-### G3. Move to cart
-1. **POST** → `{{baseUrl}}/api/v1/wishlist/move-to-cart/PASTE_PRODUCT_ID_HERE` → **Send** (no body).
+### E4. One order
+1. **GET** → `{{baseUrl}}/api/v1/lms/orders/PASTE_ORDER_ID` → **Send**.
 
 ---
 
-## PART H — Coupons
+## PART F — My Learning (login needed; orders are just history)
+
+### F1. Dashboard
+1. **GET** → `{{baseUrl}}/api/v1/lms/my-learning` → **Send** (`continueLearning`, `inProgress`, `completed`, `wishlist`, `certificates`).
+
+### F2. Enrollments
+1. **GET** → `{{baseUrl}}/api/v1/lms/enrollments` → **Send**.
+2. One: **GET** → `{{baseUrl}}/api/v1/lms/enrollments/PASTE_ENROLLMENT_ID`.
+
+### F3. Certificates
+1. **GET** → `{{baseUrl}}/api/v1/lms/certificates` → **Send**.
+2. One: **GET** → `{{baseUrl}}/api/v1/lms/certificates/PASTE_CERT_ID`.
+
+---
+
+## PART G — Wishlist, courses (login needed)
+
+### G1. Toggle (add/remove, same button)
+1. **POST** → `{{baseUrl}}/api/v1/lms/wishlist`, Body JSON: `{ "courseId": "PASTE_COURSE_ID" }` → `{ "wishlisted": true/false }`. Alias: `POST /api/v1/lms/wishlist/toggle` (same body).
+
+### G2. See mine
+1. **GET** → `{{baseUrl}}/api/v1/lms/wishlist` → **Send**.
+
+---
+
+## PART H — Coupons, courses
 
 ### H1. Create coupon — Admin needed
-1. **POST** → `{{baseUrl}}/api/v1/coupon/create`, Body JSON:
-```json
-{ "code": "WELCOME10", "discountType": "percentage", "discountValue": 10,
-  "minOrderAmount": 500, "endDate": "2026-12-31" }
-```
-(`discountType` is `percentage` or `fixed`.)
+1. **POST** → `{{baseUrl}}/api/v1/lms/coupons`, Body JSON: `{ "code": "WELCOME10", "discountType": "percentage", "discountValue": 10, "endDate": "2027-01-01T00:00:00Z" }`.
 
-### H2. See all coupons — Admin needed
-1. **GET** → `{{baseUrl}}/api/v1/coupon/all` → **Send**.
+### H2. See all — Admin needed
+1. **GET** → `{{baseUrl}}/api/v1/lms/coupons` → **Send**.
 
-### H3. Use coupon — Login needed
-1. **POST** → `{{baseUrl}}/api/v1/coupon/apply`, Body JSON: `{ "code": "WELCOME10" }`
-2. Reply tells you how much you saved. If it says minimum amount, add more items first.
-
-### H4. Remove coupon — Login needed
-1. **POST** → `{{baseUrl}}/api/v1/coupon/remove` → **Send** (no body).
-
-### H5. Delete coupon — Admin needed
-1. **DELETE** → `{{baseUrl}}/api/v1/coupon/delete/PASTE_COUPON_ID_HERE` → **Send**.
+### H3. Check a code — Login needed
+1. **POST** → `{{baseUrl}}/api/v1/lms/coupons/validate`, Body JSON: `{ "code": "WELCOME10", "courseId": "PASTE_COURSE_ID" }` → `{ "discount": 49.9, "payable": 449.1 }`.
 
 ---
 
-## PART I — Payments (online money)
+## PART I — Reviews, courses
 
-### I1. Get shop key — Public
-1. **GET** → `{{baseUrl}}/api/v1/payment/razorpay-key` → **Send**. Copy the `key` (your website needs it).
+### I1. See reviews — Public
+1. **GET** → `{{baseUrl}}/api/v1/lms/reviews/PASTE_COURSE_ID` → **Send** (alias: `GET /api/v1/lms/courses/PASTE_COURSE_ID/reviews`).
 
-### I2. Make a payment order — Login needed
-1. **POST** → `{{baseUrl}}/api/v1/payment/razorpay-order`, Body JSON: `{}` (empty! it counts your cart itself) → **Send**. Copy the order `id`.
-
-### I3. Confirm payment — Login needed
-1. After paying on the website you get 3 values. **POST** → `{{baseUrl}}/api/v1/payment/verify`, Body JSON:
-```json
-{ "razorpay_order_id": "PASTE", "razorpay_payment_id": "PASTE", "razorpay_signature": "PASTE" }
-```
-
-### I4. Webhook — NOT for you
-This is called by Razorpay's computer automatically. Skip it.
-
-### I5. Refund — Admin needed
-1. **POST** → `{{baseUrl}}/api/v1/payment/refund`, Body JSON: `{ "paymentId": "pay_PASTE_ID" }`
-
-**Easy choice:** skip I1–I3 completely and pay cash on delivery — order with `"method": "cod"` (Part J).
+### I2. Write a review — Login needed + enrolled
+1. **POST** → `{{baseUrl}}/api/v1/lms/reviews/PASTE_COURSE_ID`, Body JSON: `{ "rating": 5, "comment": "Excellent!" }`. Strangers get `403`.
 
 ---
 
-## PART J — Shop orders
+## PART J — Instructor (Instructor or Admin role)
 
-### J1. Place order — Login needed (cart must NOT be empty!)
-1. **POST** → `{{baseUrl}}/api/v1/ecommerce/order/create`, Body JSON (use your address id from E1):
-```json
-{ "addressId": "PASTE_ADDRESS_ID", "paymentInfo": { "method": "cod" } }
-```
-2. Write down the `orderNumber` (like `ORD-...`) from the reply. If it says cart is empty, do F2 first.
-3. Paid online? Use instead:
-```json
-{ "addressId": "PASTE_ADDRESS_ID",
-  "paymentInfo": { "method": "Razorpay", "orderId": "PASTE_ORDER_ID", "id": "PASTE_PAY_ID", "signature": "PASTE_SIGN" } }
-```
+> Lifecycle: `DRAFT` → `SUBMITTED` → `UNDER_REVIEW` → `PUBLISHED` (admin) → `UNPUBLISHED` / `ARCHIVED`. Only `PUBLISHED` shows in the marketplace.
 
-### J2. My orders — Login needed
-1. **GET** → `{{baseUrl}}/api/v1/ecommerce/order/my-orders` → **Send**.
+### J1. My courses
+1. **GET** → `{{baseUrl}}/api/v1/lms/instructor/courses` → **Send**.
 
-### J3. One order details — Login needed
-1. **GET** → `{{baseUrl}}/api/v1/ecommerce/order/single/PASTE_ORDER_ID_HERE` → **Send** (only yours, unless admin).
+### J2. Create (DRAFT)
+1. **POST** → `{{baseUrl}}/api/v1/lms/instructor/courses`, same course body as B3.
 
-### J4. Cancel my order — Login needed
-1. **PUT** → `{{baseUrl}}/api/v1/ecommerce/order/cancel/PASTE_ORDER_ID_HERE`, Body JSON: `{ "reason": "Ordered by mistake" }`
-2. Works only BEFORE it ships. After shipping it says cannot cancel.
+### J3. Edit
+1. **PUT** → `{{baseUrl}}/api/v1/lms/instructor/courses/PASTE_COURSE_ID`, Body JSON: `{ "price": 499 }`.
 
-### J5. All orders — Admin needed
-1. **GET** → `{{baseUrl}}/api/v1/ecommerce/order/admin/all?status=Processing&page=1&limit=20` → **Send**.
+### J4. Add lecture
+1. **POST** → `{{baseUrl}}/api/v1/lms/instructor/courses/PASTE_COURSE_ID/lectures`, Body JSON: `{ "title": "Lesson 1", "videoSection": "Basics", "videoLength": 10, "isPreview": true }`.
 
-### J6. Change order status — Admin needed
-1. **PUT** → `{{baseUrl}}/api/v1/ecommerce/order/admin/status/PASTE_ORDER_ID_HERE`, Body JSON:
-```json
-{ "status": "Shipped", "trackingNumber": "TRK123", "courierPartner": "Delhivery" }
-```
-2. Change `"status"` to `Shipped`, then later `Delivered`.
+### J5. Submit for review
+1. **POST** → `{{baseUrl}}/api/v1/lms/instructor/courses/PASTE_COURSE_ID/submit` → **Send** (no body).
+
+### J6. Students / revenue / analytics
+1. **GET** → `{{baseUrl}}/api/v1/lms/instructor/students`, `.../revenue`, `.../analytics`.
 
 ---
 
-## PART K — Product reviews
+## PART K — Admin marketplace
 
-### K1. See reviews — Public
-1. **GET** → `{{baseUrl}}/api/v1/product-reviews/product/PASTE_PRODUCT_ID_HERE` → **Send**.
+### K1. All courses (any status)
+1. **GET** → `{{baseUrl}}/api/v1/lms/admin/courses` → **Send**.
 
-### K2. Write a review — Login needed
-1. **POST** → `{{baseUrl}}/api/v1/product-reviews/add`, Body JSON:
-```json
-{ "productId": "PASTE_PRODUCT_ID", "rating": 5, "title": "Loved it", "comment": "Value for money" }
-```
-2. One review per product only. `rating` is 1 to 5.
+### K2. Publish / unpublish
+1. **PUT** → `{{baseUrl}}/api/v1/lms/admin/courses/PASTE_COURSE_ID/status`, Body JSON: `{ "status": "PUBLISHED" }`.
 
-### K3. Say review was helpful — Login needed
-1. **PUT** → `{{baseUrl}}/api/v1/product-reviews/helpful/PASTE_REVIEW_ID_HERE` → **Send** (no body).
+### K3. Instructors
+1. **GET** → `{{baseUrl}}/api/v1/lms/admin/instructors` → **Send**.
 
-### K4. Delete a review — Login needed (yours or admin)
-1. **DELETE** → `{{baseUrl}}/api/v1/product-reviews/delete/PASTE_REVIEW_ID_HERE` → **Send**.
+### K4. Orders / enrollments / analytics
+1. **GET** → `{{baseUrl}}/api/v1/lms/admin/orders`, `.../enrollments`, `.../analytics`.
 
 ---
 
@@ -455,12 +383,11 @@ This is called by Razorpay's computer automatically. Skip it.
 | `Invalid activation code` | Wrong 6 digits | Copy again from register reply |
 | `Unauthorized` (401) | You are not logged in (or key expired) | Login again (A3) |
 | `Forbidden` / admin only (403) | Logged in, but not admin | Ask an admin to do A12 for you |
-| `Your cart is empty` | Nothing in cart | Do F2 first |
-| `not allowed to access this course` | You didn't buy it | Do B7 first |
-| `already purchased/reviewed` | You did it before | Nothing to do |
-| `cannot be cancelled` | Already shipped | Too late to cancel |
+| `Enroll in this course` (403) | Lecture locked, no enrollment | Buy via E1–E2, then F1 |
+| `already purchased/enrolled` | You did it before | Open F1 My Learning |
+| `Payment verification failed` (400) | Bad signature | Check Razorpay ids |
 | `... does not exist` | Wrong id or CAPITAL letters in layout type | Check id / use lowercase |
-| `Only N items in stock` | Asked for more than shop has | Lower the quantity |
-| `Not found` (404) | Wrong id in URL | Copy the id again |
+| `Section/Course not found` (404) | Wrong id | Copy the id again |
+| 404 on `/product` `/cart` `/address` | Removed shop APIs | Use `/api/v1/lms/*` |
 
-**Golden rules:** IDs come from earlier replies (course `_id`, `addressId`, cart `itemId`, `orderId`). Cart item id ≠ product id. Course buying (`/order/...`) and shop buying (`/ecommerce/order/...`) are different. `cod` and layout types are lowercase.
+**Golden rules:** IDs come from earlier replies. Enrollment = access (locked lectures need E1–E2 first). Courses are digital: no address, no quantity, no cart. Layout types are lowercase.

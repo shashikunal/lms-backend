@@ -60,10 +60,20 @@ export const registrationUser = CatchAsyncErrors(
           message: `Please check your ${user.email} address to activate your account!`,
           activationToken: activationToken.token,
           activationCode: activationCode,
+          mailSent: true,
           mailUrl: mailUrl || "https://ethereal.email/messages",
         });
       } catch (error: any) {
-        return next(new ErrorHandler(error.message, 400));
+        // SMTP delivery is best-effort: still hand out the activation
+        // credentials so signup works when mail is unreachable.
+        console.warn("Activation email skipped:", error?.message || error);
+        res.status(201).json({
+          success: true,
+          message: `Account created for ${user.email}. Use the activation code to activate (email delivery unavailable).`,
+          activationToken: activationToken.token,
+          activationCode: activationCode,
+          mailSent: false,
+        });
       }
     } catch (error: any) {
       return next(new ErrorHandler(error, 500));
@@ -117,7 +127,12 @@ export const activateUser = CatchAsyncErrors(
         message: "User activated successfully",
       });
     } catch (error: any) {
-      return next(new ErrorHandler(error.message, 500));
+      // Invalid/expired activation tokens are client errors, not 500s.
+      const status =
+        error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError"
+          ? 400
+          : 500;
+      return next(new ErrorHandler(error.message, status));
     }
   }
 );
@@ -179,6 +194,9 @@ export const updateAccessToken = CatchAsyncErrors(
   async (req: Request | any, res: Response, next: NextFunction) => {
     try {
       const refresh_token = req.cookies.refresh_token as string;
+      if (!refresh_token) {
+        return next(new ErrorHandler("Please login again to continue", 400));
+      }
       const decoded = jwt.verify(
         refresh_token,
         CONFIG.REFRESH_TOKEN as string

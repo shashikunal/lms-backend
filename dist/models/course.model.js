@@ -49,12 +49,14 @@ const courseDataSchema = new mongoose_1.Schema({
     links: { type: [linkSchema] },
     suggestion: { type: String },
     questions: { type: [commentSchema] },
+    isPreview: { type: Boolean, default: false },
 });
 const courseSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     description: { type: String, required: true },
     price: { type: Number, required: true },
     estimatedPrice: { type: Number },
+    discountPrice: { type: Number },
     thumbnail: {
         public_id: {
             type: String,
@@ -66,6 +68,23 @@ const courseSchema = new mongoose_1.Schema({
     tags: { type: String, required: true },
     level: { type: String, required: true },
     demoUrl: { type: String, required: true },
+    category: { type: String, default: "General" },
+    status: {
+        type: String,
+        enum: [
+            "DRAFT",
+            "SUBMITTED",
+            "UNDER_REVIEW",
+            "PUBLISHED",
+            "UNPUBLISHED",
+            "ARCHIVED",
+        ],
+        default: "PUBLISHED",
+    },
+    instructor: {
+        id: { type: String },
+        name: { type: String },
+    },
     benefits: { type: [{ title: String }] },
     prerequisites: { type: [{ title: String }] },
     reviews: { type: [reviewSchema] },

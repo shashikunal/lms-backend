@@ -1,14 +1,16 @@
-# LMS & E-Commerce REST API — Clean Guide
+# LMS Course Marketplace REST API — Clean Guide
+
+> **Verified Oct 2026:** 104/104 endpoint checks pass. Legacy physical-commerce APIs (`/product`, `/cart`, `/address`, `/ecommerce/order`, `/product-reviews`, shop category/coupon/payment/wishlist) were removed and return `404` — use `/api/v1/lms/*`.
 
 > **Base URL (Production):** `https://mockapi-mauve.vercel.app`
 > **Base URL (Local):** `http://localhost:8000`
 > **Interactive Swagger UI:** `/api-docs` (or `/docs`) · **Raw OpenAPI JSON:** `/api-docs.json`
 > **Test mailbox (activation codes):** https://ethereal.email/messages
 
-This guide is the single source of truth for students. It shows **exactly how to call each endpoint as a `user` vs an `admin`**, with request/response examples. No code was changed — this is documentation only.
+This guide is the single source of truth for students. It shows **exactly how to call each endpoint as a student (`user`), instructor, or `admin`**, with request/response examples.
 
 > **Confused? Start here:** [`SIMPLE_GUIDE.md`](./SIMPLE_GUIDE.md) — every endpoint in plain words, numbered Postman clicks, copy-paste bodies.
-> **Postman + React setup:** [`FRONTEND_POSTMAN_GUIDE.md`](./FRONTEND_POSTMAN_GUIDE.md) (auth context, user shop flow, admin screens).
+> **Postman + React setup:** [`FRONTEND_POSTMAN_GUIDE.md`](./FRONTEND_POSTMAN_GUIDE.md) (auth context, marketplace flow, instructor/admin screens).
 > **Need every field + response explained?** see [`MODULE_WISE_GUIDE.md`](./MODULE_WISE_GUIDE.md) — full module-wise Auth & Courses documentation (request tables, success/error examples, React snippets).
 
 ---
@@ -21,15 +23,15 @@ This guide is the single source of truth for students. It shows **exactly how to
 4. [Authentication & Users](#4-authentication--users)
 5. [Courses (LMS)](#5-courses-lms)
 6. [Course Orders (LMS checkout)](#6-course-orders-lms-checkout)
-7. [Categories & Brands](#7-categories--brands)
-8. [Products Catalog](#8-products-catalog)
-9. [Address Book](#9-address-book)
-10. [Shopping Cart](#10-shopping-cart)
-11. [Wishlist](#11-wishlist)
-12. [Coupons](#12-coupons)
-13. [Payments (Razorpay)](#13-payments-razorpay)
-14. [E-Commerce Orders](#14-e-commerce-orders)
-15. [Product Reviews](#15-product-reviews)
+7. [Marketplace Discovery](#7-marketplace-discovery)
+8. [Lectures, Progress & Certificates](#8-lectures-progress--certificates)
+9. [Digital Purchase & Enrollments](#9-digital-purchase--enrollments)
+10. [Wishlist (courses)](#10-wishlist-courses)
+11. [Coupons (courses)](#11-coupons-courses)
+12. [Reviews (courses)](#12-reviews-courses)
+13. [Instructor Marketplace](#13-instructor-marketplace)
+14. [Admin Marketplace](#14-admin-marketplace)
+15. [Removed shop APIs](#15-removed-shop-apis)
 16. [Notifications, Analytics, Layout (admin)](#16-notifications-analytics-layout-admin)
 17. [Common student mistakes](#17-common-student-mistakes)
 18. [Status codes & error format](#18-status-codes--error-format)
@@ -52,8 +54,9 @@ This guide is the single source of truth for students. It shows **exactly how to
 
 | Role | Meaning | How to get it |
 |---|---|---|
-| `user` | Default. Can shop, enroll in courses, manage own cart/addresses/orders, ask questions, write reviews. | Register normally. |
-| `admin` | Everything a user can do, **plus** create/edit products, courses, categories, coupons, view all orders/users, analytics. | An existing admin calls `PUT /api/v1/auth/update-user-roles` with `{ "id": "<userId>", "role": "admin" }`. There is no self-promote endpoint. |
+| `user` | Default = student. Browse, buy, enroll, learn, wishlist, review. | Register normally. |
+| `instructor` | Everything a student can do, **plus** create/edit courses, curriculum, submit for review, view students/revenue/analytics. | An existing admin calls `PUT /api/v1/auth/update-user-roles` with `{ "id": "<userId>", "role": "instructor" }`. There is no self-promote endpoint. |
+| `admin` | Everything, **plus** publish courses, manage users/orders/enrollments/coupons/layouts, analytics. | An existing admin calls `PUT /api/v1/auth/update-user-roles` with `{ "id": "<userId>", "role": "admin" }`. |
 
 > If you get `403 Forbidden`, you called an admin-only endpoint with a `user` token. If you get `401 Unauthorized`, your token is missing/expired.
 
@@ -63,7 +66,7 @@ Every path below is relative to the base URL. Example:
 
 ```
 POST https://mockapi-mauve.vercel.app/api/v1/auth/login
-GET  http://localhost:8000/api/v1/product/all
+GET  http://localhost:8000/api/v1/lms/courses
 ```
 
 ### 1.4 Postman / fetch setup (recommended)
@@ -120,13 +123,13 @@ GET /api/v1/auth/me
 Authorization: Bearer <access_token>
 ```
 
-**Step 5 — Shop as a user**
+**Step 5 — Buy & learn as a student (digital, no address/cart)**
 
 ```http
-GET /api/v1/product/all?page=1&limit=5
-POST /api/v1/address/add            (Authorization required, see §9)
-GET  /api/v1/cart/                  (Authorization required, see §10)
-POST /api/v1/ecommerce/order/create (Authorization required, see §14)
+GET  /api/v1/lms/courses?page=1&limit=5
+POST /api/v1/lms/payments/create   (Authorization required, see §9)
+POST /api/v1/lms/payments/verify   (Authorization required, see §9)
+GET  /api/v1/lms/my-learning       (Go to Course)
 ```
 
 **Step 6 — Learn as a student**
@@ -151,28 +154,18 @@ You must already have a `user` account, then get promoted once (by an existing a
 POST /api/v1/auth/login
 { "email": "admin@example.com", "password": "Admin@123" }
 
-# 2. Create a category (need its _id for products)
-POST /api/v1/category/create
+# 2. Publish an instructor's submitted course
+PUT /api/v1/lms/admin/courses/<courseId>/status
 Authorization: Bearer <admin_token>
-{ "name": "Electronics", "description": "Gadgets" }
+{ "status": "PUBLISHED" }
 
-# 3. Create a brand
-POST /api/v1/category/brand/create
+# 3. Create a coupon
+POST /api/v1/lms/coupons
 Authorization: Bearer <admin_token>
-{ "name": "Acme", "description": "Acme brand" }
+{ "code": "WELCOME10", "discountType": "percentage", "discountValue": 10, "endDate": "2027-01-01T00:00:00Z" }
 
-# 4. Create a product (use category _id + brand _id)
-POST /api/v1/product/create
-Authorization: Bearer <admin_token>
-{ "title": "Wireless Mouse", "price": 999, "category": "<categoryId>", "stockQuantity": 50 }
-
-# 5. Create a coupon
-POST /api/v1/coupon/create
-Authorization: Bearer <admin_token>
-{ "code": "WELCOME10", "discountType": "percentage", "discountValue": 10, "minOrderAmount": 500, "endDate": "2026-12-31" }
-
-# 6. View all orders / users / analytics
-GET /api/v1/ecommerce/order/admin/all?status=all&page=1&limit=20
+# 4. View orders / users / analytics
+GET /api/v1/lms/admin/orders
 GET /api/v1/auth/get-all-user-dashboard
 GET /api/v1/analytics/orders-analytics
 ```
@@ -206,7 +199,7 @@ Base route: `/api/v1/auth`
 | `PUT` | `/update-user-password` | Auth | Change password. Body: `{ "oldPassword": "...", "newPassword": "..." }`. Social accounts without a password get `400`. |
 | `PUT` | `/update-user-profile-picture` | Auth | Update avatar. Body: `{ "avatar": "<cloudinary-url-or-base64>" }`. |
 | `GET` | `/get-all-user-dashboard` (alias: `/get-users`) | Admin | List all users. |
-| `PUT` | `/update-user-roles` | Admin | Change role. Body: `{ "id": "<userId>", "role": "user" \| "admin" }`. |
+| `PUT` | `/update-user-roles` | Admin | Change role. Body: `{ "id": "<userId>", "role": "user" \| "instructor" \| "admin" }`. |
 | `DELETE` | `/delete-user/:id` | Admin | Delete user by ID. |
 
 > ⚠️ Name confusion in old docs: the real routes are `/refreshtoken` (no hyphen), `/update-user-roles` (plural), `/update-user-profile-picture` (not `update-user-avatar`). The aliases `/get-users` also work for the admin user list.
@@ -288,285 +281,158 @@ Authorization: Bearer <user_token>
 { "courseId": "<courseId>", "payment_info": { "id": "pay_123", "status": "success" } }
 ```
 
-> For physical products use §14 (`/api/v1/ecommerce/order`), not this.
+> For the verified Razorpay flow use §9 (`POST /api/v1/lms/payments/create` → `POST /api/v1/lms/payments/verify`), which creates the order **and** enrollment.
 
 ---
 
-## 7. Categories & Brands
+## 7. Marketplace Discovery
 
-Base route: `/api/v1/category`
-
-| Method | Endpoint | Who | What it does |
-|---|---|---|---|
-| `GET` | `/all` | Public | All active categories. |
-| `GET` | `/single/:idOrSlug` | Public | One category by Mongo ID or slug. |
-| `GET` | `/brands/all` | Public | All brands. |
-| `POST` | `/create` | Admin | Create category. Body: `{ "name": "...", "description": "...", "image": "...", "parentCategory": "<optional parentId>", "displayOrder": 1 }`. |
-| `PUT` | `/update/:id` | Admin | Update category (same fields). |
-| `DELETE` | `/delete/:id` | Admin | Delete category. |
-| `POST` | `/brand/create` | Admin | Create brand. Body: `{ "name": "...", "description": "...", "logo": "...", "website": "..." }`. |
-
-```http
-POST /api/v1/category/create
-Authorization: Bearer <admin_token>
-{ "name": "Laptops", "description": "All laptops", "displayOrder": 2 }
-```
-
----
-
-## 8. Products Catalog
-
-Base route: `/api/v1/product`
-
-| Method | Endpoint | Who | What it does |
-|---|---|---|---|
-| `GET` | `/all` | Public | Search + filter + paginate (see query params). |
-| `GET` | `/featured` | Public | Featured products (`isFeatured: true`). |
-| `GET` | `/single/:idOrSlug` | Public | One product by ID or slug. |
-| `GET` | `/related/:id` | Public | Products in the same category. |
-| `POST` | `/create` | Admin | Create product. Required: `title, price, category`. |
-| `PUT` | `/update/:id` | Admin | Update product (any fields). |
-| `DELETE` | `/delete/:id` | Admin | Delete product. |
-
-**Query params for `GET /all`:** `search, category, brand, minPrice, maxPrice, rating, inStock, sort, page, limit`
-
-```
-GET /api/v1/product/all?search=mouse&minPrice=100&maxPrice=2000&sort=price-asc&page=1&limit=12
-```
-
-`search` matches title/description/tags (case-insensitive). `sort` options: default newest, `price-asc`, `price-desc`, `rating`, `oldest`.
-
-**Admin example — create product:**
-
-```http
-POST /api/v1/product/create
-Authorization: Bearer <admin_token>
-Content-Type: application/json
-
-{
-  "title": "Wireless Mouse",
-  "price": 999,
-  "discountPrice": 799,
-  "category": "<categoryId>",
-  "brand": "<brandId>",
-  "description": "Ergonomic 2.4GHz mouse",
-  "stockQuantity": 50,
-  "isFeatured": true,
-  "isPublished": true,
-  "tags": ["wireless", "mouse"],
-  "images": [{ "public_id": "x", "url": "https://..." }]
-}
-```
-
----
-
-## 9. Address Book
-
-Base route: `/api/v1/address` — all routes need auth (user or admin token; users only see their own).
+Base route: `/api/v1/lms` — all below are public.
 
 | Method | Endpoint | What it does |
 |---|---|---|
-| `POST` | `/add` | Add address. Required: `fullName, phone, addressLine1, city, state, postalCode`. Optional: `addressLine2, landmark, country (default India), addressType (home/work/other), isDefault`. Aliases accepted: `phoneNumber→phone`, `street→addressLine1`, `zipCode→postalCode`. |
-| `GET` | `/my-addresses` | List my addresses. |
-| `PUT` | `/update/:id` | Edit address (any fields). |
-| `DELETE` | `/delete/:id` | Delete address. |
-| `PUT` | `/set-default/:id` | Make this my default address. |
+| `GET` | `/courses?page=1&limit=12` | Published courses. Filters: `category`, `level`, `search`. |
+| `GET` | `/categories` | Categories + counts (aggregated from courses). |
+| `GET` | `/search?q=react` | Search name/description/tags/category. |
+| `GET` | `/home` | Featured / top-rated / newest blocks. |
+| `GET` | `/courses/:courseId` | Detail (locked video URLs hidden). Unknown id → `404`. |
+| `GET` | `/courses/:courseId/curriculum` | Curriculum with `locked` flags. |
+| `GET` | `/courses/:courseId/sections` | Sections grouped by `videoSection`. |
+| `GET` | `/sections/:sectionId` (+ `/lectures`) | By lecture `_id` or section title. Unknown → `404`. |
 
 ```http
-POST /api/v1/address/add
-Authorization: Bearer <user_token>
-
-{
-  "fullName": "Ravi Kumar",
-  "phone": "9876543210",
-  "addressLine1": "H.No 1-2-3, MG Road",
-  "city": "Hyderabad",
-  "state": "Telangana",
-  "postalCode": "500001",
-  "country": "India",
-  "addressType": "home",
-  "isDefault": true
-}
+GET /api/v1/lms/courses?page=1&limit=12
+GET /api/v1/lms/search?q=react
 ```
 
 ---
 
-## 10. Shopping Cart
+## 8. Lectures, Progress & Certificates
 
-Base route: `/api/v1/cart` — all routes need auth.
+Login required; locked lectures need enrollment (`403` otherwise). Preview lectures are open.
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `GET` | `/lms/lectures/:lectureId` | Auth | Lecture content. |
+| `GET` | `/lms/lectures/:lectureId/access` | Auth | `{ "hasAccess": true/false }`. |
+| `POST` | `/lms/lectures/:lectureId/progress` | Enrolled | Save `{ "watchedSeconds": 120 }`. |
+| `POST` | `/lms/lectures/:lectureId/complete` | Enrolled | Complete (no body). 100% auto-issues certificate. |
+| `GET` | `/lms/my-learning` | Auth | Continue / in-progress / completed / wishlist / certificates. |
+| `GET` | `/lms/enrollments` (+ `/:enrollmentId`) | Auth | My enrollments. |
+| `GET` | `/lms/certificates` (+ `/:certificateId`) | Auth | My certificates. |
+
+---
+
+## 9. Digital Purchase & Enrollments
+
+Flow: detail → **Buy Now** → `payments/create` → pay → `payments/verify` → order → enrollment → **Go to Course**. No address, quantity, or cart.
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `POST` | `/lms/payments/create` | Auth | Razorpay order. Body: `{ "courseId": "...", "couponCode?": "..." }`. |
+| `POST` | `/lms/payments/verify` | Auth | Verify HMAC → `201` order + enrollment. Bad signature → `400`. Body: `{ "razorpay_order_id", "razorpay_payment_id", "razorpay_signature", "courseId" }`. |
+| `GET` | `/lms/purchases` | Auth | Purchase history. |
+| `GET` | `/lms/orders` (+ `/:orderId`) | Auth | My orders (owner or admin). |
+
+```http
+POST /api/v1/lms/payments/create
+Authorization: Bearer <user_token>
+{ "courseId": "<courseId>", "couponCode": "WELCOME10" }
+```
+
+```http
+POST /api/v1/lms/payments/verify
+Authorization: Bearer <user_token>
+{ "razorpay_order_id": "...", "razorpay_payment_id": "...", "razorpay_signature": "...", "courseId": "<courseId>" }
+```
+
+---
+
+## 10. Wishlist (courses)
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `GET` | `/lms/wishlist` | Auth | My wishlisted courses. |
+| `POST` | `/lms/wishlist` (alias `/lms/wishlist/toggle`) | Auth | Toggle. Body: `{ "courseId": "..." }` → `{ "wishlisted": true/false }`. |
+
+---
+
+## 11. Coupons (courses)
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `POST` | `/lms/coupons/validate` | Auth | Body: `{ "code": "WELCOME10", "courseId": "..." }` → `{ "discount", "payable" }`. |
+| `POST` | `/lms/coupons` | Admin | Create. Body: `{ "code", "discountType": "percentage"\|"fixed", "discountValue", "endDate", ... }`. |
+| `GET` | `/lms/coupons` | Admin | All coupons. |
+
+```http
+POST /api/v1/lms/coupons
+Authorization: Bearer <admin_token>
+{ "code": "WELCOME10", "discountType": "percentage", "discountValue": 10, "endDate": "2027-01-01T00:00:00Z" }
+```
+
+---
+
+## 12. Reviews (courses)
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `GET` | `/lms/reviews/:courseId` (alias `/lms/courses/:courseId/reviews`) | Public | Review list. |
+| `POST` | `/lms/reviews/:courseId` | Enrolled | Body: `{ "rating": 5, "comment": "..." }` → `201`. Strangers get `403`. |
+
+---
+
+## 13. Instructor Marketplace
+
+Roles: `instructor` or `admin`. Lifecycle: `DRAFT` → `SUBMITTED` → `UNDER_REVIEW` → `PUBLISHED` → `UNPUBLISHED` / `ARCHIVED`.
 
 | Method | Endpoint | What it does |
 |---|---|---|
-| `GET` | `/` | My cart with subtotal/tax/discounts/total. |
-| `POST` | `/add` | Add item. Body: `{ "productId": "...", "variantSku": "..." (optional), "quantity": 1 }`. |
-| `PUT` | `/update-quantity` | Change qty. Body: `{ "itemId": "<cartItemId>", "quantity": 3 }`. |
-| `DELETE` | `/item/:itemId` | Remove one item (`:itemId` is the cart item ID, not product ID). |
-| `DELETE` | `/clear` | Empty cart. |
-| `POST` | `/merge` | Merge guest cart after login. Body: `{ "guestItems": [{ "productId": "...", "quantity": 1 }] }`. |
+| `GET` / `POST` | `/lms/instructor/courses` | My courses / create as `DRAFT` (`201`). |
+| `PUT` | `/lms/instructor/courses/:courseId` | Edit own course. |
+| `POST` | `/lms/instructor/courses/:courseId/lectures` | Add lecture (`201`). |
+| `POST` | `/lms/instructor/courses/:courseId/submit` | Submit for review. |
+| `GET` | `/lms/instructor/students` | Enrollments in my courses. |
+| `GET` | `/lms/instructor/revenue` | `{ totalRevenue, totalEnrollments, byCourse }`. |
+| `GET` | `/lms/instructor/analytics` | Courses, enrollments, completions. |
 
 ```http
-POST /api/v1/cart/add
-Authorization: Bearer <user_token>
-{ "productId": "<productId>", "quantity": 2 }
+POST /api/v1/lms/instructor/courses
+Authorization: Bearer <instructor_token>
+{ "name": "My Course", "description": "...", "price": 499, "tags": "js",
+  "level": "Beginner", "demoUrl": "https://...", "courseData": [{ "title": "L1", "videoSection": "Basics", "videoLength": 10, "isPreview": true }] }
 ```
 
 ---
 
-## 11. Wishlist
-
-Base route: `/api/v1/wishlist` — all routes need auth.
+## 14. Admin Marketplace
 
 | Method | Endpoint | What it does |
 |---|---|---|
-| `GET` | `/` | My wishlist. |
-| `POST` | `/toggle` | Add if missing, remove if present. Body: `{ "productId": "..." }`. |
-| `POST` | `/move-to-cart/:productId` | Move that product into cart. |
-
-```http
-POST /api/v1/wishlist/toggle
-Authorization: Bearer <user_token>
-{ "productId": "<productId>" }
-```
+| `GET` | `/lms/admin/courses` | All courses incl. drafts. |
+| `PUT` | `/lms/admin/courses/:courseId/status` | Set lifecycle. Body: `{ "status": "PUBLISHED" }`. Bad value → `400`. |
+| `GET` | `/lms/admin/instructors` | Instructors/admins. |
+| `GET` | `/lms/admin/orders` | All course orders. |
+| `GET` | `/lms/admin/enrollments` | All enrollments. |
+| `GET` | `/lms/admin/analytics` | `{ users, courses, orders, enrollments, certificates }`. |
 
 ---
 
-## 12. Coupons
+## 15. Removed shop APIs
 
-Base route: `/api/v1/coupon` — all routes need auth; create/list/delete are admin-only.
+These return `404` by design (physical commerce removed Oct 2026). Use the LMS replacements above.
 
-| Method | Endpoint | Who | What it does |
-|---|---|---|---|
-| `POST` | `/apply` | Auth | Apply code to my cart. Body: `{ "code": "WELCOME10" }`. |
-| `POST` | `/remove` | Auth | Remove coupon from cart. |
-| `POST` | `/create` | Admin | Create coupon. |
-| `GET` | `/all` | Admin | All coupons + stats. |
-| `DELETE` | `/delete/:id` | Admin | Delete coupon. |
-
-**Admin example:**
-
-```http
-POST /api/v1/coupon/create
-Authorization: Bearer <admin_token>
-
-{
-  "code": "WELCOME10",
-  "discountType": "percentage",
-  "discountValue": 10,
-  "minOrderAmount": 500,
-  "maxDiscountLimit": 200,
-  "startDate": "2026-01-01",
-  "endDate": "2026-12-31",
-  "usageLimit": 100
-}
-```
-
-Accepted aliases: `discountAmount→discountValue`, `minPurchaseAmount→minOrderAmount`, `maxDiscountAmount→maxDiscountLimit`, `expiryDate/expiresAt→endDate`. `discountType` is `percentage` or `fixed`.
-
-**User example:**
-
-```http
-POST /api/v1/coupon/apply
-Authorization: Bearer <user_token>
-{ "code": "WELCOME10" }
-```
-
----
-
-## 13. Payments (Razorpay)
-
-Base route: `/api/v1/payment`
-
-| Method | Endpoint | Who | What it does |
-|---|---|---|---|
-| `GET` | `/razorpay-key` | Public | Get Razorpay Key ID for frontend checkout. |
-| `POST` | `/razorpay-order` | Auth | Create Razorpay order. Body: `{ "amount": 999, "receipt": "rcpt_001" }` (amount in INR). |
-| `POST` | `/verify` | Auth | Verify payment signature. Body: `{ "razorpay_order_id": "...", "razorpay_payment_id": "...", "razorpay_signature": "..." }`. |
-| `POST` | `/webhook` | Public | Razorpay server webhook (Razorpay calls this, not students). |
-| `POST` | `/refund` | Admin | Refund. Body: `{ "paymentId": "pay_...", "amount": 500 }`. |
-
-**User checkout flow:**
-
-```
-1. GET  /api/v1/payment/razorpay-key          → get key
-2. POST /api/v1/payment/razorpay-order        → { amount } → get razorpay order id
-3. Pay on frontend with Razorpay Checkout
-4. POST /api/v1/payment/verify                → confirm signature
-5. POST /api/v1/ecommerce/order/create        → place the order (see §14)
-```
-
-Cash-on-delivery skips steps 1–4: just call `POST /api/v1/ecommerce/order/create` with `paymentInfo: { method: "cod" }` (lowercase — delivery then auto-marks it paid).
-
----
-
-## 14. E-Commerce Orders
-
-Base route: `/api/v1/ecommerce/order` — all routes need auth. Cart must have items before ordering.
-
-| Method | Endpoint | Who | What it does |
-|---|---|---|---|
-| `POST` | `/create` | Auth | Place order from cart. Needs address + payment info (see below). Clears cart on success. |
-| `GET` | `/my-orders` | Auth | My order history. |
-| `GET` | `/single/:id` | Auth | One order (owner or admin). |
-| `PUT` | `/cancel/:id` | Auth | Cancel own order (only if still `Pending`/`Processing`). Body: `{ "reason": "..." }` (optional). |
-| `GET` | `/admin/all` | Admin | All orders. Query: `?status=Pending|Processing|Shipped|Delivered|Cancelled|all&page=1&limit=20`. |
-| `PUT` | `/admin/status/:id` (alias: `/admin/update-status/:id`) | Admin | Update status. Body: `{ "status": "Shipped", "trackingNumber": "...", "courierPartner": "..." }`. |
-
-**User example — order with saved address (COD):**
-
-```http
-POST /api/v1/ecommerce/order/create
-Authorization: Bearer <user_token>
-
-{ "addressId": "<addressId from §9>", "paymentInfo": { "method": "cod" } }
-```
-
-**User example — order with new address + online payment:**
-
-```http
-POST /api/v1/ecommerce/order/create
-Authorization: Bearer <user_token>
-
-{
-  "shippingAddress": {
-    "fullName": "Ravi Kumar", "phone": "9876543210",
-    "addressLine1": "H.No 1-2-3, MG Road", "city": "Hyderabad",
-    "state": "Telangana", "postalCode": "500001", "country": "India"
-  },
-  "paymentInfo": {
-    "method": "Razorpay",
-    "razorpay_order_id": "<id from §13>",
-    "razorpay_payment_id": "pay_...",
-    "razorpay_signature": "..."
-  }
-}
-```
-
-**Admin example — update status:**
-
-```http
-PUT /api/v1/ecommerce/order/admin/status/<orderId>
-Authorization: Bearer <admin_token>
-{ "status": "Shipped", "trackingNumber": "TRK123", "courierPartner": "Delhivery" }
-```
-
----
-
-## 15. Product Reviews
-
-Base route: `/api/v1/product-reviews`
-
-| Method | Endpoint | Who | What it does |
-|---|---|---|---|
-| `GET` | `/product/:productId?page=1&limit=10` | Public | Reviews + average rating for a product. |
-| `POST` | `/add` | Auth | Add review. Body: `{ "productId": "...", "rating": 5, "title": "Great!", "comment": "...", "images": [] }`. Rating 1–5. |
-| `PUT` | `/helpful/:id` | Auth | Upvote review `:id` as helpful. |
-| `DELETE` | `/delete/:id` | Auth | Delete review (author or admin). |
-
-```http
-POST /api/v1/product-reviews/add
-Authorization: Bearer <user_token>
-{ "productId": "<productId>", "rating": 5, "title": "Loved it", "comment": "Value for money" }
-```
+| Removed | Replacement |
+|---|---|
+| `GET /api/v1/product/*`, `POST /product/create`… | `GET /api/v1/lms/courses`, instructor create |
+| `GET/POST /api/v1/cart/*` | none — digital checkout needs no cart |
+| `*/api/v1/address/*` | none — no shipping |
+| `*/api/v1/category/*` (shop) | `GET /api/v1/lms/categories` |
+| `*/api/v1/coupon/*` (shop) | `/api/v1/lms/coupons*` |
+| `*/api/v1/payment/*` (shop) | `/api/v1/lms/payments/*` |
+| `*/api/v1/ecommerce/order/*` | `/api/v1/lms/orders`, `/purchases` |
+| `*/api/v1/product-reviews/*` | `/api/v1/lms/reviews/:courseId` |
+| `*/api/v1/wishlist/*` (shop) | `/api/v1/lms/wishlist` |
 
 ---
 
@@ -619,13 +485,13 @@ GET /api/v1/layout/get-layout?type=faq
 
 ## 17. Common student mistakes
 
-1. **Wrong base path.** Shop orders are `/api/v1/ecommerce/order/*`, course enrollment is `/api/v1/order/*`. They are different systems.
+1. **Old shop paths 404.** `/product`, `/cart`, `/address`, `/ecommerce/order`, `/product-reviews` (and shop category/coupon/payment/wishlist) were removed. Use `/api/v1/lms/*` (see §15).
 2. **Forgot `Authorization` header.** Protected routes need `Authorization: Bearer <token>`. `401` = token missing/expired → login again or call `/refreshtoken`.
 3. **`403 Forbidden` on admin routes.** You logged in as `user`. Get promoted via `PUT /api/v1/auth/update-user-roles`, then login again.
 4. **Misspelled routes.** Real names: `/refreshtoken`, `/update-user-roles`, `/update-user-profile-picture`, `/add-replay`, `/get-all-course-dashboard`, `/get-all-order-dashboard`, `/get-all-notification`. Check the tables above, not old notes.
-5. **Ordering with an empty cart.** Add to cart first (`POST /api/v1/cart/add`), then `POST /api/v1/ecommerce/order/create`.
-6. **Course content without enrollment.** `GET /api/v1/course/get-course-content/:id` requires buying the course first via `POST /api/v1/order/create-order`.
-7. **Wrong IDs.** Cart remove uses the **cart item ID** (`/api/v1/cart/item/:itemId`), not the product ID. Wishlist move uses the **product ID**.
+5. **Locked lecture 403.** Enroll first: `POST /api/v1/lms/payments/create` → pay → `POST /api/v1/lms/payments/verify`, then `GET /api/v1/lms/my-learning`.
+6. **No certificate yet.** Complete **every** lecture via `POST /api/v1/lms/lectures/:id/complete` — issued automatically at 100%.
+7. **Wrong IDs.** Lectures use lesson `_id`s from curriculum; orders/enrollments/certificates each have their own IDs.
 8. **Activation code expired.** Tokens last 5 minutes. Register again to get a fresh code.
 9. **Sending `email` to update-user-info.** Only `name` is applied; email is ignored.
 10. **Cookies in Postman.** For `/refreshtoken`, enable the cookie jar, or just re-login to get a fresh token.

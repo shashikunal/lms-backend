@@ -39,7 +39,7 @@
 </head>
 <body>
 <header>
-  <h1>🎓 LMS &amp; E-Commerce API — Step by Step Guide</h1>
+  <h1>🎓 LMS Course Marketplace API — Step by Step Guide</h1>
   <p>Base URL (Local): <code>http://localhost:8000</code> &nbsp;|&nbsp; Production: <code>https://mockapi-mauve.vercel.app</code></p>
   <p>Swagger UI: <code>/api-docs</code> &nbsp;|&nbsp; Raw spec: <code>/api-docs.json</code> &nbsp;|&nbsp; Health: <code>/test</code></p>
 </header>
@@ -65,7 +65,7 @@
 <div class="step"><b>Step 3 — Login:</b> <code class="inline">POST /api/v1/auth/login</code> with <code class="inline">{ email, password }</code> → returns <code class="inline">accessToken</code> + sets cookies.</div>
 <div class="step"><b>Step 4 — Call protected routes</b> with header <code class="inline">Authorization: Bearer &lt;access_token&gt;</code> (browsers: also works via cookies with <code class="inline">credentials: "include"</code>).</div>
 <div class="step"><b>Step 5 — Token expired?</b> Call <code class="inline">GET /api/v1/auth/refreshtoken</code> (cookies sent automatically) or just login again.</div>
-<p><span class="badge b-public">user</span> default role: shop, enroll, cart, orders, Q&amp;A, reviews. &nbsp; <span class="badge b-admin">admin</span> everything + manage catalog, users, orders, analytics. Promote via <code class="inline">PUT /api/v1/auth/update-user-roles { id, role }</code> (admin only — no self-promote).</p>
+<p><span class="badge b-public">user</span> default role: student — browse, buy, enroll, learn, review. &nbsp; <span class="badge b-admin">instructor</span> create courses + curriculum, revenue. &nbsp; <span class="badge b-admin">admin</span> publish approvals, users, orders, analytics. Promote via <code class="inline">PUT /api/v1/auth/update-user-roles { id, role }</code> (admin only — no self-promote).</p>
 <div class="warn">⚠️ <b>401</b> = token missing/expired → login again. <b>403</b> = you are <code class="inline">user</code> on an admin-only route → get promoted, then login again.</div>
 </section>
 
@@ -82,13 +82,13 @@ POST /api/v1/auth/login
 → save accessToken, send as  Authorization: Bearer &lt;token&gt;
 
 GET  /api/v1/auth/me                      <span class="c">(verify login)</span>
-GET  /api/v1/product/all?page=1&amp;limit=5      <span class="c">(browse shop)</span>
-POST /api/v1/address/add                  <span class="c">(save address, see §6)</span>
-POST /api/v1/cart/add                     <span class="c">{ "productId": "...", "quantity": 2 }</span>
-POST /api/v1/ecommerce/order/create       <span class="c">{ "addressId": "...", "paymentInfo": { "method": "cod" } }</span>
-GET  /api/v1/course/get-courses           <span class="c">(browse courses)</span>
-POST /api/v1/order/create-order           <span class="c">{ "courseId": "...", "payment_info": {...} } (enroll)</span>
-GET  /api/v1/course/get-course-content/:id  <span class="c">(after enrollment)</span></pre>
+GET  /api/v1/lms/courses?page=1&amp;limit=5   <span class="c">(browse marketplace, copy course _id)</span>
+GET  /api/v1/lms/courses/&lt;courseId&gt;       <span class="c">(detail + curriculum preview)</span>
+POST /api/v1/lms/payments/create        <span class="c">{ "courseId": "..." } → Razorpay order</span>
+POST /api/v1/lms/payments/verify        <span class="c">{ razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId } → enrollment</span>
+GET  /api/v1/lms/my-learning              <span class="c">(Go to Course)</span>
+GET  /api/v1/lms/lectures/&lt;lectureId&gt;    <span class="c">(preview open; locked needs enrollment)</span>
+POST /api/v1/lms/lectures/&lt;lectureId&gt;/complete  <span class="c">(100% → certificate)</span></pre>
 </section>
 
 <section id="admin-flow">
@@ -96,24 +96,25 @@ GET  /api/v1/course/get-course-content/:id  <span class="c">(after enrollment)</
 <pre>POST /api/v1/auth/login
 <span class="c">{ "email": "admin@example.com", "password": "Admin@123" }</span>  → admin token
 
-POST /api/v1/category/create
-<span class="c">{ "name": "Electronics", "description": "Gadgets" }</span>  → save category _id
+POST /api/v1/lms/instructor/courses
+<span class="c">{ "name": "My Course", "description": "...", "price": 499, "tags": "js",
+  "level": "Beginner", "demoUrl": "https://..." } (DRAFT)</span>  → save course _id
 
-POST /api/v1/category/brand/create
-<span class="c">{ "name": "Acme", "description": "Acme brand" }</span>
+POST /api/v1/lms/instructor/courses/&lt;courseId&gt;/lectures
+<span class="c">{ "title": "Lesson 1", "videoSection": "Basics", "videoLength": 10, "isPreview": true }</span>
 
-POST /api/v1/product/create
-<span class="c">{ "title": "Wireless Mouse", "price": 999,
-  "category": "&lt;categoryId&gt;", "stockQuantity": 50 }</span>
+POST /api/v1/lms/instructor/courses/&lt;courseId&gt;/submit  <span class="c">(submit for review)</span>
 
-POST /api/v1/coupon/create
+PUT  /api/v1/lms/admin/courses/&lt;courseId&gt;/status
+<span class="c">{ "status": "PUBLISHED" } (admin publishes → visible in marketplace)</span>
+
+POST /api/v1/lms/coupons
 <span class="c">{ "code": "WELCOME10", "discountType": "percentage",
-  "discountValue": 10, "minOrderAmount": 500, "endDate": "2026-12-31" }</span>
+  "discountValue": 10, "endDate": "2027-01-01T00:00:00Z" }</span>
 
-GET  /api/v1/ecommerce/order/admin/all?status=all&amp;page=1&amp;limit=20
-PUT  /api/v1/ecommerce/order/admin/status/&lt;orderId&gt;  <span class="c">{ "status": "Shipped" }</span>
+GET  /api/v1/lms/admin/orders · /api/v1/lms/admin/enrollments · /api/v1/lms/admin/analytics
 GET  /api/v1/auth/get-all-user-dashboard
-PUT  /api/v1/auth/update-user-roles  <span class="c">{ "id": "&lt;userId&gt;", "role": "admin" } (promote)</span></pre>
+PUT  /api/v1/auth/update-user-roles  <span class="c">{ "id": "&lt;userId&gt;", "role": "instructor" } (promote)</span></pre>
 </section>
 
 <section id="postman">
@@ -125,7 +126,7 @@ PUT  /api/v1/auth/update-user-roles  <span class="c">{ "id": "&lt;userId&gt;", "
 <pre>const j = pm.response.json();
 pm.environment.set("token", j.accessToken || j.access_token);</pre></li>
 <li><b>Verify:</b> <code class="inline">GET {{baseUrl}}/api/v1/auth/me</code> → should show your user + role.</li>
-<li><b>Shop as user:</b> product list → address/add → cart/add → cart → coupon/apply → ecommerce/order/create (COD).</li>
+<li><b>Buy as student:</b> marketplace (<code class="inline">GET /lms/courses</code>) → detail → <code class="inline">POST /lms/payments/create { courseId }</code> → pay → <code class="inline">POST /lms/payments/verify</code> → <code class="inline">GET /lms/my-learning</code>.</li>
 <li><b>Admin:</b> login as admin (repeat step 3, overwrites <code class="inline">token</code>), then run §3 calls.</li>
 </ol>
 <div class="warn">⚠️ Refresh endpoint <code class="inline">GET /auth/refreshtoken</code> needs cookies — enable Postman's cookie jar for that domain, or simply re-login.</div>
@@ -162,37 +163,41 @@ api.interceptors.response.use((r) =&gt; r, (e) =&gt; {
   const { data } = await api.post("/auth/login", { email, password });
   localStorage.setItem("accessToken", data.accessToken || data.access_token);
   setUser(data.user);
-  return data.user; <span class="c">// user.role === "admin" ? "/admin" : "/shop"</span>
+  return data.user; <span class="c">// user.role === "admin" ? "/admin" : user.role === "instructor" ? "/instructor" : "/courses"</span>
 };
-// register:  await api.post("/auth/register", { name, email, password });
+// register:  await api.post("/auth/register", { name, email, password }); // 201 + activationToken/activationCode
 // activate:  await api.post("/auth/activate-user", { activation_token, activation_code });
 // on reload: GET /auth/me with stored token → setUser / clear bad token</pre>
 <h3>5.4 Route guards</h3>
 <pre><span class="c">// RequireAuth:</span> no user → &lt;Navigate to="/login" /&gt;
 <span class="c">// RequireAdmin:</span> no user → /login; user but role !== "admin" → "403 — Admins only"
-&lt;Route path="/cart" element={&lt;RequireAuth&gt;&lt;Cart/&gt;&lt;/RequireAuth&gt;} /&gt;
+&lt;Route path="/my-learning" element={&lt;RequireAuth&gt;&lt;MyLearning/&gt;&lt;/RequireAuth&gt;} /&gt;
+&lt;Route path="/instructor" element={&lt;RequireInstructor&gt;&lt;Instructor/&gt;&lt;/RequireInstructor&gt;} /&gt;
 &lt;Route path="/admin" element={&lt;RequireAdmin&gt;&lt;Admin/&gt;&lt;/RequireAdmin&gt;} /&gt;</pre>
-<h3>5.5 User screens</h3>
-<pre>GET  /product/all?page=1&amp;limit=12&amp;sort=price-asc        <span class="c">(filters: search, category, brand, min/maxPrice, rating, inStock)</span>
-POST /address/add   <span class="c">{ fullName, phone, addressLine1, city, state, postalCode }</span>
-POST /cart/add      <span class="c">{ productId, quantity }</span>  →  GET /cart/
-PUT  /cart/update-quantity  <span class="c">{ itemId, quantity }</span>  →  DELETE /cart/item/:itemId
-POST /coupon/apply  <span class="c">{ code }</span>
-POST /ecommerce/order/create <span class="c">{ addressId, paymentInfo: { method: "cod" } }</span></pre>
-<h3>5.6 Razorpay (online payment)</h3>
-<pre>GET  /payment/razorpay-key            <span class="c">→ public key for Checkout</span>
-POST /payment/razorpay-order          <span class="c">{ amount } → order id</span>
+<h3>5.5 Student screens (course marketplace — no cart, no address)</h3>
+<pre>GET  /lms/courses?page=1&amp;limit=12            <span class="c">(marketplace; ?category ?level ?search)</span>
+GET  /lms/courses/:courseId                  <span class="c">→ detail + curriculum preview</span>
+POST /lms/payments/create  <span class="c">{ courseId, couponCode? } → Razorpay order</span>
 <span class="c">// pay in Razorpay Checkout, then:</span>
-POST /payment/verify                  <span class="c">{ razorpay_order_id, razorpay_payment_id, razorpay_signature }</span>
-POST /ecommerce/order/create          <span class="c">{ addressId, paymentInfo: { method: "Razorpay", ...same 3 ids } }</span></pre>
-<h3>5.7 Admin screens</h3>
-<pre>POST /category/create  <span class="c">{ name, description }</span>
-POST /product/create   <span class="c">{ title, price, category, stockQuantity }</span>
-POST /coupon/create    <span class="c">{ code, discountType, discountValue, endDate }</span>
-GET  /ecommerce/order/admin/all?status=all&amp;page=1&amp;limit=20
-PUT  /ecommerce/order/admin/status/:id  <span class="c">{ status: "Shipped" }</span>
-PUT  /auth/update-user-roles  <span class="c">{ id, role }</span></pre>
-<div class="warn">⚠️ Courses ≠ products: enroll via <code class="inline">POST /order/create-order { courseId, payment_info }</code>, then <code class="inline">GET /course/get-course-content/:id</code>. Shop orders use <code class="inline">/ecommerce/order/*</code>.</div>
+POST /lms/payments/verify  <span class="c">{ razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId } → enrollment</span>
+GET  /lms/my-learning                         <span class="c">(Go to Course)</span>
+GET  /lms/lectures/:lectureId                 <span class="c">(preview open; locked → 403 until enrolled)</span>
+POST /lms/lectures/:lectureId/complete        <span class="c">(100% → certificate)</span>
+POST /lms/wishlist  <span class="c">{ courseId }</span>  →  GET /lms/wishlist
+POST /lms/reviews/:courseId  <span class="c">{ rating, comment } (enrolled only)</span></pre>
+<h3>5.6 Razorpay (online payment)</h3>
+<pre><span class="c">// dev keys are placeholders: create still returns an order id, verification is HMAC-checked.</span>
+POST /lms/payments/create   <span class="c">{ courseId, couponCode? } → order id + amount</span>
+<span class="c">// pay in Razorpay Checkout, then:</span>
+POST /lms/payments/verify   <span class="c">{ razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId }</span></pre>
+<h3>5.7 Instructor &amp; admin screens</h3>
+<pre>POST /lms/instructor/courses  <span class="c">(DRAFT) → add lectures → POST .../submit</span>
+PUT  /lms/admin/courses/:courseId/status  <span class="c">{ status: "PUBLISHED" }</span>
+POST /lms/coupons    <span class="c">{ code, discountType, discountValue, endDate }</span>
+GET  /lms/instructor/revenue · /lms/instructor/analytics
+GET  /lms/admin/orders · /lms/admin/enrollments · /lms/admin/analytics
+PUT  /auth/update-user-roles  <span class="c">{ id, role: "instructor" | "admin" }</span></pre>
+<div class="warn">⚠️ Enrollment = access: buying via <code class="inline">POST /lms/payments/verify</code> (or legacy <code class="inline">POST /order/create-order { courseId, payment_info }</code>) creates the enrollment; protected lectures check it. Old shop routes (<code class="inline">/product /cart /address /ecommerce/order /product-reviews</code>) return 404.</div>
 </section>
 
 <section id="endpoints">
@@ -225,23 +230,20 @@ PUT  /auth/update-user-roles  <span class="c">{ id, role }</span></pre>
 <tr><td>GET</td><td>/course/get-all-course-dashboard (alias /get-admin-courses)</td><td><span class="badge b-admin">Admin</span></td></tr>
 <tr><td>POST</td><td>/order/create-order <code class="inline">{courseId,payment_info}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
 <tr><td>GET</td><td>/order/get-all-order-dashboard</td><td><span class="badge b-admin">Admin</span></td></tr></table>
-<h3>Shop <code class="inline">/api/v1/category · /product · /address · /cart · /wishlist · /coupon · /payment · /ecommerce/order · /product-reviews</code></h3>
+<h3>LMS marketplace <code class="inline">/api/v1/lms (verified Oct 2026 — 104/104 checks passed)</code></h3>
 <table><tr><th>Method</th><th>Endpoint</th><th>Who</th></tr>
-<tr><td>GET</td><td>/category/all · /category/single/:idOrSlug · /category/brands/all</td><td><span class="badge b-public">Public</span></td></tr>
-<tr><td>POST / PUT / DELETE</td><td>/category/create · /category/update/:id · /category/delete/:id · /category/brand/create</td><td><span class="badge b-admin">Admin</span></td></tr>
-<tr><td>GET</td><td>/product/all (?search,category,brand,min/maxPrice,rating,inStock,sort,page,limit) · /product/featured · /product/single/:idOrSlug · /product/related/:id</td><td><span class="badge b-public">Public</span></td></tr>
-<tr><td>POST / PUT / DELETE</td><td>/product/create · /product/update/:id · /product/delete/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
-<tr><td>POST / GET / PUT / DELETE / PUT</td><td>/address/add · /address/my-addresses · /address/update/:id · /address/delete/:id · /address/set-default/:id</td><td><span class="badge b-auth">Auth</span></td></tr>
-<tr><td>GET / POST / PUT / DELETE / DELETE / POST</td><td>/cart/ · /cart/add · /cart/update-quantity · /cart/item/:itemId · /cart/clear · /cart/merge</td><td><span class="badge b-auth">Auth</span></td></tr>
-<tr><td>GET / POST / POST</td><td>/wishlist/ · /wishlist/toggle · /wishlist/move-to-cart/:productId</td><td><span class="badge b-auth">Auth</span></td></tr>
-<tr><td>POST / POST</td><td>/coupon/apply <code class="inline">{code}</code> · /coupon/remove</td><td><span class="badge b-auth">Auth</span></td></tr>
-<tr><td>POST / GET / DELETE</td><td>/coupon/create · /coupon/all · /coupon/delete/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
-<tr><td>GET / POST / POST</td><td>/payment/razorpay-key (public) · /payment/razorpay-order · /payment/verify</td><td><span class="badge b-public">Public</span> / <span class="badge b-auth">Auth</span></td></tr>
-<tr><td>POST</td><td>/payment/webhook (Razorpay calls this)</td><td><span class="badge b-public">Public</span></td></tr>
-<tr><td>POST</td><td>/payment/refund</td><td><span class="badge b-admin">Admin</span></td></tr>
-<tr><td>POST / GET / GET / PUT</td><td>/ecommerce/order/create · /my-orders · /single/:id · /cancel/:id</td><td><span class="badge b-auth">Auth</span></td></tr>
-<tr><td>GET / PUT</td><td>/ecommerce/order/admin/all · /admin/status/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
-<tr><td>GET / POST / PUT / DELETE</td><td>/product-reviews/product/:productId (public) · /add · /helpful/:id · /delete/:id</td><td><span class="badge b-public">Public</span> / <span class="badge b-auth">Auth</span></td></tr></table>
+<tr><td>GET</td><td>/lms/courses · /lms/categories · /lms/search?q= · /lms/home</td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>GET</td><td>/lms/courses/:courseId · /lms/courses/:courseId/curriculum · /lms/courses/:courseId/sections · /lms/sections/:sectionId[ /lectures]</td><td><span class="badge b-public">Public</span></td></tr>
+<tr><td>GET</td><td>/lms/lectures/:lectureId · /lms/lectures/:lectureId/access</td><td><span class="badge b-auth">Auth</span> (locked → 403)</td></tr>
+<tr><td>POST</td><td>/lms/lectures/:lectureId/progress <code class="inline">{watchedSeconds}</code> · /lms/lectures/:lectureId/complete</td><td><span class="badge b-auth">Enrolled</span></td></tr>
+<tr><td>POST</td><td>/lms/payments/create <code class="inline">{courseId,couponCode?}</code> · /lms/payments/verify <code class="inline">{razorpay_*,courseId}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>GET</td><td>/lms/purchases · /lms/orders · /lms/orders/:orderId · /lms/enrollments[/:enrollmentId] · /lms/my-learning · /lms/certificates[/:certificateId]</td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>GET / POST</td><td>/lms/wishlist · /lms/wishlist/toggle <code class="inline">{courseId}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>GET / POST</td><td>/lms/reviews/:courseId (alias /lms/courses/:courseId/reviews) · POST needs enrollment</td><td><span class="badge b-public">Public</span> / <span class="badge b-auth">Enrolled</span></td></tr>
+<tr><td>POST / GET</td><td>/lms/coupons/validate <code class="inline">{code,courseId}</code> (auth) · /lms/coupons (admin)</td><td><span class="badge b-auth">Auth</span> / <span class="badge b-admin">Admin</span></td></tr>
+<tr><td>GET / POST / PUT</td><td>/lms/instructor/courses · /lms/instructor/courses/:courseId · .../lectures · .../submit · /lms/instructor/students|revenue|analytics</td><td><span class="badge b-admin">Instructor/Admin</span></td></tr>
+<tr><td>GET / PUT</td><td>/lms/admin/courses · /lms/admin/courses/:courseId/status <code class="inline">{status}</code> · /lms/admin/instructors|orders|enrollments|analytics</td><td><span class="badge b-admin">Admin</span></td></tr></table>
+<div class="warn">⚠️ Removed: <code class="inline">/product /cart /address /ecommerce/order /product-reviews</code> (and shop category/coupon/payment/wishlist) return <b>404</b>. Use <code class="inline">/api/v1/lms/*</code>.</div>
 <h3>Admin extras <code class="inline">/api/v1/notifications · /analytics · /layout</code></h3>
 <table><tr><th>Method</th><th>Endpoint</th><th>Who</th></tr>
 <tr><td>GET / PUT</td><td>/notifications/get-all-notification · /update-notification-status/:id</td><td><span class="badge b-admin">Admin</span></td></tr>
@@ -255,11 +257,12 @@ PUT  /auth/update-user-roles  <span class="c">{ id, role }</span></pre>
 <table><tr><th>Symptom</th><th>Fix</th></tr>
 <tr><td>401 Unauthorized</td><td>Token missing/expired → login again; check <code class="inline">Authorization: Bearer</code> header.</td></tr>
 <tr><td>403 Forbidden</td><td>User token on admin route → promote via <code class="inline">update-user-roles</code>, login again.</td></tr>
-<tr><td>Order fails, cart empty</td><td>Add to cart first — ordering reads the server cart.</td></tr>
-<tr><td>Course content blocked</td><td>Enroll first via <code class="inline">POST /order/create-order</code>.</td></tr>
+<tr><td>Locked lecture 403</td><td>Enroll first: <code class="inline">POST /lms/payments/create</code> → pay → <code class="inline">POST /lms/payments/verify</code>, then <code class="inline">GET /lms/my-learning</code>.</td></tr>
+<tr><td>No certificate yet</td><td>Complete <b>every</b> lecture via <code class="inline">POST /lms/lectures/:id/complete</code> — issued automatically at 100%.</td></tr>
+<tr><td>Mail not received</td><td>SMTP may be down — register/order still succeed; activation code is in the register response (<code class="inline">mailSent:false</code>).</td></tr>
 <tr><td>Activation fails</td><td>Code is 6 digits, expires in 5 min; fields are <code class="inline">activation_token</code> + <code class="inline">activation_code</code>.</td></tr>
 <tr><td>Email change ignored</td><td>By design — <code class="inline">update-user-info</code> only updates <code class="inline">name</code>.</td></tr>
-<tr><td>Cart delete 404</td><td>Use cart <b>item ID</b> (<code class="inline">/cart/item/:itemId</code>), not product ID.</td></tr>
+<tr><td>Cart/address/product 404</td><td>Removed by design — courses are digital. Use <code class="inline">/api/v1/lms/*</code> (see §6).</td></tr>
 <tr><td>503 DB error</td><td>Check <code class="inline">DB_URI</code>; Atlas must allow <code class="inline">0.0.0.0/0</code>.</td></tr>
 <tr><td>React CORS error</td><td>Set <code class="inline">withCredentials: true</code>; check <code class="inline">VITE_API_URL</code> has no trailing slash.</td></tr></table>
 <h3>Error format</h3>
