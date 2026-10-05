@@ -55,6 +55,7 @@ import {
   lmsUserProgressAnalytics,
   lmsCloneCourse,
   lmsDownloadCertificate,
+  lmsBulkCourseOperation,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -109,6 +110,7 @@ lmsRouter.get(
 lmsRouter.get("/my-learning", isAuthenticated, lmsMyLearning);
 lmsRouter.get("/progress-analytics", isAuthenticated, lmsUserProgressAnalytics);
 lmsRouter.post("/courses/clone", isAuthenticated, authorizeRoles("admin"), lmsCloneCourse);
+lmsRouter.post("/courses/bulk", isAuthenticated, authorizeRoles("admin"), lmsBulkCourseOperation);
 
 // Wishlist (courses)
 lmsRouter.get("/wishlist", isAuthenticated, lmsGetWishlist);

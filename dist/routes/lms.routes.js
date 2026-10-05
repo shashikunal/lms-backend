@@ -37,6 +37,7 @@ lmsRouter.get("/enrollments/:enrollmentId", auth_1.isAuthenticated, lms_controll
 lmsRouter.get("/my-learning", auth_1.isAuthenticated, lms_controller_1.lmsMyLearning);
 lmsRouter.get("/progress-analytics", auth_1.isAuthenticated, lms_controller_1.lmsUserProgressAnalytics);
 lmsRouter.post("/courses/clone", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsCloneCourse);
+lmsRouter.post("/courses/bulk", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsBulkCourseOperation);
 // Wishlist (courses)
 lmsRouter.get("/wishlist", auth_1.isAuthenticated, lms_controller_1.lmsGetWishlist);
 lmsRouter.post("/wishlist", auth_1.isAuthenticated, lms_controller_1.lmsToggleWishlist);

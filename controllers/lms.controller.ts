@@ -14,6 +14,7 @@ import LmsCouponModel from "../models/lmsCoupon.model";
 import CertificateModel from "../models/certificate.model";
 import CategoryModel from "../models/category.model";
 import PDFDocument from "pdfkit";
+import { redis } from "../utils/redis";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -1360,5 +1361,36 @@ export const lmsDownloadCertificate = CatchAsyncErrors(
     doc.font("Helvetica").fontSize(14).fill("#64748b").text(`Issued: ${(certificate.createdAt || new Date()).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, 0, 450, { align: "center" });
     doc.font("Helvetica-Bold").fontSize(18).fill("#1e293b").text("QSP LEARNING", 0, 520, { align: "center" });
     doc.end();
+  }
+);
+
+export const lmsBulkCourseOperation = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseIds, action } = req.body || {};
+    if (!courseIds || !Array.isArray(courseIds) || courseIds.length === 0)
+      return next(new ErrorHandler("courseIds array is required", 400));
+    if (!["delete", "publish", "unpublish"].includes(action))
+      return next(new ErrorHandler("Invalid action. Use: delete, publish, unpublish", 400));
+    if (action === "delete") {
+      const result = await CourseModel.deleteMany({ _id: { $in: courseIds } });
+      for (const id of courseIds) {
+        await redis.del(id);
+      }
+      return res.status(200).json({
+        success: true,
+        message: `${result.deletedCount} courses deleted`,
+        deletedCount: result.deletedCount,
+      });
+    }
+    const status = action === "publish" ? "PUBLISHED" : "UNPUBLISHED";
+    const result = await CourseModel.updateMany(
+      { _id: { $in: courseIds } },
+      { $set: { status } }
+    );
+    res.status(200).json({
+      success: true,
+      message: `${result.modifiedCount} courses ${action}ed`,
+      modifiedCount: result.modifiedCount,
+    });
   }
 );

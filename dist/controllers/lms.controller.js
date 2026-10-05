@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -40,6 +40,7 @@ const lmsCoupon_model_1 = __importDefault(require("../models/lmsCoupon.model"));
 const certificate_model_1 = __importDefault(require("../models/certificate.model"));
 const category_model_1 = __importDefault(require("../models/category.model"));
 const pdfkit_1 = __importDefault(require("pdfkit"));
+const redis_1 = require("../utils/redis");
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -1196,5 +1197,30 @@ exports.lmsDownloadCertificate = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, 
     doc.font("Helvetica").fontSize(14).fill("#64748b").text(`Issued: ${(certificate.createdAt || new Date()).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, 0, 450, { align: "center" });
     doc.font("Helvetica-Bold").fontSize(18).fill("#1e293b").text("QSP LEARNING", 0, 520, { align: "center" });
     doc.end();
+}));
+exports.lmsBulkCourseOperation = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { courseIds, action } = req.body || {};
+    if (!courseIds || !Array.isArray(courseIds) || courseIds.length === 0)
+        return next(new ErrorHandler_1.default("courseIds array is required", 400));
+    if (!["delete", "publish", "unpublish"].includes(action))
+        return next(new ErrorHandler_1.default("Invalid action. Use: delete, publish, unpublish", 400));
+    if (action === "delete") {
+        const result = yield course_model_1.default.deleteMany({ _id: { $in: courseIds } });
+        for (const id of courseIds) {
+            yield redis_1.redis.del(id);
+        }
+        return res.status(200).json({
+            success: true,
+            message: `${result.deletedCount} courses deleted`,
+            deletedCount: result.deletedCount,
+        });
+    }
+    const status = action === "publish" ? "PUBLISHED" : "UNPUBLISHED";
+    const result = yield course_model_1.default.updateMany({ _id: { $in: courseIds } }, { $set: { status } });
+    res.status(200).json({
+        success: true,
+        message: `${result.modifiedCount} courses ${action}ed`,
+        modifiedCount: result.modifiedCount,
+    });
 }));
 //# sourceMappingURL=lms.controller.js.map
