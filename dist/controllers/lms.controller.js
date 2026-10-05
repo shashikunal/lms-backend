@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -39,6 +39,7 @@ const courseWishlist_model_1 = __importDefault(require("../models/courseWishlist
 const lmsCoupon_model_1 = __importDefault(require("../models/lmsCoupon.model"));
 const certificate_model_1 = __importDefault(require("../models/certificate.model"));
 const category_model_1 = __importDefault(require("../models/category.model"));
+const pdfkit_1 = __importDefault(require("pdfkit"));
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -1167,5 +1168,33 @@ exports.lmsCloneCourse = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, nex
         instructor: source.instructor,
     });
     res.status(201).json({ success: true, course: cloned });
+}));
+exports.lmsDownloadCertificate = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _43, _44;
+    const { certificateId } = req.params;
+    const certificate = yield certificate_model_1.default.findById(certificateId);
+    if (!certificate)
+        return next(new ErrorHandler_1.default("Certificate not found", 404));
+    if (certificate.userId !== ((_43 = req.userId) === null || _43 === void 0 ? void 0 : _43.toString()) &&
+        ((_44 = req.user) === null || _44 === void 0 ? void 0 : _44.role) !== "admin")
+        return next(new ErrorHandler_1.default("Not authorized", 403));
+    const course = yield course_model_1.default.findById(certificate.courseId).select("name");
+    const user = yield user_model_1.default.findById(certificate.userId).select("name");
+    const doc = new pdfkit_1.default({ size: "A4", layout: "landscape" });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="certificate-${certificate.certificateId}.pdf"`);
+    doc.pipe(res);
+    doc.rect(0, 0, 842, 595).fill("#ffffff");
+    doc.rect(20, 20, 802, 555).lineWidth(2).stroke("#1e293b");
+    doc.rect(30, 30, 782, 535).lineWidth(1).stroke("#38bdf8");
+    doc.fill("#1e293b").font("Helvetica-Bold").fontSize(36).text("Certificate of Completion", 0, 100, { align: "center" });
+    doc.font("Helvetica").fontSize(16).fill("#64748b").text("This is to certify that", 0, 180, { align: "center" });
+    doc.font("Helvetica-Bold").fontSize(28).fill("#0f172a").text((user === null || user === void 0 ? void 0 : user.name) || "Student", 0, 220, { align: "center" });
+    doc.font("Helvetica").fontSize(16).fill("#64748b").text("has successfully completed the course", 0, 270, { align: "center" });
+    doc.font("Helvetica-Bold").fontSize(24).fill("#059669").text((course === null || course === void 0 ? void 0 : course.name) || certificate.courseName || "Course", 0, 310, { align: "center" });
+    doc.font("Helvetica").fontSize(14).fill("#64748b").text(`Certificate ID: ${certificate.certificateId}`, 0, 420, { align: "center" });
+    doc.font("Helvetica").fontSize(14).fill("#64748b").text(`Issued: ${(certificate.createdAt || new Date()).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, 0, 450, { align: "center" });
+    doc.font("Helvetica-Bold").fontSize(18).fill("#1e293b").text("QSP LEARNING", 0, 520, { align: "center" });
+    doc.end();
 }));
 //# sourceMappingURL=lms.controller.js.map

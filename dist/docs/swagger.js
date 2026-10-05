@@ -698,6 +698,58 @@ exports.swaggerDocument = {
                 },
             },
         },
+        "/api/v1/auth/2fa/setup": {
+            post: {
+                tags: ["Authentication & Users"],
+                summary: "Setup 2FA - get secret and otpauth URL",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                responses: { 200: { description: "Returns secret and otpauth URL" }, 400: { description: "2FA already enabled" } },
+            },
+        },
+        "/api/v1/auth/2fa/verify": {
+            post: {
+                tags: ["Authentication & Users"],
+                summary: "Verify 2FA token and enable 2FA",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["token"],
+                                properties: {
+                                    token: { type: "string", description: "6-digit TOTP code" },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: { 200: { description: "2FA enabled" }, 400: { description: "Invalid token" } },
+            },
+        },
+        "/api/v1/auth/2fa/disable": {
+            post: {
+                tags: ["Authentication & Users"],
+                summary: "Disable 2FA (requires current token)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["token"],
+                                properties: {
+                                    token: { type: "string", description: "6-digit TOTP code" },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: { 200: { description: "2FA disabled" }, 400: { description: "Invalid token" } },
+            },
+        },
         "/api/v1/course/create-course": {
             post: {
                 tags: ["Courses"],
@@ -1770,6 +1822,15 @@ exports.swaggerDocument = {
                 security: [{ bearerAuth: [] }, { cookieAuth: [] }],
                 parameters: [{ name: "certificateId", in: "path", required: true, schema: { type: "string" } }],
                 responses: { 200: { description: "Certificate detail" }, 403: { description: "Not authorized" }, 404: { description: "Not found" } },
+            },
+        },
+        "/api/v1/lms/certificates/{certificateId}/download": {
+            get: {
+                tags: ["LMS Marketplace"],
+                summary: "Download certificate as PDF (owner or admin)",
+                security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+                parameters: [{ name: "certificateId", in: "path", required: true, schema: { type: "string" } }],
+                responses: { 200: { description: "PDF file download" }, 403: { description: "Not authorized" }, 404: { description: "Not found" } },
             },
         },
         "/api/v1/lms/instructor/courses": {

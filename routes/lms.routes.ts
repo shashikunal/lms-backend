@@ -54,6 +54,7 @@ import {
   lmsDeleteCategory,
   lmsUserProgressAnalytics,
   lmsCloneCourse,
+  lmsDownloadCertificate,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -144,6 +145,11 @@ lmsRouter.get(
   "/certificates/:certificateId",
   isAuthenticated,
   lmsGetCertificate
+);
+lmsRouter.get(
+  "/certificates/:certificateId/download",
+  isAuthenticated,
+  lmsDownloadCertificate
 );
 
 // Instructor marketplace

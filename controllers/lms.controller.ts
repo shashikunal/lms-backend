@@ -13,6 +13,7 @@ import CourseWishlistModel from "../models/courseWishlist.model";
 import LmsCouponModel from "../models/lmsCoupon.model";
 import CertificateModel from "../models/certificate.model";
 import CategoryModel from "../models/category.model";
+import PDFDocument from "pdfkit";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -1325,5 +1326,39 @@ export const lmsCloneCourse = CatchAsyncErrors(
       instructor: source.instructor,
     });
     res.status(201).json({ success: true, course: cloned });
+  }
+);
+
+export const lmsDownloadCertificate = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { certificateId } = req.params;
+    const certificate = await CertificateModel.findById(certificateId);
+    if (!certificate) return next(new ErrorHandler("Certificate not found", 404));
+    if (
+      certificate.userId !== req.userId?.toString() &&
+      req.user?.role !== "admin"
+    )
+      return next(new ErrorHandler("Not authorized", 403));
+    const course: any = await CourseModel.findById(certificate.courseId).select("name");
+    const user: any = await userModel.findById(certificate.userId).select("name");
+    const doc = new PDFDocument({ size: "A4", layout: "landscape" });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="certificate-${certificate.certificateId}.pdf"`
+    );
+    doc.pipe(res);
+    doc.rect(0, 0, 842, 595).fill("#ffffff");
+    doc.rect(20, 20, 802, 555).lineWidth(2).stroke("#1e293b");
+    doc.rect(30, 30, 782, 535).lineWidth(1).stroke("#38bdf8");
+    doc.fill("#1e293b").font("Helvetica-Bold").fontSize(36).text("Certificate of Completion", 0, 100, { align: "center" });
+    doc.font("Helvetica").fontSize(16).fill("#64748b").text("This is to certify that", 0, 180, { align: "center" });
+    doc.font("Helvetica-Bold").fontSize(28).fill("#0f172a").text(user?.name || "Student", 0, 220, { align: "center" });
+    doc.font("Helvetica").fontSize(16).fill("#64748b").text("has successfully completed the course", 0, 270, { align: "center" });
+    doc.font("Helvetica-Bold").fontSize(24).fill("#059669").text(course?.name || certificate.courseName || "Course", 0, 310, { align: "center" });
+    doc.font("Helvetica").fontSize(14).fill("#64748b").text(`Certificate ID: ${certificate.certificateId}`, 0, 420, { align: "center" });
+    doc.font("Helvetica").fontSize(14).fill("#64748b").text(`Issued: ${(certificate.createdAt || new Date()).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, 0, 450, { align: "center" });
+    doc.font("Helvetica-Bold").fontSize(18).fill("#1e293b").text("QSP LEARNING", 0, 520, { align: "center" });
+    doc.end();
   }
 );

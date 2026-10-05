@@ -291,6 +291,9 @@ POST /api/v1/auth/activate-user   # { activation_token, activation_code }
 POST /api/v1/auth/login           # { email, password } → save accessToken
 POST /api/v1/auth/forgot-password # { email } → sends reset link
 POST /api/v1/auth/reset-password  # { token, newPassword }
+POST /api/v1/auth/2fa/setup        # get 2FA secret + otpauth URL
+POST /api/v1/auth/2fa/verify       # verify token → enable 2FA
+POST /api/v1/auth/2fa/disable      # disable 2FA (requires token)
 GET  /api/v1/auth/me              # Authorization: Bearer <token>
 GET  /api/v1/lms/courses          # browse marketplace
 POST /api/v1/lms/payments/create  # { courseId } → Stripe PaymentIntent
@@ -298,6 +301,7 @@ POST /api/v1/lms/payments/verify  # { paymentIntentId, courseId }
 POST /api/v1/lms/payments/refund  # { orderId } → refund + remove enrollment
 GET  /api/v1/lms/my-learning      # Go to Course
 GET  /api/v1/lms/progress-analytics # learning progress stats
+GET  /api/v1/lms/certificates/:id/download # download PDF certificate
 ```
 
 **Instructor — create → submit → published → revenue:**

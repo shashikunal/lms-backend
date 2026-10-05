@@ -409,10 +409,21 @@ Authorization: Bearer <admin_token>
 |---|---|---|---|
 | `POST` | `/auth/forgot-password` | Public | Send password reset link via email. Body: `{ "email": "..." }`. |
 | `POST` | `/auth/reset-password` | Public | Reset password with token. Body: `{ "token": "...", "newPassword": "..." }`. |
+| `POST` | `/auth/2fa/setup` | Auth | Get 2FA secret + otpauth URL. |
+| `POST` | `/auth/2fa/verify` | Auth | Verify TOTP token → enable 2FA. Body: `{ "token": "..." }`. |
+| `POST` | `/auth/2fa/disable` | Auth | Disable 2FA. Body: `{ "token": "..." }`. |
 
 ---
 
-## 16. Reviews (courses)
+## 16. Certificate Download
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `GET` | `/lms/certificates/:certificateId/download` | Owner/Admin | Download certificate as PDF file. |
+
+---
+
+## 17. Reviews (courses)
 
 | Method | Endpoint | Who | What it does |
 |---|---|---|---|

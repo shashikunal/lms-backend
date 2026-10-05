@@ -8,6 +8,7 @@ export interface ICertificate extends Document {
   userName: string;
   courseName: string;
   issuedAt: Date;
+  createdAt?: Date;
 }
 
 const certificateSchema = new Schema<ICertificate>(

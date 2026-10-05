@@ -52,6 +52,7 @@ lmsRouter.get("/coupons", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("ad
 // Certificates
 lmsRouter.get("/certificates", auth_1.isAuthenticated, lms_controller_1.lmsMyCertificates);
 lmsRouter.get("/certificates/:certificateId", auth_1.isAuthenticated, lms_controller_1.lmsGetCertificate);
+lmsRouter.get("/certificates/:certificateId/download", auth_1.isAuthenticated, lms_controller_1.lmsDownloadCertificate);
 // Instructor marketplace
 lmsRouter.get("/instructor/courses", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin", "instructor"), lms_controller_1.lmsInstructorCourses);
 lmsRouter.post("/instructor/courses", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin", "instructor"), lms_controller_1.lmsInstructorCreateCourse);
