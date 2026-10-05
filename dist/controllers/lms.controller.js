@@ -23,9 +23,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
+exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
+const config_1 = require("../config");
 const stripe_1 = require("../config/stripe");
 const course_model_1 = __importDefault(require("../models/course.model"));
 const orderModel_1 = __importDefault(require("../models/orderModel"));
@@ -942,4 +943,71 @@ exports.lmsAdminAnalytics = (0, catchAsyncErrors_1.CatchAsyncErrors)((_req, res)
         certificates,
     });
 }));
+const lmsWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const sig = req.headers["stripe-signature"];
+    const webhookSecret = config_1.CONFIG.STRIPE_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET || "";
+    if (!sig || !webhookSecret) {
+        return res.status(400).json({ success: false, message: "Missing webhook signature or secret" });
+    }
+    const stripe = (0, stripe_1.getStripeInstance)();
+    let event;
+    try {
+        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    }
+    catch (err) {
+        return res.status(400).json({ success: false, message: `Webhook Error: ${err.message}` });
+    }
+    if (event.type === "payment_intent.succeeded") {
+        const paymentIntent = event.data.object;
+        const { userId, courseId, couponCode } = paymentIntent.metadata || {};
+        if (!userId || !courseId) {
+            return res.status(200).json({ received: true, skipped: "missing metadata" });
+        }
+        const existingOrder = yield orderModel_1.default.findOne({ "payment_info.id": paymentIntent.id });
+        if (existingOrder) {
+            return res.status(200).json({ received: true, skipped: "already processed" });
+        }
+        const course = yield course_model_1.default.findById(courseId);
+        if (!course) {
+            return res.status(200).json({ received: true, skipped: "course not found" });
+        }
+        const already = yield isEnrolled(userId, courseId);
+        if (already) {
+            return res.status(200).json({ received: true, skipped: "already enrolled" });
+        }
+        let coupon = null;
+        if (couponCode) {
+            const r = yield computeCouponDiscount(couponCode, courseId, Number(course.price));
+            coupon = r.coupon;
+            if (coupon) {
+                coupon.usedCount = (coupon.usedCount || 0) + 1;
+                yield coupon.save();
+            }
+        }
+        const order = yield orderModel_1.default.create({
+            courseId: course._id.toString(),
+            userId,
+            payment_info: {
+                id: paymentIntent.id,
+                amount: paymentIntent.amount,
+                currency: paymentIntent.currency,
+                status: paymentIntent.status,
+                method: "stripe",
+                paidAt: new Date(),
+                couponCode: couponCode || undefined,
+            },
+        });
+        const enrollment = yield ensureEnrollment(userId, course._id.toString(), order._id.toString());
+        course.purchased = (course.purchased || 0) + 1;
+        yield course.save();
+        yield notificationModel_1.default.create({
+            user: userId,
+            title: "Enrollment confirmed",
+            message: `You are now enrolled in ${course === null || course === void 0 ? void 0 : course.name}. Go to My Learning to start.`,
+        });
+        void enrollment;
+    }
+    res.status(200).json({ received: true });
+});
+exports.lmsWebhook = lmsWebhook;
 //# sourceMappingURL=lms.controller.js.map

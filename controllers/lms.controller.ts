@@ -1092,3 +1092,69 @@ export const lmsAdminAnalytics = CatchAsyncErrors(
     });
   }
 );
+
+export const lmsWebhook = async (req: Request | any, res: Response) => {
+  const sig = req.headers["stripe-signature"] as string;
+  const webhookSecret = CONFIG.STRIPE_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET || "";
+  if (!sig || !webhookSecret) {
+    return res.status(400).json({ success: false, message: "Missing webhook signature or secret" });
+  }
+  const stripe = getStripeInstance();
+  let event: any;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+  } catch (err: any) {
+    return res.status(400).json({ success: false, message: `Webhook Error: ${err.message}` });
+  }
+  if (event.type === "payment_intent.succeeded") {
+    const paymentIntent = event.data.object;
+    const { userId, courseId, couponCode } = paymentIntent.metadata || {};
+    if (!userId || !courseId) {
+      return res.status(200).json({ received: true, skipped: "missing metadata" });
+    }
+    const existingOrder = await OrderModel.findOne({ "payment_info.id": paymentIntent.id });
+    if (existingOrder) {
+      return res.status(200).json({ received: true, skipped: "already processed" });
+    }
+    const course: any = await CourseModel.findById(courseId);
+    if (!course) {
+      return res.status(200).json({ received: true, skipped: "course not found" });
+    }
+    const already = await isEnrolled(userId, courseId);
+    if (already) {
+      return res.status(200).json({ received: true, skipped: "already enrolled" });
+    }
+    let coupon: any = null;
+    if (couponCode) {
+      const r = await computeCouponDiscount(couponCode, courseId, Number(course.price));
+      coupon = r.coupon;
+      if (coupon) {
+        coupon.usedCount = (coupon.usedCount || 0) + 1;
+        await coupon.save();
+      }
+    }
+    const order: any = await OrderModel.create({
+      courseId: course._id.toString(),
+      userId,
+      payment_info: {
+        id: paymentIntent.id,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        status: paymentIntent.status,
+        method: "stripe",
+        paidAt: new Date(),
+        couponCode: couponCode || undefined,
+      },
+    });
+    const enrollment = await ensureEnrollment(userId, course._id.toString(), order._id.toString());
+    course.purchased = (course.purchased || 0) + 1;
+    await course.save();
+    await NotificationModel.create({
+      user: userId,
+      title: "Enrollment confirmed",
+      message: `You are now enrolled in ${course?.name}. Go to My Learning to start.`,
+    });
+    void enrollment;
+  }
+  res.status(200).json({ received: true });
+};
