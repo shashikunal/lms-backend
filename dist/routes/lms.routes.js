@@ -53,6 +53,7 @@ lmsRouter.get("/courses/:courseId/reviews", lms_controller_1.lmsListReviews);
 lmsRouter.post("/reviews/:courseId", auth_1.isAuthenticated, lms_controller_1.lmsAddReview);
 // Coupons (courses)
 lmsRouter.post("/coupons/validate", auth_1.isAuthenticated, lms_controller_1.lmsValidateCoupon);
+lmsRouter.post("/coupons/bulk", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsBulkCouponOperation);
 lmsRouter.post("/coupons", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsCreateCoupon);
 lmsRouter.get("/coupons", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsListCoupons);
 // Certificates

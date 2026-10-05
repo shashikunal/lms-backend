@@ -61,6 +61,7 @@ import {
   lmsRemoveFromCart,
   lmsClearCart,
   lmsMoveWishlistToCart,
+  lmsBulkCouponOperation,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -139,6 +140,7 @@ lmsRouter.post(
 
 // Coupons (courses)
 lmsRouter.post("/coupons/validate", isAuthenticated, lmsValidateCoupon);
+lmsRouter.post("/coupons/bulk", isAuthenticated, authorizeRoles("admin"), lmsBulkCouponOperation);
 lmsRouter.post(
   "/coupons",
   isAuthenticated,

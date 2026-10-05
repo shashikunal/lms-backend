@@ -1475,3 +1475,31 @@ export const lmsMoveWishlistToCart = CatchAsyncErrors(
     res.status(200).json({ success: true, message: `${moved} courses moved to cart`, moved });
   }
 );
+
+export const lmsBulkCouponOperation = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { couponIds, action } = req.body || {};
+    if (!couponIds || !Array.isArray(couponIds) || couponIds.length === 0)
+      return next(new ErrorHandler("couponIds array is required", 400));
+    if (!["delete", "activate", "deactivate"].includes(action))
+      return next(new ErrorHandler("Invalid action. Use: delete, activate, deactivate", 400));
+    if (action === "delete") {
+      const result = await LmsCouponModel.deleteMany({ _id: { $in: couponIds } });
+      return res.status(200).json({
+        success: true,
+        message: `${result.deletedCount} coupons deleted`,
+        deletedCount: result.deletedCount,
+      });
+    }
+    const isActive = action === "activate";
+    const result = await LmsCouponModel.updateMany(
+      { _id: { $in: couponIds } },
+      { $set: { isActive } }
+    );
+    res.status(200).json({
+      success: true,
+      message: `${result.modifiedCount} coupons ${action}d`,
+      modifiedCount: result.modifiedCount,
+    });
+  }
+);

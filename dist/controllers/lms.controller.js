@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -1298,5 +1298,27 @@ exports.lmsMoveWishlistToCart = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, r
     yield cart.save();
     yield courseWishlist_model_1.default.findOneAndUpdate({ userId }, { $set: { courses: [] } });
     res.status(200).json({ success: true, message: `${moved} courses moved to cart`, moved });
+}));
+exports.lmsBulkCouponOperation = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { couponIds, action } = req.body || {};
+    if (!couponIds || !Array.isArray(couponIds) || couponIds.length === 0)
+        return next(new ErrorHandler_1.default("couponIds array is required", 400));
+    if (!["delete", "activate", "deactivate"].includes(action))
+        return next(new ErrorHandler_1.default("Invalid action. Use: delete, activate, deactivate", 400));
+    if (action === "delete") {
+        const result = yield lmsCoupon_model_1.default.deleteMany({ _id: { $in: couponIds } });
+        return res.status(200).json({
+            success: true,
+            message: `${result.deletedCount} coupons deleted`,
+            deletedCount: result.deletedCount,
+        });
+    }
+    const isActive = action === "activate";
+    const result = yield lmsCoupon_model_1.default.updateMany({ _id: { $in: couponIds } }, { $set: { isActive } });
+    res.status(200).json({
+        success: true,
+        message: `${result.modifiedCount} coupons ${action}d`,
+        modifiedCount: result.modifiedCount,
+    });
 }));
 //# sourceMappingURL=lms.controller.js.map
