@@ -333,7 +333,7 @@ exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
     }
 }));
 exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _w, _x, _y, _z;
+    var _w, _x, _y, _z, _0;
     try {
         const { comment, reviewId, courseId } = req.body;
         const course = yield course_model_1.default.findById(courseId);
@@ -359,6 +359,22 @@ exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
                 title: "New reply to your review",
                 message: `${((_z = req.user) === null || _z === void 0 ? void 0 : _z.name) || "Admin"} replied to your review on "${course === null || course === void 0 ? void 0 : course.name}".`,
             });
+            try {
+                yield (0, sendMail_1.default)({
+                    email: review.user.email,
+                    subject: "New Reply to Your Review",
+                    template: "review-reply.ejs",
+                    data: {
+                        name: review.user.name,
+                        courseName: course === null || course === void 0 ? void 0 : course.name,
+                        reply: comment,
+                        replyBy: ((_0 = req.user) === null || _0 === void 0 ? void 0 : _0.name) || "Admin",
+                    },
+                });
+            }
+            catch (err) {
+                console.warn("Review reply email skipped:", (err === null || err === void 0 ? void 0 : err.message) || err);
+            }
         }
         res.status(200).json({
             success: true,

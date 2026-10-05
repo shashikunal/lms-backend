@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Reply to Your Review</title>
+    <style>
+      body { margin: 0; padding: 0; background-color: #f4f4f4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+      .email-wrapper { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+      .email-header { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 40px 30px; text-align: center; }
+      .email-header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; }
+      .email-header p { color: #c4b5fd; margin: 8px 0 0; font-size: 14px; }
+      .email-body { padding: 40px 30px; }
+      .email-body p { color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 16px; }
+      .reply-box { background: #f5f3ff; border-left: 4px solid #7c3aed; padding: 16px 20px; margin: 24px 0; border-radius: 0 8px 8px 0; }
+      .reply-box p { color: #5b21b6; font-size: 14px; margin: 0; }
+      .reply-meta { color: #64748b; font-size: 13px; margin-top: 8px; }
+      .cta-button { display: inline-block; background: #7c3aed; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 24px 0; }
+      .email-footer { background: #f8fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+      .email-footer p { color: #94a3b8; font-size: 12px; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div class="email-wrapper">
+      <div class="email-header">
+        <h1>New Reply Received</h1>
+        <p>Your review has a new response</p>
+      </div>
+      <div class="email-body">
+        <p>Hello <strong><%= name %></strong>,</p>
+        <p><strong><%= replyBy %></strong> has replied to your review on course: <strong>"<%= courseName %>"</strong></p>
+        <div class="reply-box">
+          <p>"<%= reply %>"</p>
+          <p class="reply-meta">— <%= replyBy %></p>
+        </div>
+        <a href="#" class="cta-button">View Reply</a>
+        <p>Thank you for helping our learning community grow!</p>
+      </div>
+      <div class="email-footer">
+        <p>&copy; 2026 QSP LEARNING. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

@@ -395,6 +395,21 @@ export const addReplayToReview = CatchAsyncErrors(
           title: "New reply to your review",
           message: `${req.user?.name || "Admin"} replied to your review on "${course?.name}".`,
         });
+        try {
+          await sendMail({
+            email: review.user.email,
+            subject: "New Reply to Your Review",
+            template: "review-reply.ejs",
+            data: {
+              name: review.user.name,
+              courseName: course?.name,
+              reply: comment,
+              replyBy: req.user?.name || "Admin",
+            },
+          });
+        } catch (err: any) {
+          console.warn("Review reply email skipped:", err?.message || err);
+        }
       }
       res.status(200).json({
         success: true,
