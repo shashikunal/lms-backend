@@ -21,5 +21,7 @@ userRouter.put("/update-user-profile-picture", auth_1.isAuthenticated, user_cont
 userRouter.get(["/get-all-user-dashboard", "/get-users"], auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), user_controller_1.getAllUsersDashboard);
 userRouter.put("/update-user-roles", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), user_controller_1.updateUserRoles);
 userRouter.delete("/delete-user/:id", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), user_controller_1.deleteUserByAdmin);
+userRouter.post("/forgot-password", user_controller_1.forgotPassword);
+userRouter.post("/reset-password", user_controller_1.resetPassword);
 exports.default = userRouter;
 //# sourceMappingURL=user.routes.js.map

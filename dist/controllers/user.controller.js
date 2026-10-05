@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUserByAdmin = exports.updateUserRoles = exports.getAllUsersDashboard = exports.updateProfilePicture = exports.updatePassword = exports.updateUserInfo = exports.socialAuth = exports.getUserInfo = exports.updateAccessToken = exports.logoutUser = exports.loginUser = exports.activateUser = exports.createActivationToken = exports.registrationUser = void 0;
+exports.resetPassword = exports.forgotPassword = exports.deleteUserByAdmin = exports.updateUserRoles = exports.getAllUsersDashboard = exports.updateProfilePicture = exports.updatePassword = exports.updateUserInfo = exports.socialAuth = exports.getUserInfo = exports.updateAccessToken = exports.logoutUser = exports.loginUser = exports.activateUser = exports.createActivationToken = exports.registrationUser = void 0;
 const user_model_1 = __importDefault(require("../models/user.model"));
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
@@ -358,7 +358,7 @@ exports.deleteUserByAdmin = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
         if (!user) {
             return next(new ErrorHandler_1.default("User not found", 404));
         }
-        yield user.deleteOne({ id });
+        yield user_model_1.default.findByIdAndDelete(id);
         yield redis_1.redis.del(id);
         res.status(200).json({
             success: true,
@@ -367,6 +367,63 @@ exports.deleteUserByAdmin = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
     }
     catch (error) {
         return next(new ErrorHandler_1.default(error.message, 500));
+    }
+}));
+exports.forgotPassword = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email } = req.body;
+        if (!email)
+            return next(new ErrorHandler_1.default("Email is required", 400));
+        const user = yield user_model_1.default.findOne({ email });
+        if (!user)
+            return next(new ErrorHandler_1.default("User not found", 404));
+        const resetToken = jsonwebtoken_1.default.sign({ id: user._id.toString() }, index_1.CONFIG.ACTIVATION_TOKEN_SECRET, { expiresIn: "10m" });
+        const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password/${resetToken}`;
+        try {
+            yield (0, sendMail_1.default)({
+                email: user.email,
+                subject: "Password Reset Request",
+                template: "password-reset.ejs",
+                data: { name: user.name, resetUrl },
+            });
+        }
+        catch (err) {
+            console.warn("Password reset email skipped:", (err === null || err === void 0 ? void 0 : err.message) || err);
+        }
+        res.status(200).json({
+            success: true,
+            message: "Password reset link sent to your email",
+            resetToken,
+        });
+    }
+    catch (error) {
+        return next(new ErrorHandler_1.default(error.message, 500));
+    }
+}));
+exports.resetPassword = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword)
+            return next(new ErrorHandler_1.default("Token and new password are required", 400));
+        const decoded = jsonwebtoken_1.default.verify(token, index_1.CONFIG.ACTIVATION_TOKEN_SECRET);
+        if (!decoded || !decoded.id)
+            return next(new ErrorHandler_1.default("Invalid or expired token", 400));
+        const user = yield user_model_1.default.findById(decoded.id).select("+password");
+        if (!user)
+            return next(new ErrorHandler_1.default("User not found", 404));
+        user.password = newPassword;
+        yield user.save();
+        yield redis_1.redis.del(user._id.toString());
+        res.status(200).json({
+            success: true,
+            message: "Password reset successfully",
+        });
+    }
+    catch (error) {
+        const status = (error === null || error === void 0 ? void 0 : error.name) === "JsonWebTokenError" || (error === null || error === void 0 ? void 0 : error.name) === "TokenExpiredError"
+            ? 400
+            : 500;
+        return next(new ErrorHandler_1.default(error.message, status));
     }
 }));
 //# sourceMappingURL=user.controller.js.map

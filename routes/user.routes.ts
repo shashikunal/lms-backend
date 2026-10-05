@@ -13,6 +13,8 @@ import {
   getAllUsersDashboard,
   updateUserRoles,
   deleteUserByAdmin,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/user.controller";
 import { authorizeRoles, isAuthenticated } from "../middlewares/auth";
 
@@ -54,5 +56,8 @@ userRouter.delete(
   authorizeRoles("admin"),
   deleteUserByAdmin
 );
+
+userRouter.post("/forgot-password", forgotPassword);
+userRouter.post("/reset-password", resetPassword);
 
 export default userRouter;

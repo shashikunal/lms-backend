@@ -453,7 +453,7 @@ export const deleteUserByAdmin = CatchAsyncErrors(
       if (!user) {
         return next(new ErrorHandler("User not found", 404));
       }
-      await user.deleteOne({ id });
+      await userModel.findByIdAndDelete(id);
 
       await redis.del(id);
 
@@ -463,6 +463,71 @@ export const deleteUserByAdmin = CatchAsyncErrors(
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
+export const forgotPassword = CatchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body;
+      if (!email) return next(new ErrorHandler("Email is required", 400));
+      const user = await userModel.findOne({ email });
+      if (!user) return next(new ErrorHandler("User not found", 404));
+      const resetToken = jwt.sign(
+        { id: user._id.toString() },
+        CONFIG.ACTIVATION_TOKEN_SECRET as string,
+        { expiresIn: "10m" }
+      );
+      const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password/${resetToken}`;
+      try {
+        await sendMail({
+          email: user.email,
+          subject: "Password Reset Request",
+          template: "password-reset.ejs",
+          data: { name: user.name, resetUrl },
+        });
+      } catch (err: any) {
+        console.warn("Password reset email skipped:", err?.message || err);
+      }
+      res.status(200).json({
+        success: true,
+        message: "Password reset link sent to your email",
+        resetToken,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
+export const resetPassword = CatchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token, newPassword } = req.body;
+      if (!token || !newPassword)
+        return next(new ErrorHandler("Token and new password are required", 400));
+      const decoded = jwt.verify(
+        token,
+        CONFIG.ACTIVATION_TOKEN_SECRET as string
+      ) as JwtPayload;
+      if (!decoded || !decoded.id)
+        return next(new ErrorHandler("Invalid or expired token", 400));
+      const user = await userModel.findById(decoded.id).select("+password");
+      if (!user) return next(new ErrorHandler("User not found", 404));
+      user.password = newPassword;
+      await user.save();
+      await redis.del(user._id.toString());
+      res.status(200).json({
+        success: true,
+        message: "Password reset successfully",
+      });
+    } catch (error: any) {
+      const status =
+        error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError"
+          ? 400
+          : 500;
+      return next(new ErrorHandler(error.message, status));
     }
   }
 );
