@@ -1301,3 +1301,29 @@ export const lmsUserProgressAnalytics = CatchAsyncErrors(
     });
   }
 );
+
+export const lmsCloneCourse = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseId } = req.body || {};
+    if (!courseId) return next(new ErrorHandler("courseId is required", 400));
+    const source: any = await CourseModel.findById(courseId);
+    if (!source) return next(new ErrorHandler("Course not found", 404));
+    const cloned = await CourseModel.create({
+      name: `${source.name} (Copy)`,
+      description: source.description,
+      price: source.price,
+      discountPrice: source.discountPrice,
+      thumbnail: source.thumbnail,
+      tags: source.tags,
+      level: source.level,
+      demoUrl: source.demoUrl,
+      benefits: source.benefits,
+      prerequisites: source.prerequisites,
+      category: source.category,
+      status: "DRAFT",
+      courseData: source.courseData,
+      instructor: source.instructor,
+    });
+    res.status(201).json({ success: true, course: cloned });
+  }
+);

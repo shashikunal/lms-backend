@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -1142,5 +1142,30 @@ exports.lmsUserProgressAnalytics = (0, catchAsyncErrors_1.CatchAsyncErrors)((req
         lastActivity,
         progress: progressList,
     });
+}));
+exports.lmsCloneCourse = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { courseId } = req.body || {};
+    if (!courseId)
+        return next(new ErrorHandler_1.default("courseId is required", 400));
+    const source = yield course_model_1.default.findById(courseId);
+    if (!source)
+        return next(new ErrorHandler_1.default("Course not found", 404));
+    const cloned = yield course_model_1.default.create({
+        name: `${source.name} (Copy)`,
+        description: source.description,
+        price: source.price,
+        discountPrice: source.discountPrice,
+        thumbnail: source.thumbnail,
+        tags: source.tags,
+        level: source.level,
+        demoUrl: source.demoUrl,
+        benefits: source.benefits,
+        prerequisites: source.prerequisites,
+        category: source.category,
+        status: "DRAFT",
+        courseData: source.courseData,
+        instructor: source.instructor,
+    });
+    res.status(201).json({ success: true, course: cloned });
 }));
 //# sourceMappingURL=lms.controller.js.map

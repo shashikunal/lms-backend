@@ -1525,6 +1525,27 @@ export const swaggerDocument: Record<string, any> = {
         summary: "List course categories with counts",
         responses: { 200: { description: "Category aggregation" } },
       },
+      post: {
+        tags: ["LMS Marketplace"],
+        summary: "Create course category (Admin only)",
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["name"],
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: { 201: { description: "Category created" }, 400: { description: "Validation error" } },
+      },
     },
     "/api/v1/lms/search": {
       get: {
@@ -1864,6 +1885,147 @@ export const swaggerDocument: Record<string, any> = {
         summary: "Marketplace totals (Admin only)",
         security: [{ bearerAuth: [] }, { cookieAuth: [] }],
         responses: { 200: { description: "{ users, courses, orders, enrollments, certificates }" } },
+      },
+    },
+    "/api/v1/lms/payments/webhook": {
+      post: {
+        tags: ["LMS Marketplace"],
+        summary: "Stripe webhook handler (auto-enrollment on payment success)",
+        responses: { 200: { description: "Webhook received" }, 400: { description: "Invalid signature" } },
+      },
+    },
+    "/api/v1/lms/payments/refund": {
+      post: {
+        tags: ["LMS Marketplace"],
+        summary: "Refund a payment and remove enrollment",
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["orderId"],
+                properties: {
+                  orderId: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: { 200: { description: "Refund processed" }, 400: { description: "Bad request" }, 404: { description: "Order not found" } },
+      },
+    },
+    "/api/v1/lms/categories/all": {
+      get: {
+        tags: ["LMS Marketplace"],
+        summary: "List all categories including inactive (Admin only)",
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        responses: { 200: { description: "All categories" } },
+      },
+    },
+    "/api/v1/lms/categories/{categoryId}": {
+      put: {
+        tags: ["LMS Marketplace"],
+        summary: "Update course category (Admin only)",
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        parameters: [{ name: "categoryId", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                  isActive: { type: "boolean" },
+                },
+              },
+            },
+          },
+        },
+        responses: { 200: { description: "Category updated" }, 404: { description: "Category not found" } },
+      },
+      delete: {
+        tags: ["LMS Marketplace"],
+        summary: "Delete course category (Admin only)",
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        parameters: [{ name: "categoryId", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "Category deleted" }, 404: { description: "Category not found" } },
+      },
+    },
+    "/api/v1/lms/progress-analytics": {
+      get: {
+        tags: ["LMS Marketplace"],
+        summary: "User learning progress analytics",
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        responses: { 200: { description: "Progress data with totals and per-course breakdown" } },
+      },
+    },
+    "/api/v1/lms/courses/clone": {
+      post: {
+        tags: ["LMS Marketplace"],
+        summary: "Clone/duplicate a course as DRAFT (Admin only)",
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["courseId"],
+                properties: {
+                  courseId: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: { 201: { description: "Cloned course" }, 404: { description: "Source course not found" } },
+      },
+    },
+    "/api/v1/auth/forgot-password": {
+      post: {
+        tags: ["Authentication & Users"],
+        summary: "Send password reset link via email",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["email"],
+                properties: {
+                  email: { type: "string", format: "email" },
+                },
+              },
+            },
+          },
+        },
+        responses: { 200: { description: "Reset link sent" }, 404: { description: "User not found" } },
+      },
+    },
+    "/api/v1/auth/reset-password": {
+      post: {
+        tags: ["Authentication & Users"],
+        summary: "Reset password with token",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["token", "newPassword"],
+                properties: {
+                  token: { type: "string" },
+                  newPassword: { type: "string", minLength: 6 },
+                },
+              },
+            },
+          },
+        },
+        responses: { 200: { description: "Password reset successful" }, 400: { description: "Invalid or expired token" } },
       },
     },
   },

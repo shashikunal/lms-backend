@@ -331,6 +331,8 @@ Flow: detail → **Buy Now** → `payments/create` → pay → `payments/verify`
 |---|---|---|---|
 | `POST` | `/lms/payments/create` | Auth | Stripe PaymentIntent. Body: `{ "courseId": "...", "couponCode?": "..." }`. |
 | `POST` | `/lms/payments/verify` | Auth | Verify payment → `201` order + enrollment. Body: `{ "paymentIntentId", "courseId" }`. |
+| `POST` | `/lms/payments/webhook` | Stripe | Webhook handler — auto-enrolls on `payment_intent.succeeded`. |
+| `POST` | `/lms/payments/refund` | Auth/Admin | Refund payment + remove enrollment. Body: `{ "orderId" }`. |
 | `GET` | `/lms/purchases` | Auth | Purchase history. |
 | `GET` | `/lms/orders` (+ `/:orderId`) | Auth | My orders (owner or admin). |
 
@@ -373,7 +375,44 @@ Authorization: Bearer <admin_token>
 
 ---
 
-## 12. Reviews (courses)
+## 12. Course Categories
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `POST` | `/lms/categories` | Admin | Create category. Body: `{ "name": "...", "description": "..." }`. |
+| `GET` | `/lms/categories` | Public | List active categories. |
+| `GET` | `/lms/categories/all` | Admin | List all categories (including inactive). |
+| `PUT` | `/lms/categories/:categoryId` | Admin | Update category. Body: `{ "name", "description", "isActive" }`. |
+| `DELETE` | `/lms/categories/:categoryId` | Admin | Delete category. |
+
+---
+
+## 13. User Progress Analytics
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `GET` | `/lms/progress-analytics` | Auth | Learning progress stats — total/completed/in-progress counts, average progress, last activity, per-course breakdown. |
+
+---
+
+## 14. Course Clone
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `POST` | `/lms/courses/clone` | Admin | Clone a course as DRAFT. Body: `{ "courseId": "..." }`. |
+
+---
+
+## 15. Password Reset
+
+| Method | Endpoint | Who | What it does |
+|---|---|---|---|
+| `POST` | `/auth/forgot-password` | Public | Send password reset link via email. Body: `{ "email": "..." }`. |
+| `POST` | `/auth/reset-password` | Public | Reset password with token. Body: `{ "token": "...", "newPassword": "..." }`. |
+
+---
+
+## 16. Reviews (courses)
 
 | Method | Endpoint | Who | What it does |
 |---|---|---|---|

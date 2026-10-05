@@ -53,6 +53,7 @@ import {
   lmsUpdateCategory,
   lmsDeleteCategory,
   lmsUserProgressAnalytics,
+  lmsCloneCourse,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -106,6 +107,7 @@ lmsRouter.get(
 );
 lmsRouter.get("/my-learning", isAuthenticated, lmsMyLearning);
 lmsRouter.get("/progress-analytics", isAuthenticated, lmsUserProgressAnalytics);
+lmsRouter.post("/courses/clone", isAuthenticated, authorizeRoles("admin"), lmsCloneCourse);
 
 // Wishlist (courses)
 lmsRouter.get("/wishlist", isAuthenticated, lmsGetWishlist);
