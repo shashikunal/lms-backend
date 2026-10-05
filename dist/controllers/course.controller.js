@@ -333,7 +333,7 @@ exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
     }
 }));
 exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _w, _x;
+    var _w, _x, _y, _z;
     try {
         const { comment, reviewId, courseId } = req.body;
         const course = yield course_model_1.default.findById(courseId);
@@ -353,6 +353,13 @@ exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
         }
         (_x = review === null || review === void 0 ? void 0 : review.commentReplies) === null || _x === void 0 ? void 0 : _x.push(replayData);
         yield (course === null || course === void 0 ? void 0 : course.save());
+        if ((_y = review === null || review === void 0 ? void 0 : review.user) === null || _y === void 0 ? void 0 : _y._id) {
+            yield notificationModel_1.default.create({
+                user: review.user._id.toString(),
+                title: "New reply to your review",
+                message: `${((_z = req.user) === null || _z === void 0 ? void 0 : _z.name) || "Admin"} replied to your review on "${course === null || course === void 0 ? void 0 : course.name}".`,
+            });
+        }
         res.status(200).json({
             success: true,
             message: "Replay added successfully",

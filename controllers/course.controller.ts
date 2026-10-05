@@ -389,6 +389,13 @@ export const addReplayToReview = CatchAsyncErrors(
 
       review?.commentReplies?.push(replayData);
       await course?.save();
+      if (review?.user?._id) {
+        await NotificationModel.create({
+          user: review.user._id.toString(),
+          title: "New reply to your review",
+          message: `${req.user?.name || "Admin"} replied to your review on "${course?.name}".`,
+        });
+      }
       res.status(200).json({
         success: true,
         message: "Replay added successfully",
