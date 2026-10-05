@@ -1948,6 +1948,14 @@ export const swaggerDocument: Record<string, any> = {
         responses: { 200: { description: "{ users, courses, orders, enrollments, certificates }" } },
       },
     },
+    "/api/v1/lms/admin/enrollments/export": {
+      get: {
+        tags: ["LMS Marketplace"],
+        summary: "Export all enrollments as CSV (Admin only)",
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        responses: { 200: { description: "CSV file download" } },
+      },
+    },
     "/api/v1/lms/payments/webhook": {
       post: {
         tags: ["LMS Marketplace"],

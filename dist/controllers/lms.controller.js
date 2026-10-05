@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsExportEnrollments = exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -1320,5 +1320,39 @@ exports.lmsBulkCouponOperation = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, 
         message: `${result.modifiedCount} coupons ${action}d`,
         modifiedCount: result.modifiedCount,
     });
+}));
+exports.lmsExportEnrollments = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const enrollments = yield enrollment_model_1.default.find().sort({ createdAt: -1 });
+    const userIds = [...new Set(enrollments.map((e) => e.userId))];
+    const courseIds = [...new Set(enrollments.map((e) => e.courseId))];
+    const [users, courses] = yield Promise.all([
+        user_model_1.default.find({ _id: { $in: userIds } }).select("name email"),
+        course_model_1.default.find({ _id: { $in: courseIds } }).select("name"),
+    ]);
+    const userMap = {};
+    const courseMap = {};
+    for (const u of users)
+        userMap[u._id.toString()] = u;
+    for (const c of courses)
+        courseMap[c._id.toString()] = c;
+    const headers = "Enrollment ID,Student Name,Student Email,Course,Progress,Completed,Enrolled At,Completed At\n";
+    const rows = enrollments.map((e) => {
+        const u = userMap[e.userId] || {};
+        const c = courseMap[e.courseId] || {};
+        return [
+            e._id.toString(),
+            u.name || "",
+            u.email || "",
+            c.name || e.courseId,
+            e.progress || 0,
+            e.completed ? "Yes" : "No",
+            e.enrolledAt ? new Date(e.enrolledAt).toISOString() : "",
+            e.completedAt ? new Date(e.completedAt).toISOString() : "",
+        ].join(",");
+    }).join("\n");
+    const csv = headers + rows;
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="enrollments-${Date.now()}.csv"`);
+    res.status(200).send(csv);
 }));
 //# sourceMappingURL=lms.controller.js.map

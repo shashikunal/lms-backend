@@ -62,6 +62,7 @@ import {
   lmsClearCart,
   lmsMoveWishlistToCart,
   lmsBulkCouponOperation,
+  lmsExportEnrollments,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -247,6 +248,12 @@ lmsRouter.get(
   isAuthenticated,
   authorizeRoles("admin"),
   lmsAdminEnrollments
+);
+lmsRouter.get(
+  "/admin/enrollments/export",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  lmsExportEnrollments
 );
 lmsRouter.get(
   "/admin/analytics",

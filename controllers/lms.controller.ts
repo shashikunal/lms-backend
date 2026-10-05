@@ -1503,3 +1503,38 @@ export const lmsBulkCouponOperation = CatchAsyncErrors(
     });
   }
 );
+
+export const lmsExportEnrollments = CatchAsyncErrors(
+  async (req: Request | any, res: Response) => {
+    const enrollments = await EnrollmentModel.find().sort({ createdAt: -1 });
+    const userIds = [...new Set(enrollments.map((e) => e.userId))];
+    const courseIds = [...new Set(enrollments.map((e) => e.courseId))];
+    const [users, courses] = await Promise.all([
+      userModel.find({ _id: { $in: userIds } }).select("name email"),
+      CourseModel.find({ _id: { $in: courseIds } }).select("name"),
+    ]);
+    const userMap: Record<string, any> = {};
+    const courseMap: Record<string, any> = {};
+    for (const u of users) userMap[u._id.toString()] = u;
+    for (const c of courses) courseMap[c._id.toString()] = c;
+    const headers = "Enrollment ID,Student Name,Student Email,Course,Progress,Completed,Enrolled At,Completed At\n";
+    const rows = enrollments.map((e) => {
+      const u = userMap[e.userId] || {};
+      const c = courseMap[e.courseId] || {};
+      return [
+        e._id.toString(),
+        u.name || "",
+        u.email || "",
+        c.name || e.courseId,
+        e.progress || 0,
+        e.completed ? "Yes" : "No",
+        e.enrolledAt ? new Date(e.enrolledAt).toISOString() : "",
+        e.completedAt ? new Date(e.completedAt).toISOString() : "",
+      ].join(",");
+    }).join("\n");
+    const csv = headers + rows;
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="enrollments-${Date.now()}.csv"`);
+    res.status(200).send(csv);
+  }
+);

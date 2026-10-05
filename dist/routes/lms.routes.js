@@ -75,6 +75,7 @@ lmsRouter.put("/admin/courses/:courseId/status", auth_1.isAuthenticated, (0, aut
 lmsRouter.get("/admin/instructors", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsAdminInstructors);
 lmsRouter.get("/admin/orders", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsAdminOrders);
 lmsRouter.get("/admin/enrollments", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsAdminEnrollments);
+lmsRouter.get("/admin/enrollments/export", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsExportEnrollments);
 lmsRouter.get("/admin/analytics", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsAdminAnalytics);
 lmsRouter.post("/categories", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsCreateCategory);
 lmsRouter.get("/categories", lms_controller_1.lmsGetCategories);
