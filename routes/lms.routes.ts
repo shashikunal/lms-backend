@@ -69,6 +69,10 @@ import {
   lmsClearCourseSale,
   lmsGetActiveSales,
   lmsVoteReview,
+  lmsAddLectureNote,
+  lmsAddLectureResource,
+  lmsDeleteLectureNote,
+  lmsDeleteLectureResource,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -287,6 +291,11 @@ lmsRouter.delete(
 );
 lmsRouter.get("/sales", lmsGetActiveSales);
 lmsRouter.post("/reviews/vote", isAuthenticated, lmsVoteReview);
+
+lmsRouter.post("/lectures/notes", isAuthenticated, authorizeRoles("admin", "instructor"), lmsAddLectureNote);
+lmsRouter.post("/lectures/resources", isAuthenticated, authorizeRoles("admin", "instructor"), lmsAddLectureResource);
+lmsRouter.delete("/lectures/notes", isAuthenticated, authorizeRoles("admin", "instructor"), lmsDeleteLectureNote);
+lmsRouter.delete("/lectures/resources", isAuthenticated, authorizeRoles("admin", "instructor"), lmsDeleteLectureResource);
 lmsRouter.get(
   "/admin/analytics",
   isAuthenticated,

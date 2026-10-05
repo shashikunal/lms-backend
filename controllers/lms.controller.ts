@@ -1688,3 +1688,77 @@ export const lmsVoteReview = CatchAsyncErrors(
     });
   }
 );
+
+export const lmsAddLectureNote = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseId, lectureId, title, content } = req.body || {};
+    if (!courseId || !lectureId || !title || !content)
+      return next(new ErrorHandler("courseId, lectureId, title, and content are required", 400));
+    const course: any = await CourseModel.findOne({ "courseData._id": lectureId });
+    if (!course) return next(new ErrorHandler("Lecture not found", 404));
+    const lecture = course.courseData.find(
+      (l: any) => l._id.toString() === lectureId
+    );
+    if (!lecture) return next(new ErrorHandler("Lecture not found", 404));
+    if (!lecture.notes) lecture.notes = [];
+    lecture.notes.push({ title, content });
+    await course.save();
+    res.status(201).json({ success: true, notes: lecture.notes });
+  }
+);
+
+export const lmsAddLectureResource = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseId, lectureId, title, url, fileType } = req.body || {};
+    if (!courseId || !lectureId || !title || !url || !fileType)
+      return next(new ErrorHandler("courseId, lectureId, title, url, and fileType are required", 400));
+    const course: any = await CourseModel.findOne({ "courseData._id": lectureId });
+    if (!course) return next(new ErrorHandler("Lecture not found", 404));
+    const lecture = course.courseData.find(
+      (l: any) => l._id.toString() === lectureId
+    );
+    if (!lecture) return next(new ErrorHandler("Lecture not found", 404));
+    if (!lecture.resources) lecture.resources = [];
+    lecture.resources.push({ title, url, fileType });
+    await course.save();
+    res.status(201).json({ success: true, resources: lecture.resources });
+  }
+);
+
+export const lmsDeleteLectureNote = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseId, lectureId, noteIndex } = req.body || {};
+    if (!courseId || !lectureId || noteIndex === undefined)
+      return next(new ErrorHandler("courseId, lectureId, and noteIndex are required", 400));
+    const course: any = await CourseModel.findOne({ "courseData._id": lectureId });
+    if (!course) return next(new ErrorHandler("Lecture not found", 404));
+    const lecture = course.courseData.find(
+      (l: any) => l._id.toString() === lectureId
+    );
+    if (!lecture) return next(new ErrorHandler("Lecture not found", 404));
+    if (!lecture.notes || noteIndex >= lecture.notes.length)
+      return next(new ErrorHandler("Note not found", 404));
+    lecture.notes.splice(noteIndex, 1);
+    await course.save();
+    res.status(200).json({ success: true, notes: lecture.notes });
+  }
+);
+
+export const lmsDeleteLectureResource = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseId, lectureId, resourceIndex } = req.body || {};
+    if (!courseId || !lectureId || resourceIndex === undefined)
+      return next(new ErrorHandler("courseId, lectureId, and resourceIndex are required", 400));
+    const course: any = await CourseModel.findOne({ "courseData._id": lectureId });
+    if (!course) return next(new ErrorHandler("Lecture not found", 404));
+    const lecture = course.courseData.find(
+      (l: any) => l._id.toString() === lectureId
+    );
+    if (!lecture) return next(new ErrorHandler("Lecture not found", 404));
+    if (!lecture.resources || resourceIndex >= lecture.resources.length)
+      return next(new ErrorHandler("Resource not found", 404));
+    lecture.resources.splice(resourceIndex, 1);
+    await course.save();
+    res.status(200).json({ success: true, resources: lecture.resources });
+  }
+);

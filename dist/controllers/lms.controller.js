@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsVoteReview = exports.lmsGetActiveSales = exports.lmsClearCourseSale = exports.lmsSetCourseSale = exports.lmsBulkSetEnrollmentExpiry = exports.lmsSetEnrollmentExpiry = exports.lmsExportEnrollments = exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsDeleteLectureResource = exports.lmsDeleteLectureNote = exports.lmsAddLectureResource = exports.lmsAddLectureNote = exports.lmsVoteReview = exports.lmsGetActiveSales = exports.lmsClearCourseSale = exports.lmsSetCourseSale = exports.lmsBulkSetEnrollmentExpiry = exports.lmsSetEnrollmentExpiry = exports.lmsExportEnrollments = exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -1485,5 +1485,69 @@ exports.lmsVoteReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next
         helpfulCount: review.helpfulCount,
         notHelpfulCount: review.notHelpfulCount,
     });
+}));
+exports.lmsAddLectureNote = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { courseId, lectureId, title, content } = req.body || {};
+    if (!courseId || !lectureId || !title || !content)
+        return next(new ErrorHandler_1.default("courseId, lectureId, title, and content are required", 400));
+    const course = yield course_model_1.default.findOne({ "courseData._id": lectureId });
+    if (!course)
+        return next(new ErrorHandler_1.default("Lecture not found", 404));
+    const lecture = course.courseData.find((l) => l._id.toString() === lectureId);
+    if (!lecture)
+        return next(new ErrorHandler_1.default("Lecture not found", 404));
+    if (!lecture.notes)
+        lecture.notes = [];
+    lecture.notes.push({ title, content });
+    yield course.save();
+    res.status(201).json({ success: true, notes: lecture.notes });
+}));
+exports.lmsAddLectureResource = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { courseId, lectureId, title, url, fileType } = req.body || {};
+    if (!courseId || !lectureId || !title || !url || !fileType)
+        return next(new ErrorHandler_1.default("courseId, lectureId, title, url, and fileType are required", 400));
+    const course = yield course_model_1.default.findOne({ "courseData._id": lectureId });
+    if (!course)
+        return next(new ErrorHandler_1.default("Lecture not found", 404));
+    const lecture = course.courseData.find((l) => l._id.toString() === lectureId);
+    if (!lecture)
+        return next(new ErrorHandler_1.default("Lecture not found", 404));
+    if (!lecture.resources)
+        lecture.resources = [];
+    lecture.resources.push({ title, url, fileType });
+    yield course.save();
+    res.status(201).json({ success: true, resources: lecture.resources });
+}));
+exports.lmsDeleteLectureNote = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { courseId, lectureId, noteIndex } = req.body || {};
+    if (!courseId || !lectureId || noteIndex === undefined)
+        return next(new ErrorHandler_1.default("courseId, lectureId, and noteIndex are required", 400));
+    const course = yield course_model_1.default.findOne({ "courseData._id": lectureId });
+    if (!course)
+        return next(new ErrorHandler_1.default("Lecture not found", 404));
+    const lecture = course.courseData.find((l) => l._id.toString() === lectureId);
+    if (!lecture)
+        return next(new ErrorHandler_1.default("Lecture not found", 404));
+    if (!lecture.notes || noteIndex >= lecture.notes.length)
+        return next(new ErrorHandler_1.default("Note not found", 404));
+    lecture.notes.splice(noteIndex, 1);
+    yield course.save();
+    res.status(200).json({ success: true, notes: lecture.notes });
+}));
+exports.lmsDeleteLectureResource = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { courseId, lectureId, resourceIndex } = req.body || {};
+    if (!courseId || !lectureId || resourceIndex === undefined)
+        return next(new ErrorHandler_1.default("courseId, lectureId, and resourceIndex are required", 400));
+    const course = yield course_model_1.default.findOne({ "courseData._id": lectureId });
+    if (!course)
+        return next(new ErrorHandler_1.default("Lecture not found", 404));
+    const lecture = course.courseData.find((l) => l._id.toString() === lectureId);
+    if (!lecture)
+        return next(new ErrorHandler_1.default("Lecture not found", 404));
+    if (!lecture.resources || resourceIndex >= lecture.resources.length)
+        return next(new ErrorHandler_1.default("Resource not found", 404));
+    lecture.resources.splice(resourceIndex, 1);
+    yield course.save();
+    res.status(200).json({ success: true, resources: lecture.resources });
 }));
 //# sourceMappingURL=lms.controller.js.map

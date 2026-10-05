@@ -34,6 +34,8 @@ interface ICourseData extends Document {
   suggestion: string;
   questions: IComment[];
   isPreview?: boolean;
+  notes: Array<{ title: string; content: string }>;
+  resources: Array<{ title: string; url: string; fileType: string }>;
 }
 
 export type CourseStatus =
@@ -94,6 +96,8 @@ const courseDataSchema = new Schema<ICourseData>({
   suggestion: { type: String },
   questions: { type: [commentSchema] },
   isPreview: { type: Boolean, default: false },
+  notes: { type: [{ title: String, content: String }], default: [] },
+  resources: { type: [{ title: String, url: String, fileType: String }], default: [] },
 });
 
 const courseSchema = new Schema<ICourse>(

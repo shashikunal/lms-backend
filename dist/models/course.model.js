@@ -50,6 +50,8 @@ const courseDataSchema = new mongoose_1.Schema({
     suggestion: { type: String },
     questions: { type: [commentSchema] },
     isPreview: { type: Boolean, default: false },
+    notes: { type: [{ title: String, content: String }], default: [] },
+    resources: { type: [{ title: String, url: String, fileType: String }], default: [] },
 });
 const courseSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
