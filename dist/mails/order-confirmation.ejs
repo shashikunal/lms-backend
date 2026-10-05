@@ -3,54 +3,62 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Order Confirmation</title>
+    <style>
+      body { margin: 0; padding: 0; background-color: #f4f4f4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+      .email-wrapper { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+      .email-header { background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 40px 30px; text-align: center; }
+      .email-header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; }
+      .email-header p { color: #a7f3d0; margin: 8px 0 0; font-size: 14px; }
+      .email-body { padding: 40px 30px; }
+      .email-body p { color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 16px; }
+      .order-details { background: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; }
+      .order-details h3 { color: #0f172a; margin: 0 0 16px; font-size: 18px; }
+      .order-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+      .order-row:last-child { border-bottom: none; }
+      .order-label { color: #64748b; font-size: 14px; }
+      .order-value { color: #0f172a; font-size: 14px; font-weight: 600; }
+      .total-row { display: flex; justify-content: space-between; padding: 16px 0 0; margin-top: 8px; border-top: 2px solid #0f172a; }
+      .total-label { color: #0f172a; font-size: 16px; font-weight: 700; }
+      .total-value { color: #059669; font-size: 20px; font-weight: 800; }
+      .cta-button { display: inline-block; background: #059669; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 24px 0; }
+      .email-footer { background: #f8fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+      .email-footer p { color: #94a3b8; font-size: 12px; margin: 0; }
+    </style>
   </head>
   <body>
-    <div class="container">
-      <div class="message-sm">
-        <h1>Your Learning order is confirmed</h1>
-        <p>And we are just excited as you are.</p>
+    <div class="email-wrapper">
+      <div class="email-header">
+        <h1>Order Confirmed!</h1>
+        <p>Thank you for your purchase</p>
       </div>
-      <br />
-      <br />
-      <div class="courseInfo">
-        <h2>Here's what you Ordered</h2>
-        <table style="border-bottom: 1px solid #000">
-          <tr>
-            <td>Order #: <%= order._id %></td>
-            <td>Order Date: <%= order.date %></td>
-          </tr>
-        </table>
-        <br />
-        <table style="width: 90%; margin: auto; display: block">
-          <tr>
-            <td>Item</td>
-            <td>Qty</td>
-            <td>Cost</td>
-          </tr>
-        </table>
-        <br />
-        <table style="width: 90%; margin: auto; display: block">
-          <tr>
-            <td><%= order.name %></td>
-            <td>1</td>
-            <td><%= order.price %></td>
-          </tr>
-        </table>
-        <br />
-        <table style="border: 1px solid #111">
-          <tr>
-            <td>Subtotal</td>
-            <td>$<%= order.price %></td>
-          </tr>
-        </table>
-        <br />
-        <table style="border: 1px solid #111">
-          <tr>
-            <td>Total:</td>
-            <td>$<%= order.price %></td>
-          </tr>
-        </table>
+      <div class="email-body">
+        <p>Hello <strong><%= order.userName || 'Student' %></strong>,</p>
+        <p>Your order has been confirmed. Here are your order details:</p>
+        <div class="order-details">
+          <h3>Order Summary</h3>
+          <div class="order-row">
+            <span class="order-label">Order ID</span>
+            <span class="order-value">#<%= order._id %></span>
+          </div>
+          <div class="order-row">
+            <span class="order-label">Date</span>
+            <span class="order-value"><%= order.date %></span>
+          </div>
+          <div class="order-row">
+            <span class="order-label">Course</span>
+            <span class="order-value"><%= order.name %></span>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Total Paid</span>
+            <span class="total-value">₹<%= order.price %></span>
+          </div>
+        </div>
+        <p>You can now access your course from the My Learning dashboard.</p>
+        <a href="#" class="cta-button">Go to My Learning</a>
+      </div>
+      <div class="email-footer">
+        <p>&copy; 2026 QSP LEARNING. All rights reserved.</p>
       </div>
     </div>
   </body>

@@ -3,24 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>E-learning App</title>
+    <title>New Reply to Your Question</title>
+    <style>
+      body { margin: 0; padding: 0; background-color: #f4f4f4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+      .email-wrapper { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+      .email-header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 40px 30px; text-align: center; }
+      .email-header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; }
+      .email-header p { color: #93c5fd; margin: 8px 0 0; font-size: 14px; }
+      .email-body { padding: 40px 30px; }
+      .email-body p { color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 16px; }
+      .highlight-box { background: #eff6ff; border-left: 4px solid #2563eb; padding: 16px 20px; margin: 24px 0; border-radius: 0 8px 8px 0; }
+      .highlight-box p { color: #1e40af; font-size: 14px; margin: 0; }
+      .cta-button { display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 24px 0; }
+      .email-footer { background: #f8fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+      .email-footer p { color: #94a3b8; font-size: 12px; margin: 0; }
+    </style>
   </head>
   <body>
     <div class="email-wrapper">
       <div class="email-header">
-        <h1>Welcome to LMS</h1>
+        <h1>New Reply Received</h1>
+        <p>Someone has answered your question</p>
       </div>
       <div class="email-body">
-        <p>hello <%= name %></p>
-        <p>
-          a new replay has been added to your question in the video "<%= title
-          %>
-        </p>
-        <p>
-          please login to our website to view the replay and continue the
-          discussion
-        </p>
-        <p>Thank you for being part of our community!</p>
+        <p>Hello <strong><%= name %></strong>,</p>
+        <p>A new reply has been added to your question in the video:</p>
+        <div class="highlight-box">
+          <p>"<%= title %>"</p>
+        </div>
+        <p>Please log in to your account to view the reply and continue the discussion.</p>
+        <a href="#" class="cta-button">View Reply</a>
+        <p>Thank you for being part of our learning community!</p>
+      </div>
+      <div class="email-footer">
+        <p>&copy; 2026 QSP LEARNING. All rights reserved.</p>
       </div>
     </div>
   </body>
