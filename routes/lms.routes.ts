@@ -47,6 +47,11 @@ import {
   lmsVerifyPayment,
   lmsWebhook,
   lmsRefundPayment,
+  lmsCreateCategory,
+  lmsGetCategories,
+  lmsGetAllCategories,
+  lmsUpdateCategory,
+  lmsDeleteCategory,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -223,6 +228,32 @@ lmsRouter.get(
   isAuthenticated,
   authorizeRoles("admin"),
   lmsAdminAnalytics
+);
+
+lmsRouter.post(
+  "/categories",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  lmsCreateCategory
+);
+lmsRouter.get("/categories", lmsGetCategories);
+lmsRouter.get(
+  "/categories/all",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  lmsGetAllCategories
+);
+lmsRouter.put(
+  "/categories/:categoryId",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  lmsUpdateCategory
+);
+lmsRouter.delete(
+  "/categories/:categoryId",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  lmsDeleteCategory
 );
 
 export default lmsRouter;

@@ -12,6 +12,7 @@ import LectureProgressModel from "../models/lectureProgress.model";
 import CourseWishlistModel from "../models/courseWishlist.model";
 import LmsCouponModel from "../models/lmsCoupon.model";
 import CertificateModel from "../models/certificate.model";
+import CategoryModel from "../models/category.model";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -1204,5 +1205,57 @@ export const lmsRefundPayment = CatchAsyncErrors(
       message: "Refund processed successfully",
       order,
     });
+  }
+);
+
+export const lmsCreateCategory = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { name, description } = req.body || {};
+    if (!name) return next(new ErrorHandler("name is required", 400));
+    const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const existing = await CategoryModel.findOne({ slug });
+    if (existing) return next(new ErrorHandler("Category already exists", 400));
+    const category = await CategoryModel.create({ name, description, slug });
+    res.status(201).json({ success: true, category });
+  }
+);
+
+export const lmsGetCategories = CatchAsyncErrors(
+  async (_req: Request, res: Response) => {
+    const categories = await CategoryModel.find({ isActive: true }).sort({ name: 1 });
+    res.status(200).json({ success: true, categories });
+  }
+);
+
+export const lmsGetAllCategories = CatchAsyncErrors(
+  async (_req: Request, res: Response) => {
+    const categories = await CategoryModel.find().sort({ name: 1 });
+    res.status(200).json({ success: true, categories });
+  }
+);
+
+export const lmsUpdateCategory = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { categoryId } = req.params;
+    const { name, description, isActive } = req.body || {};
+    const category = await CategoryModel.findById(categoryId);
+    if (!category) return next(new ErrorHandler("Category not found", 404));
+    if (name) {
+      category.name = name;
+      category.slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    }
+    if (description !== undefined) category.description = description;
+    if (isActive !== undefined) category.isActive = isActive;
+    await category.save();
+    res.status(200).json({ success: true, category });
+  }
+);
+
+export const lmsDeleteCategory = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { categoryId } = req.params;
+    const category = await CategoryModel.findByIdAndDelete(categoryId);
+    if (!category) return next(new ErrorHandler("Category not found", 404));
+    res.status(200).json({ success: true, message: "Category deleted successfully" });
   }
 );

@@ -23,7 +23,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
+exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
+exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -37,6 +38,7 @@ const lectureProgress_model_1 = __importDefault(require("../models/lectureProgre
 const courseWishlist_model_1 = __importDefault(require("../models/courseWishlist.model"));
 const lmsCoupon_model_1 = __importDefault(require("../models/lmsCoupon.model"));
 const certificate_model_1 = __importDefault(require("../models/certificate.model"));
+const category_model_1 = __importDefault(require("../models/category.model"));
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -1056,5 +1058,48 @@ exports.lmsRefundPayment = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, n
         message: "Refund processed successfully",
         order,
     });
+}));
+exports.lmsCreateCategory = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, description } = req.body || {};
+    if (!name)
+        return next(new ErrorHandler_1.default("name is required", 400));
+    const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const existing = yield category_model_1.default.findOne({ slug });
+    if (existing)
+        return next(new ErrorHandler_1.default("Category already exists", 400));
+    const category = yield category_model_1.default.create({ name, description, slug });
+    res.status(201).json({ success: true, category });
+}));
+exports.lmsGetCategories = (0, catchAsyncErrors_1.CatchAsyncErrors)((_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const categories = yield category_model_1.default.find({ isActive: true }).sort({ name: 1 });
+    res.status(200).json({ success: true, categories });
+}));
+exports.lmsGetAllCategories = (0, catchAsyncErrors_1.CatchAsyncErrors)((_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const categories = yield category_model_1.default.find().sort({ name: 1 });
+    res.status(200).json({ success: true, categories });
+}));
+exports.lmsUpdateCategory = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { categoryId } = req.params;
+    const { name, description, isActive } = req.body || {};
+    const category = yield category_model_1.default.findById(categoryId);
+    if (!category)
+        return next(new ErrorHandler_1.default("Category not found", 404));
+    if (name) {
+        category.name = name;
+        category.slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    }
+    if (description !== undefined)
+        category.description = description;
+    if (isActive !== undefined)
+        category.isActive = isActive;
+    yield category.save();
+    res.status(200).json({ success: true, category });
+}));
+exports.lmsDeleteCategory = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { categoryId } = req.params;
+    const category = yield category_model_1.default.findByIdAndDelete(categoryId);
+    if (!category)
+        return next(new ErrorHandler_1.default("Category not found", 404));
+    res.status(200).json({ success: true, message: "Category deleted successfully" });
 }));
 //# sourceMappingURL=lms.controller.js.map

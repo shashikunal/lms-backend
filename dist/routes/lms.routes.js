@@ -66,5 +66,10 @@ lmsRouter.get("/admin/instructors", auth_1.isAuthenticated, (0, auth_1.authorize
 lmsRouter.get("/admin/orders", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsAdminOrders);
 lmsRouter.get("/admin/enrollments", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsAdminEnrollments);
 lmsRouter.get("/admin/analytics", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsAdminAnalytics);
+lmsRouter.post("/categories", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsCreateCategory);
+lmsRouter.get("/categories", lms_controller_1.lmsGetCategories);
+lmsRouter.get("/categories/all", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsGetAllCategories);
+lmsRouter.put("/categories/:categoryId", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsUpdateCategory);
+lmsRouter.delete("/categories/:categoryId", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), lms_controller_1.lmsDeleteCategory);
 exports.default = lmsRouter;
 //# sourceMappingURL=lms.routes.js.map
