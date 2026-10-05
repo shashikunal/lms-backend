@@ -26,5 +26,8 @@ userRouter.post("/reset-password", user_controller_1.resetPassword);
 userRouter.post("/2fa/setup", auth_1.isAuthenticated, user_controller_1.setupTwoFactor);
 userRouter.post("/2fa/verify", auth_1.isAuthenticated, user_controller_1.verifyTwoFactor);
 userRouter.post("/2fa/disable", auth_1.isAuthenticated, user_controller_1.disableTwoFactor);
+userRouter.get("/sessions", auth_1.isAuthenticated, user_controller_1.getUserSessions);
+userRouter.delete("/sessions", auth_1.isAuthenticated, user_controller_1.revokeUserSession);
+userRouter.delete("/sessions/all", auth_1.isAuthenticated, user_controller_1.revokeAllUserSessions);
 exports.default = userRouter;
 //# sourceMappingURL=user.routes.js.map

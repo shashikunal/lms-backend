@@ -627,3 +627,47 @@ export const disableTwoFactor = CatchAsyncErrors(
     }
   }
 );
+
+export const getUserSessions = CatchAsyncErrors(
+  async (req: Request | any, res: Response) => {
+    const userId = req.userId?.toString();
+    const sessionKey = `sessions:${userId}`;
+    const sessionIds = await redis.smembers(sessionKey);
+    const sessions = [];
+    for (const sid of sessionIds) {
+      const data = await redis.get(`session:${sid}`);
+      if (data) {
+        const parsed = JSON.parse(data);
+        sessions.push({ sessionId: sid, ...parsed });
+      }
+    }
+    res.status(200).json({ success: true, sessions });
+  }
+);
+
+export const revokeUserSession = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { sessionId } = req.body;
+    if (!sessionId) return next(new ErrorHandler("sessionId is required", 400));
+    const userId = req.userId?.toString();
+    const sessionKey = `sessions:${userId}`;
+    const exists = await redis.sismember(sessionKey, sessionId);
+    if (!exists) return next(new ErrorHandler("Session not found", 404));
+    await redis.del(`session:${sessionId}`);
+    await redis.srem(sessionKey, sessionId);
+    res.status(200).json({ success: true, message: "Session revoked" });
+  }
+);
+
+export const revokeAllUserSessions = CatchAsyncErrors(
+  async (req: Request | any, res: Response) => {
+    const userId = req.userId?.toString();
+    const sessionKey = `sessions:${userId}`;
+    const sessionIds = await redis.smembers(sessionKey);
+    for (const sid of sessionIds) {
+      await redis.del(`session:${sid}`);
+    }
+    await redis.del(sessionKey);
+    res.status(200).json({ success: true, message: "All sessions revoked" });
+  }
+);

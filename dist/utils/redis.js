@@ -123,6 +123,54 @@ class HybridRedisClient {
             return deletedFromMemory;
         });
     }
+    smembers(key) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.redisClient) {
+                try {
+                    return yield this.redisClient.smembers(key);
+                }
+                catch (_a) {
+                }
+            }
+            return [];
+        });
+    }
+    sismember(key, member) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.redisClient) {
+                try {
+                    return yield this.redisClient.sismember(key, member);
+                }
+                catch (_a) {
+                }
+            }
+            return 0;
+        });
+    }
+    srem(key, member) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.redisClient) {
+                try {
+                    return yield this.redisClient.srem(key, member);
+                }
+                catch (_a) {
+                }
+            }
+            return 0;
+        });
+    }
+    sadd(key, member) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.redisClient) {
+                try {
+                    return yield this.redisClient.sadd(key, member);
+                }
+                catch (_a) {
+                }
+            }
+            return 0;
+        });
+    }
 }
 exports.redis = new HybridRedisClient(config_1.CONFIG.REDIS_URL);
 //# sourceMappingURL=redis.js.map

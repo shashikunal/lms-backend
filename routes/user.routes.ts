@@ -18,6 +18,9 @@ import {
   setupTwoFactor,
   verifyTwoFactor,
   disableTwoFactor,
+  getUserSessions,
+  revokeUserSession,
+  revokeAllUserSessions,
 } from "../controllers/user.controller";
 import { authorizeRoles, isAuthenticated } from "../middlewares/auth";
 
@@ -66,5 +69,9 @@ userRouter.post("/reset-password", resetPassword);
 userRouter.post("/2fa/setup", isAuthenticated, setupTwoFactor);
 userRouter.post("/2fa/verify", isAuthenticated, verifyTwoFactor);
 userRouter.post("/2fa/disable", isAuthenticated, disableTwoFactor);
+
+userRouter.get("/sessions", isAuthenticated, getUserSessions);
+userRouter.delete("/sessions", isAuthenticated, revokeUserSession);
+userRouter.delete("/sessions/all", isAuthenticated, revokeAllUserSessions);
 
 export default userRouter;

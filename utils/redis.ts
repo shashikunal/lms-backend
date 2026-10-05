@@ -109,6 +109,46 @@ class HybridRedisClient {
 
     return deletedFromMemory;
   }
+
+  async smembers(key: string): Promise<string[]> {
+    if (this.redisClient) {
+      try {
+        return await this.redisClient.smembers(key);
+      } catch {
+      }
+    }
+    return [];
+  }
+
+  async sismember(key: string, member: string): Promise<number> {
+    if (this.redisClient) {
+      try {
+        return await this.redisClient.sismember(key, member);
+      } catch {
+      }
+    }
+    return 0;
+  }
+
+  async srem(key: string, member: string): Promise<number> {
+    if (this.redisClient) {
+      try {
+        return await this.redisClient.srem(key, member);
+      } catch {
+      }
+    }
+    return 0;
+  }
+
+  async sadd(key: string, member: string): Promise<number> {
+    if (this.redisClient) {
+      try {
+        return await this.redisClient.sadd(key, member);
+      } catch {
+      }
+    }
+    return 0;
+  }
 }
 
 export const redis = new HybridRedisClient(CONFIG.REDIS_URL);

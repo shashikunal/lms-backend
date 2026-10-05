@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.disableTwoFactor = exports.verifyTwoFactor = exports.setupTwoFactor = exports.resetPassword = exports.forgotPassword = exports.deleteUserByAdmin = exports.updateUserRoles = exports.getAllUsersDashboard = exports.updateProfilePicture = exports.updatePassword = exports.updateUserInfo = exports.socialAuth = exports.getUserInfo = exports.updateAccessToken = exports.logoutUser = exports.loginUser = exports.activateUser = exports.createActivationToken = exports.registrationUser = void 0;
+exports.revokeAllUserSessions = exports.revokeUserSession = exports.getUserSessions = exports.disableTwoFactor = exports.verifyTwoFactor = exports.setupTwoFactor = exports.resetPassword = exports.forgotPassword = exports.deleteUserByAdmin = exports.updateUserRoles = exports.getAllUsersDashboard = exports.updateProfilePicture = exports.updatePassword = exports.updateUserInfo = exports.socialAuth = exports.getUserInfo = exports.updateAccessToken = exports.logoutUser = exports.loginUser = exports.activateUser = exports.createActivationToken = exports.registrationUser = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
@@ -523,5 +523,45 @@ exports.disableTwoFactor = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, n
     catch (error) {
         return next(new ErrorHandler_1.default(error.message, 500));
     }
+}));
+exports.getUserSessions = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _k;
+    const userId = (_k = req.userId) === null || _k === void 0 ? void 0 : _k.toString();
+    const sessionKey = `sessions:${userId}`;
+    const sessionIds = yield redis_1.redis.smembers(sessionKey);
+    const sessions = [];
+    for (const sid of sessionIds) {
+        const data = yield redis_1.redis.get(`session:${sid}`);
+        if (data) {
+            const parsed = JSON.parse(data);
+            sessions.push(Object.assign({ sessionId: sid }, parsed));
+        }
+    }
+    res.status(200).json({ success: true, sessions });
+}));
+exports.revokeUserSession = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _l;
+    const { sessionId } = req.body;
+    if (!sessionId)
+        return next(new ErrorHandler_1.default("sessionId is required", 400));
+    const userId = (_l = req.userId) === null || _l === void 0 ? void 0 : _l.toString();
+    const sessionKey = `sessions:${userId}`;
+    const exists = yield redis_1.redis.sismember(sessionKey, sessionId);
+    if (!exists)
+        return next(new ErrorHandler_1.default("Session not found", 404));
+    yield redis_1.redis.del(`session:${sessionId}`);
+    yield redis_1.redis.srem(sessionKey, sessionId);
+    res.status(200).json({ success: true, message: "Session revoked" });
+}));
+exports.revokeAllUserSessions = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _m;
+    const userId = (_m = req.userId) === null || _m === void 0 ? void 0 : _m.toString();
+    const sessionKey = `sessions:${userId}`;
+    const sessionIds = yield redis_1.redis.smembers(sessionKey);
+    for (const sid of sessionIds) {
+        yield redis_1.redis.del(`session:${sid}`);
+    }
+    yield redis_1.redis.del(sessionKey);
+    res.status(200).json({ success: true, message: "All sessions revoked" });
 }));
 //# sourceMappingURL=user.controller.js.map
