@@ -82,6 +82,14 @@ const userSchema = new mongoose_1.Schema({
             },
         },
     ],
+    twoFactorSecret: {
+        type: String,
+        select: false,
+    },
+    twoFactorEnabled: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 //hash password before saving user
 userSchema.pre("save", function (next) {

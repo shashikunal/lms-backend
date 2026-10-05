@@ -12,7 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.deleteUserByAdmin = exports.updateUserRoles = exports.getAllUsersDashboard = exports.updateProfilePicture = exports.updatePassword = exports.updateUserInfo = exports.socialAuth = exports.getUserInfo = exports.updateAccessToken = exports.logoutUser = exports.loginUser = exports.activateUser = exports.createActivationToken = exports.registrationUser = void 0;
+exports.disableTwoFactor = exports.verifyTwoFactor = exports.setupTwoFactor = exports.resetPassword = exports.forgotPassword = exports.deleteUserByAdmin = exports.updateUserRoles = exports.getAllUsersDashboard = exports.updateProfilePicture = exports.updatePassword = exports.updateUserInfo = exports.socialAuth = exports.getUserInfo = exports.updateAccessToken = exports.logoutUser = exports.loginUser = exports.activateUser = exports.createActivationToken = exports.registrationUser = void 0;
+const crypto_1 = __importDefault(require("crypto"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
@@ -424,6 +425,103 @@ exports.resetPassword = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next
             ? 400
             : 500;
         return next(new ErrorHandler_1.default(error.message, status));
+    }
+}));
+exports.setupTwoFactor = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _g;
+    try {
+        const userId = (_g = req.userId) === null || _g === void 0 ? void 0 : _g.toString();
+        const user = yield user_model_1.default.findById(userId).select("+twoFactorSecret");
+        if (!user)
+            return next(new ErrorHandler_1.default("User not found", 404));
+        if (user.twoFactorEnabled)
+            return next(new ErrorHandler_1.default("2FA is already enabled", 400));
+        const secret = crypto_1.default.randomBytes(32).toString("hex");
+        user.twoFactorSecret = secret;
+        yield user.save();
+        const otpauthUrl = `otpauth://totp/LMS:${user.email}?secret=${secret}&issuer=LMS`;
+        res.status(200).json({
+            success: true,
+            message: "2FA setup initiated. Use the secret/URL in your authenticator app.",
+            secret,
+            otpauthUrl,
+        });
+    }
+    catch (error) {
+        return next(new ErrorHandler_1.default(error.message, 500));
+    }
+}));
+exports.verifyTwoFactor = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _h;
+    try {
+        const { token } = req.body;
+        if (!token)
+            return next(new ErrorHandler_1.default("Token is required", 400));
+        const userId = (_h = req.userId) === null || _h === void 0 ? void 0 : _h.toString();
+        const user = yield user_model_1.default.findById(userId).select("+twoFactorSecret");
+        if (!user)
+            return next(new ErrorHandler_1.default("User not found", 404));
+        if (!user.twoFactorSecret)
+            return next(new ErrorHandler_1.default("2FA not set up", 400));
+        const expected = crypto_1.default
+            .createHmac("sha256", user.twoFactorSecret)
+            .update(Math.floor(Date.now() / 30000).toString())
+            .digest("hex")
+            .slice(0, 6);
+        const expectedPrev = crypto_1.default
+            .createHmac("sha256", user.twoFactorSecret)
+            .update(Math.floor(Date.now() / 30000) - 1 + "")
+            .digest("hex")
+            .slice(0, 6);
+        if (token !== expected && token !== expectedPrev)
+            return next(new ErrorHandler_1.default("Invalid 2FA token", 400));
+        user.twoFactorEnabled = true;
+        yield user.save();
+        yield redis_1.redis.del(userId);
+        res.status(200).json({
+            success: true,
+            message: "2FA enabled successfully",
+        });
+    }
+    catch (error) {
+        return next(new ErrorHandler_1.default(error.message, 500));
+    }
+}));
+exports.disableTwoFactor = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _j;
+    try {
+        const userId = (_j = req.userId) === null || _j === void 0 ? void 0 : _j.toString();
+        const user = yield user_model_1.default.findById(userId).select("+twoFactorSecret");
+        if (!user)
+            return next(new ErrorHandler_1.default("User not found", 404));
+        if (!user.twoFactorEnabled)
+            return next(new ErrorHandler_1.default("2FA is not enabled", 400));
+        const { token } = req.body;
+        if (!token)
+            return next(new ErrorHandler_1.default("Token is required", 400));
+        const expected = crypto_1.default
+            .createHmac("sha256", user.twoFactorSecret)
+            .update(Math.floor(Date.now() / 30000).toString())
+            .digest("hex")
+            .slice(0, 6);
+        const expectedPrev = crypto_1.default
+            .createHmac("sha256", user.twoFactorSecret)
+            .update(Math.floor(Date.now() / 30000) - 1 + "")
+            .digest("hex")
+            .slice(0, 6);
+        if (token !== expected && token !== expectedPrev)
+            return next(new ErrorHandler_1.default("Invalid 2FA token", 400));
+        user.twoFactorEnabled = false;
+        user.twoFactorSecret = undefined;
+        yield user.save();
+        yield redis_1.redis.del(userId);
+        res.status(200).json({
+            success: true,
+            message: "2FA disabled successfully",
+        });
+    }
+    catch (error) {
+        return next(new ErrorHandler_1.default(error.message, 500));
     }
 }));
 //# sourceMappingURL=user.controller.js.map

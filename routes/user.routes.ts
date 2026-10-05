@@ -15,6 +15,9 @@ import {
   deleteUserByAdmin,
   forgotPassword,
   resetPassword,
+  setupTwoFactor,
+  verifyTwoFactor,
+  disableTwoFactor,
 } from "../controllers/user.controller";
 import { authorizeRoles, isAuthenticated } from "../middlewares/auth";
 
@@ -59,5 +62,9 @@ userRouter.delete(
 
 userRouter.post("/forgot-password", forgotPassword);
 userRouter.post("/reset-password", resetPassword);
+
+userRouter.post("/2fa/setup", isAuthenticated, setupTwoFactor);
+userRouter.post("/2fa/verify", isAuthenticated, verifyTwoFactor);
+userRouter.post("/2fa/disable", isAuthenticated, disableTwoFactor);
 
 export default userRouter;

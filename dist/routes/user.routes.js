@@ -23,5 +23,8 @@ userRouter.put("/update-user-roles", auth_1.isAuthenticated, (0, auth_1.authoriz
 userRouter.delete("/delete-user/:id", auth_1.isAuthenticated, (0, auth_1.authorizeRoles)("admin"), user_controller_1.deleteUserByAdmin);
 userRouter.post("/forgot-password", user_controller_1.forgotPassword);
 userRouter.post("/reset-password", user_controller_1.resetPassword);
+userRouter.post("/2fa/setup", auth_1.isAuthenticated, user_controller_1.setupTwoFactor);
+userRouter.post("/2fa/verify", auth_1.isAuthenticated, user_controller_1.verifyTwoFactor);
+userRouter.post("/2fa/disable", auth_1.isAuthenticated, user_controller_1.disableTwoFactor);
 exports.default = userRouter;
 //# sourceMappingURL=user.routes.js.map

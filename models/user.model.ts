@@ -16,6 +16,8 @@ export interface IUser extends Document {
   role: string;
   isVerified: boolean;
   courses: Array<{ courseId: string }>;
+  twoFactorSecret?: string;
+  twoFactorEnabled: boolean;
   comparePassword: (password: string) => Promise<boolean>;
   SignAccessToken: () => string;
   SignRefreshToken: () => string;
@@ -64,6 +66,14 @@ const userSchema: Schema<IUser> = new Schema(
         },
       },
     ],
+    twoFactorSecret: {
+      type: String,
+      select: false,
+    },
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

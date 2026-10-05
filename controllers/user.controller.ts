@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Request, Response, NextFunction } from "express";
 import userModel, { IUser } from "../models/user.model";
 import ErrorHandler from "../utils/ErrorHandler";
@@ -528,6 +529,101 @@ export const resetPassword = CatchAsyncErrors(
           ? 400
           : 500;
       return next(new ErrorHandler(error.message, status));
+    }
+  }
+);
+
+export const setupTwoFactor = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId?.toString();
+      const user = await userModel.findById(userId).select("+twoFactorSecret");
+      if (!user) return next(new ErrorHandler("User not found", 404));
+      if (user.twoFactorEnabled)
+        return next(new ErrorHandler("2FA is already enabled", 400));
+      const secret = crypto.randomBytes(32).toString("hex");
+      user.twoFactorSecret = secret;
+      await user.save();
+      const otpauthUrl = `otpauth://totp/LMS:${user.email}?secret=${secret}&issuer=LMS`;
+      res.status(200).json({
+        success: true,
+        message: "2FA setup initiated. Use the secret/URL in your authenticator app.",
+        secret,
+        otpauthUrl,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
+export const verifyTwoFactor = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    try {
+      const { token } = req.body;
+      if (!token) return next(new ErrorHandler("Token is required", 400));
+      const userId = req.userId?.toString();
+      const user = await userModel.findById(userId).select("+twoFactorSecret");
+      if (!user) return next(new ErrorHandler("User not found", 404));
+      if (!user.twoFactorSecret)
+        return next(new ErrorHandler("2FA not set up", 400));
+      const expected = crypto
+        .createHmac("sha256", user.twoFactorSecret)
+        .update(Math.floor(Date.now() / 30000).toString())
+        .digest("hex")
+        .slice(0, 6);
+      const expectedPrev = crypto
+        .createHmac("sha256", user.twoFactorSecret)
+        .update(Math.floor(Date.now() / 30000) - 1 + "")
+        .digest("hex")
+        .slice(0, 6);
+      if (token !== expected && token !== expectedPrev)
+        return next(new ErrorHandler("Invalid 2FA token", 400));
+      user.twoFactorEnabled = true;
+      await user.save();
+      await redis.del(userId);
+      res.status(200).json({
+        success: true,
+        message: "2FA enabled successfully",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
+export const disableTwoFactor = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId?.toString();
+      const user = await userModel.findById(userId).select("+twoFactorSecret");
+      if (!user) return next(new ErrorHandler("User not found", 404));
+      if (!user.twoFactorEnabled)
+        return next(new ErrorHandler("2FA is not enabled", 400));
+      const { token } = req.body;
+      if (!token) return next(new ErrorHandler("Token is required", 400));
+      const expected = crypto
+        .createHmac("sha256", user.twoFactorSecret!)
+        .update(Math.floor(Date.now() / 30000).toString())
+        .digest("hex")
+        .slice(0, 6);
+      const expectedPrev = crypto
+        .createHmac("sha256", user.twoFactorSecret!)
+        .update(Math.floor(Date.now() / 30000) - 1 + "")
+        .digest("hex")
+        .slice(0, 6);
+      if (token !== expected && token !== expectedPrev)
+        return next(new ErrorHandler("Invalid 2FA token", 400));
+      user.twoFactorEnabled = false;
+      user.twoFactorSecret = undefined;
+      await user.save();
+      await redis.del(userId);
+      res.status(200).json({
+        success: true,
+        message: "2FA disabled successfully",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
     }
   }
 );
