@@ -58,7 +58,10 @@ export const editCourse = CatchAsyncErrors(
           new: true,
         }
       );
-      res.status(201).json({
+      if (!course) {
+        return next(new ErrorHandler("Course not found", 404));
+      }
+      res.status(200).json({
         success: true,
         course,
       });
@@ -113,7 +116,7 @@ export const getAllCourses = CatchAsyncErrors(
           "-courseData.videoUrl -courseData.suggestion -courseData.questions -courseData.links"
         );
         await redis.set("allCourses", JSON.stringify(courses));
-        res.status(201).json({
+        res.status(200).json({
           success: true,
           courses,
         });
@@ -340,11 +343,11 @@ export const addReview = CatchAsyncErrors(
         course.ratings = avg / course?.reviews?.length;
       }
       await course?.save();
-      const notification = {
+      await NotificationModel.create({
+        user: course?.instructor?.id,
         title: "new review received",
         message: `${req.user?.name} has given a review in ${course?.name} on your course`,
-      };
-      //create notification
+      });
       res.status(200).json({
         success: true,
         message: "Review added successfully",
@@ -418,7 +421,7 @@ export const deleteCourseByAdmin = CatchAsyncErrors(
       if (!course) {
         return next(new ErrorHandler("Course not found", 404));
       }
-      await course.deleteOne({ id });
+      await CourseModel.findByIdAndDelete(id);
       await redis.del(id);
 
       res.status(200).json({

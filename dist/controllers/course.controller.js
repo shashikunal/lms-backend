@@ -86,7 +86,10 @@ exports.editCourse = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =
         }, {
             new: true,
         });
-        res.status(201).json({
+        if (!course) {
+            return next(new ErrorHandler_1.default("Course not found", 404));
+        }
+        res.status(200).json({
             success: true,
             course,
         });
@@ -134,7 +137,7 @@ exports.getAllCourses = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next
         else {
             const courses = yield course_model_1.default.find().select("-courseData.videoUrl -courseData.suggestion -courseData.questions -courseData.links");
             yield redis_1.redis.set("allCourses", JSON.stringify(courses));
-            res.status(201).json({
+            res.status(200).json({
                 success: true,
                 courses,
             });
@@ -276,7 +279,7 @@ exports.addAnswer = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
     }
 }));
 exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _o, _p, _q, _r, _s, _t, _u;
+    var _o, _p, _q, _r, _s, _t, _u, _v;
     try {
         const userCourseList = (_o = req.user) === null || _o === void 0 ? void 0 : _o.courses;
         const courseId = req.params.id;
@@ -314,11 +317,11 @@ exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
             course.ratings = avg / ((_t = course === null || course === void 0 ? void 0 : course.reviews) === null || _t === void 0 ? void 0 : _t.length);
         }
         yield (course === null || course === void 0 ? void 0 : course.save());
-        const notification = {
+        yield notificationModel_1.default.create({
+            user: (_u = course === null || course === void 0 ? void 0 : course.instructor) === null || _u === void 0 ? void 0 : _u.id,
             title: "new review received",
-            message: `${(_u = req.user) === null || _u === void 0 ? void 0 : _u.name} has given a review in ${course === null || course === void 0 ? void 0 : course.name} on your course`,
-        };
-        //create notification
+            message: `${(_v = req.user) === null || _v === void 0 ? void 0 : _v.name} has given a review in ${course === null || course === void 0 ? void 0 : course.name} on your course`,
+        });
         res.status(200).json({
             success: true,
             message: "Review added successfully",
@@ -330,14 +333,14 @@ exports.addReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) =>
     }
 }));
 exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _v, _w;
+    var _w, _x;
     try {
         const { comment, reviewId, courseId } = req.body;
         const course = yield course_model_1.default.findById(courseId);
         if (!course) {
             return next(new ErrorHandler_1.default("Course not found", 400));
         }
-        const review = (_v = course === null || course === void 0 ? void 0 : course.reviews) === null || _v === void 0 ? void 0 : _v.find((rev) => rev._id.toString() === reviewId);
+        const review = (_w = course === null || course === void 0 ? void 0 : course.reviews) === null || _w === void 0 ? void 0 : _w.find((rev) => rev._id.toString() === reviewId);
         if (!review) {
             return next(new ErrorHandler_1.default("Review not found", 400));
         }
@@ -348,7 +351,7 @@ exports.addReplayToReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
         if (!review.commentReplies) {
             review.commentReplies = [];
         }
-        (_w = review === null || review === void 0 ? void 0 : review.commentReplies) === null || _w === void 0 ? void 0 : _w.push(replayData);
+        (_x = review === null || review === void 0 ? void 0 : review.commentReplies) === null || _x === void 0 ? void 0 : _x.push(replayData);
         yield (course === null || course === void 0 ? void 0 : course.save());
         res.status(200).json({
             success: true,
@@ -377,7 +380,7 @@ exports.deleteCourseByAdmin = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res
         if (!course) {
             return next(new ErrorHandler_1.default("Course not found", 404));
         }
-        yield course.deleteOne({ id });
+        yield course_model_1.default.findByIdAndDelete(id);
         yield redis_1.redis.del(id);
         res.status(200).json({
             success: true,
