@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsBulkSetEnrollmentExpiry = exports.lmsSetEnrollmentExpiry = exports.lmsExportEnrollments = exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsGetActiveSales = exports.lmsClearCourseSale = exports.lmsSetCourseSale = exports.lmsBulkSetEnrollmentExpiry = exports.lmsSetEnrollmentExpiry = exports.lmsExportEnrollments = exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -1392,5 +1392,52 @@ exports.lmsBulkSetEnrollmentExpiry = (0, catchAsyncErrors_1.CatchAsyncErrors)((r
         message: `${result.modifiedCount} enrollments updated`,
         modifiedCount: result.modifiedCount,
     });
+}));
+exports.lmsSetCourseSale = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { courseId, salePrice, saleStartsAt, saleEndsAt } = req.body || {};
+    if (!courseId)
+        return next(new ErrorHandler_1.default("courseId is required", 400));
+    if (!salePrice)
+        return next(new ErrorHandler_1.default("salePrice is required", 400));
+    if (!saleStartsAt)
+        return next(new ErrorHandler_1.default("saleStartsAt is required", 400));
+    if (!saleEndsAt)
+        return next(new ErrorHandler_1.default("saleEndsAt is required", 400));
+    const startsAt = new Date(saleStartsAt);
+    const endsAt = new Date(saleEndsAt);
+    if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime()))
+        return next(new ErrorHandler_1.default("Invalid date format", 400));
+    if (endsAt <= startsAt)
+        return next(new ErrorHandler_1.default("saleEndsAt must be after saleStartsAt", 400));
+    const course = yield course_model_1.default.findByIdAndUpdate(courseId, { $set: { salePrice, saleStartsAt: startsAt, saleEndsAt: endsAt } }, { new: true });
+    if (!course)
+        return next(new ErrorHandler_1.default("Course not found", 404));
+    res.status(200).json({
+        success: true,
+        message: "Course sale set successfully",
+        course,
+    });
+}));
+exports.lmsClearCourseSale = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { courseId } = req.body || {};
+    if (!courseId)
+        return next(new ErrorHandler_1.default("courseId is required", 400));
+    const course = yield course_model_1.default.findByIdAndUpdate(courseId, { $unset: { salePrice: 1, saleStartsAt: 1, saleEndsAt: 1 } }, { new: true });
+    if (!course)
+        return next(new ErrorHandler_1.default("Course not found", 404));
+    res.status(200).json({
+        success: true,
+        message: "Course sale cleared successfully",
+        course,
+    });
+}));
+exports.lmsGetActiveSales = (0, catchAsyncErrors_1.CatchAsyncErrors)((_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const now = new Date();
+    const sales = yield course_model_1.default.find({
+        status: "PUBLISHED",
+        saleStartsAt: { $lte: now },
+        saleEndsAt: { $gte: now },
+    }).select("name price salePrice saleStartsAt saleEndsAt thumbnail");
+    res.status(200).json({ success: true, sales });
 }));
 //# sourceMappingURL=lms.controller.js.map

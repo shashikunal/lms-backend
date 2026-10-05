@@ -1585,3 +1585,60 @@ export const lmsBulkSetEnrollmentExpiry = CatchAsyncErrors(
     });
   }
 );
+
+export const lmsSetCourseSale = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseId, salePrice, saleStartsAt, saleEndsAt } = req.body || {};
+    if (!courseId) return next(new ErrorHandler("courseId is required", 400));
+    if (!salePrice) return next(new ErrorHandler("salePrice is required", 400));
+    if (!saleStartsAt) return next(new ErrorHandler("saleStartsAt is required", 400));
+    if (!saleEndsAt) return next(new ErrorHandler("saleEndsAt is required", 400));
+    const startsAt = new Date(saleStartsAt);
+    const endsAt = new Date(saleEndsAt);
+    if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime()))
+      return next(new ErrorHandler("Invalid date format", 400));
+    if (endsAt <= startsAt)
+      return next(new ErrorHandler("saleEndsAt must be after saleStartsAt", 400));
+    const course = await CourseModel.findByIdAndUpdate(
+      courseId,
+      { $set: { salePrice, saleStartsAt: startsAt, saleEndsAt: endsAt } },
+      { new: true }
+    );
+    if (!course) return next(new ErrorHandler("Course not found", 404));
+    res.status(200).json({
+      success: true,
+      message: "Course sale set successfully",
+      course,
+    });
+  }
+);
+
+export const lmsClearCourseSale = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseId } = req.body || {};
+    if (!courseId) return next(new ErrorHandler("courseId is required", 400));
+    const course = await CourseModel.findByIdAndUpdate(
+      courseId,
+      { $unset: { salePrice: 1, saleStartsAt: 1, saleEndsAt: 1 } },
+      { new: true }
+    );
+    if (!course) return next(new ErrorHandler("Course not found", 404));
+    res.status(200).json({
+      success: true,
+      message: "Course sale cleared successfully",
+      course,
+    });
+  }
+);
+
+export const lmsGetActiveSales = CatchAsyncErrors(
+  async (_req: Request, res: Response) => {
+    const now = new Date();
+    const sales = await CourseModel.find({
+      status: "PUBLISHED",
+      saleStartsAt: { $lte: now },
+      saleEndsAt: { $gte: now },
+    }).select("name price salePrice saleStartsAt saleEndsAt thumbnail");
+    res.status(200).json({ success: true, sales });
+  }
+);

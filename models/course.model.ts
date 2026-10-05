@@ -47,6 +47,9 @@ interface ICourse extends Document {
   price: number;
   estimatedPrice?: number;
   discountPrice?: number;
+  salePrice?: number;
+  saleStartsAt?: Date;
+  saleEndsAt?: Date;
   thumbnail: object;
   tags: string;
   level: string;
@@ -97,6 +100,9 @@ const courseSchema = new Schema<ICourse>(
     price: { type: Number, required: true },
     estimatedPrice: { type: Number },
     discountPrice: { type: Number },
+    salePrice: { type: Number },
+    saleStartsAt: { type: Date },
+    saleEndsAt: { type: Date },
     thumbnail: {
       public_id: {
         type: String,

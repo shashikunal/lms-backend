@@ -57,6 +57,9 @@ const courseSchema = new mongoose_1.Schema({
     price: { type: Number, required: true },
     estimatedPrice: { type: Number },
     discountPrice: { type: Number },
+    salePrice: { type: Number },
+    saleStartsAt: { type: Date },
+    saleEndsAt: { type: Date },
     thumbnail: {
         public_id: {
             type: String,

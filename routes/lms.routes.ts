@@ -65,6 +65,9 @@ import {
   lmsExportEnrollments,
   lmsSetEnrollmentExpiry,
   lmsBulkSetEnrollmentExpiry,
+  lmsSetCourseSale,
+  lmsClearCourseSale,
+  lmsGetActiveSales,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -269,6 +272,19 @@ lmsRouter.put(
   authorizeRoles("admin"),
   lmsBulkSetEnrollmentExpiry
 );
+lmsRouter.put(
+  "/courses/sale",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  lmsSetCourseSale
+);
+lmsRouter.delete(
+  "/courses/sale",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  lmsClearCourseSale
+);
+lmsRouter.get("/sales", lmsGetActiveSales);
 lmsRouter.get(
   "/admin/analytics",
   isAuthenticated,
