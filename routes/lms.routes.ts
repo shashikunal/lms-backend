@@ -52,6 +52,7 @@ import {
   lmsGetAllCategories,
   lmsUpdateCategory,
   lmsDeleteCategory,
+  lmsUserProgressAnalytics,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -104,6 +105,7 @@ lmsRouter.get(
   lmsGetEnrollment
 );
 lmsRouter.get("/my-learning", isAuthenticated, lmsMyLearning);
+lmsRouter.get("/progress-analytics", isAuthenticated, lmsUserProgressAnalytics);
 
 // Wishlist (courses)
 lmsRouter.get("/wishlist", isAuthenticated, lmsGetWishlist);

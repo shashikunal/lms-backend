@@ -1259,3 +1259,45 @@ export const lmsDeleteCategory = CatchAsyncErrors(
     res.status(200).json({ success: true, message: "Category deleted successfully" });
   }
 );
+
+export const lmsUserProgressAnalytics = CatchAsyncErrors(
+  async (req: Request | any, res: Response) => {
+    const userId = req.userId?.toString();
+    const enrollments = await EnrollmentModel.find({ userId }).sort({ updatedAt: -1 });
+    const courseIds = enrollments.map((e) => e.courseId);
+    const courses: any[] = courseIds.length
+      ? await CourseModel.find({ _id: { $in: courseIds } }).select("name thumbnail category level")
+      : [];
+    const byId: Record<string, any> = {};
+    for (const c of courses) byId[c._id.toString()] = c;
+    const progressList = enrollments.map((e) => ({
+      courseId: e.courseId,
+      course: byId[e.courseId] || null,
+      progress: e.progress || 0,
+      completed: e.completed || false,
+      completedAt: e.completedAt || null,
+      lastAccessedAt: e.updatedAt,
+    }));
+    const totalEnrollments = enrollments.length;
+    const completedCount = enrollments.filter((e) => e.completed).length;
+    const inProgressCount = totalEnrollments - completedCount;
+    const avgProgress = totalEnrollments > 0
+      ? Math.round(enrollments.reduce((sum, e) => sum + (e.progress || 0), 0) / totalEnrollments)
+      : 0;
+    const lastActivity = enrollments.length > 0
+      ? enrollments.reduce((latest, e) => {
+          const d = e.updatedAt || e.createdAt;
+          return d > latest ? d : latest;
+        }, enrollments[0].updatedAt || enrollments[0].createdAt)
+      : null;
+    res.status(200).json({
+      success: true,
+      totalEnrollments,
+      completedCount,
+      inProgressCount,
+      avgProgress,
+      lastActivity,
+      progress: progressList,
+    });
+  }
+);

@@ -9,6 +9,8 @@ export interface IEnrollment extends Document {
   completed: boolean;
   completedAt?: Date;
   enrolledAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const enrollmentSchema = new Schema<IEnrollment>(

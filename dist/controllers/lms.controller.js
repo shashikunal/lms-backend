@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsDeleteCategory = void 0;
+exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -1101,5 +1101,46 @@ exports.lmsDeleteCategory = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
     if (!category)
         return next(new ErrorHandler_1.default("Category not found", 404));
     res.status(200).json({ success: true, message: "Category deleted successfully" });
+}));
+exports.lmsUserProgressAnalytics = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _42;
+    const userId = (_42 = req.userId) === null || _42 === void 0 ? void 0 : _42.toString();
+    const enrollments = yield enrollment_model_1.default.find({ userId }).sort({ updatedAt: -1 });
+    const courseIds = enrollments.map((e) => e.courseId);
+    const courses = courseIds.length
+        ? yield course_model_1.default.find({ _id: { $in: courseIds } }).select("name thumbnail category level")
+        : [];
+    const byId = {};
+    for (const c of courses)
+        byId[c._id.toString()] = c;
+    const progressList = enrollments.map((e) => ({
+        courseId: e.courseId,
+        course: byId[e.courseId] || null,
+        progress: e.progress || 0,
+        completed: e.completed || false,
+        completedAt: e.completedAt || null,
+        lastAccessedAt: e.updatedAt,
+    }));
+    const totalEnrollments = enrollments.length;
+    const completedCount = enrollments.filter((e) => e.completed).length;
+    const inProgressCount = totalEnrollments - completedCount;
+    const avgProgress = totalEnrollments > 0
+        ? Math.round(enrollments.reduce((sum, e) => sum + (e.progress || 0), 0) / totalEnrollments)
+        : 0;
+    const lastActivity = enrollments.length > 0
+        ? enrollments.reduce((latest, e) => {
+            const d = e.updatedAt || e.createdAt;
+            return d > latest ? d : latest;
+        }, enrollments[0].updatedAt || enrollments[0].createdAt)
+        : null;
+    res.status(200).json({
+        success: true,
+        totalEnrollments,
+        completedCount,
+        inProgressCount,
+        avgProgress,
+        lastActivity,
+        progress: progressList,
+    });
 }));
 //# sourceMappingURL=lms.controller.js.map

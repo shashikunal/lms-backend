@@ -35,6 +35,7 @@ lmsRouter.post("/payments/refund", auth_1.isAuthenticated, lms_controller_1.lmsR
 lmsRouter.get("/enrollments", auth_1.isAuthenticated, lms_controller_1.lmsEnrollments);
 lmsRouter.get("/enrollments/:enrollmentId", auth_1.isAuthenticated, lms_controller_1.lmsGetEnrollment);
 lmsRouter.get("/my-learning", auth_1.isAuthenticated, lms_controller_1.lmsMyLearning);
+lmsRouter.get("/progress-analytics", auth_1.isAuthenticated, lms_controller_1.lmsUserProgressAnalytics);
 // Wishlist (courses)
 lmsRouter.get("/wishlist", auth_1.isAuthenticated, lms_controller_1.lmsGetWishlist);
 lmsRouter.post("/wishlist", auth_1.isAuthenticated, lms_controller_1.lmsToggleWishlist);
