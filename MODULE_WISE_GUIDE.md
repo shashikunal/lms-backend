@@ -657,12 +657,11 @@ Already enrolled → `400`. Unpublished course → `404`.
 
 ```http
 POST /api/v1/lms/payments/verify
-{ "razorpay_order_id": "...", "razorpay_payment_id": "...",
-  "razorpay_signature": "...", "courseId": "<courseId>" }
+{ "paymentIntentId": "...", "courseId": "<courseId>" }
 → 201 { success, message: "Payment verified. Enrollment confirmed. Go to Course.", order, enrollment }
 ```
 
-Bad signature → `400`. Dev note: with placeholder Razorpay keys the create step returns a mock order id; verification is still HMAC-checked with `RAZORPAY_KEY_SECRET`.
+Payment not completed → `400`.
 
 ## E3. History — `GET /api/v1/lms/purchases` + `GET /api/v1/lms/orders[/:orderId]` (Auth)
 
@@ -897,7 +896,7 @@ POST /api/v1/lms/coupons  { code, discountType, discountValue, endDate }
 # 4. Student: discover → buy → learn → certificate → review
 GET  /api/v1/lms/courses
 POST /api/v1/lms/payments/create     { courseId, couponCode? }
-POST /api/v1/lms/payments/verify     { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId }
+POST /api/v1/lms/payments/verify     { paymentIntentId, courseId }
 GET  /api/v1/lms/my-learning
 GET  /api/v1/lms/lectures/<lectureId>
 POST /api/v1/lms/lectures/<lectureId>/complete   (× every lecture → certificate)

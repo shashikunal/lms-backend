@@ -249,11 +249,11 @@ Now the token saves itself every login.
 
 ### E1. Create payment
 1. **POST** → `{{baseUrl}}/api/v1/lms/payments/create`, Body JSON: `{ "courseId": "PASTE_COURSE_ID" }` (optional `"couponCode"`).
-2. Copy `order.id` from the reply.
+2. Copy `paymentIntentId` from the reply.
 
 ### E2. Verify & enroll
-1. **POST** → `{{baseUrl}}/api/v1/lms/payments/verify`, Body JSON: `{ "razorpay_order_id": "PASTE", "razorpay_payment_id": "PASTE", "razorpay_signature": "PASTE", "courseId": "PASTE_COURSE_ID" }`.
-2. Good reply: `201` + enrollment. Bad signature → `400`.
+1. **POST** → `{{baseUrl}}/api/v1/lms/payments/verify`, Body JSON: `{ "paymentIntentId": "PASTE", "courseId": "PASTE_COURSE_ID" }`.
+2. Good reply: `201` + enrollment. Payment not completed → `400`.
 
 ### E3. My purchases
 1. **GET** → `{{baseUrl}}/api/v1/lms/purchases` → **Send**.

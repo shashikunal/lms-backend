@@ -329,8 +329,8 @@ Flow: detail → **Buy Now** → `payments/create` → pay → `payments/verify`
 
 | Method | Endpoint | Who | What it does |
 |---|---|---|---|
-| `POST` | `/lms/payments/create` | Auth | Razorpay order. Body: `{ "courseId": "...", "couponCode?": "..." }`. |
-| `POST` | `/lms/payments/verify` | Auth | Verify HMAC → `201` order + enrollment. Bad signature → `400`. Body: `{ "razorpay_order_id", "razorpay_payment_id", "razorpay_signature", "courseId" }`. |
+| `POST` | `/lms/payments/create` | Auth | Stripe PaymentIntent. Body: `{ "courseId": "...", "couponCode?": "..." }`. |
+| `POST` | `/lms/payments/verify` | Auth | Verify payment → `201` order + enrollment. Body: `{ "paymentIntentId", "courseId" }`. |
 | `GET` | `/lms/purchases` | Auth | Purchase history. |
 | `GET` | `/lms/orders` (+ `/:orderId`) | Auth | My orders (owner or admin). |
 
@@ -343,7 +343,7 @@ Authorization: Bearer <user_token>
 ```http
 POST /api/v1/lms/payments/verify
 Authorization: Bearer <user_token>
-{ "razorpay_order_id": "...", "razorpay_payment_id": "...", "razorpay_signature": "...", "courseId": "<courseId>" }
+{ "paymentIntentId": "...", "courseId": "<courseId>" }
 ```
 
 ---

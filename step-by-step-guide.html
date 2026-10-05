@@ -84,8 +84,8 @@ POST /api/v1/auth/login
 GET  /api/v1/auth/me                      <span class="c">(verify login)</span>
 GET  /api/v1/lms/courses?page=1&amp;limit=5   <span class="c">(browse marketplace, copy course _id)</span>
 GET  /api/v1/lms/courses/&lt;courseId&gt;       <span class="c">(detail + curriculum preview)</span>
-POST /api/v1/lms/payments/create        <span class="c">{ "courseId": "..." } → Razorpay order</span>
-POST /api/v1/lms/payments/verify        <span class="c">{ razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId } → enrollment</span>
+POST /api/v1/lms/payments/create        <span class="c">{ "courseId": "..." } → Stripe PaymentIntent</span>
+POST /api/v1/lms/payments/verify        <span class="c">{ paymentIntentId, courseId } → enrollment</span>
 GET  /api/v1/lms/my-learning              <span class="c">(Go to Course)</span>
 GET  /api/v1/lms/lectures/&lt;lectureId&gt;    <span class="c">(preview open; locked needs enrollment)</span>
 POST /api/v1/lms/lectures/&lt;lectureId&gt;/complete  <span class="c">(100% → certificate)</span></pre>
@@ -177,19 +177,19 @@ api.interceptors.response.use((r) =&gt; r, (e) =&gt; {
 <h3>5.5 Student screens (course marketplace — no cart, no address)</h3>
 <pre>GET  /lms/courses?page=1&amp;limit=12            <span class="c">(marketplace; ?category ?level ?search)</span>
 GET  /lms/courses/:courseId                  <span class="c">→ detail + curriculum preview</span>
-POST /lms/payments/create  <span class="c">{ courseId, couponCode? } → Razorpay order</span>
-<span class="c">// pay in Razorpay Checkout, then:</span>
-POST /lms/payments/verify  <span class="c">{ razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId } → enrollment</span>
+POST /lms/payments/create  <span class="c">{ courseId, couponCode? } → Stripe PaymentIntent</span>
+<span class="c">// pay with Stripe.js, then:</span>
+POST /lms/payments/verify  <span class="c">{ paymentIntentId, courseId } → enrollment</span>
 GET  /lms/my-learning                         <span class="c">(Go to Course)</span>
 GET  /lms/lectures/:lectureId                 <span class="c">(preview open; locked → 403 until enrolled)</span>
 POST /lms/lectures/:lectureId/complete        <span class="c">(100% → certificate)</span>
 POST /lms/wishlist  <span class="c">{ courseId }</span>  →  GET /lms/wishlist
 POST /lms/reviews/:courseId  <span class="c">{ rating, comment } (enrolled only)</span></pre>
-<h3>5.6 Razorpay (online payment)</h3>
-<pre><span class="c">// dev keys are placeholders: create still returns an order id, verification is HMAC-checked.</span>
-POST /lms/payments/create   <span class="c">{ courseId, couponCode? } → order id + amount</span>
-<span class="c">// pay in Razorpay Checkout, then:</span>
-POST /lms/payments/verify   <span class="c">{ razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId }</span></pre>
+<h3>5.6 Stripe (online payment)</h3>
+<pre><span class="c">// create returns a clientSecret for Stripe.js, verification checks payment status.</span>
+POST /lms/payments/create   <span class="c">{ courseId, couponCode? } → clientSecret + paymentIntentId</span>
+<span class="c">// pay with Stripe.js, then:</span>
+POST /lms/payments/verify   <span class="c">{ paymentIntentId, courseId }</span></pre>
 <h3>5.7 Instructor &amp; admin screens</h3>
 <pre>POST /lms/instructor/courses  <span class="c">(DRAFT) → add lectures → POST .../submit</span>
 PUT  /lms/admin/courses/:courseId/status  <span class="c">{ status: "PUBLISHED" }</span>
@@ -236,7 +236,7 @@ PUT  /auth/update-user-roles  <span class="c">{ id, role: "instructor" | "admin"
 <tr><td>GET</td><td>/lms/courses/:courseId · /lms/courses/:courseId/curriculum · /lms/courses/:courseId/sections · /lms/sections/:sectionId[ /lectures]</td><td><span class="badge b-public">Public</span></td></tr>
 <tr><td>GET</td><td>/lms/lectures/:lectureId · /lms/lectures/:lectureId/access</td><td><span class="badge b-auth">Auth</span> (locked → 403)</td></tr>
 <tr><td>POST</td><td>/lms/lectures/:lectureId/progress <code class="inline">{watchedSeconds}</code> · /lms/lectures/:lectureId/complete</td><td><span class="badge b-auth">Enrolled</span></td></tr>
-<tr><td>POST</td><td>/lms/payments/create <code class="inline">{courseId,couponCode?}</code> · /lms/payments/verify <code class="inline">{razorpay_*,courseId}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
+<tr><td>POST</td><td>/lms/payments/create <code class="inline">{courseId,couponCode?}</code> · /lms/payments/verify <code class="inline">{paymentIntentId,courseId}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
 <tr><td>GET</td><td>/lms/purchases · /lms/orders · /lms/orders/:orderId · /lms/enrollments[/:enrollmentId] · /lms/my-learning · /lms/certificates[/:certificateId]</td><td><span class="badge b-auth">Auth</span></td></tr>
 <tr><td>GET / POST</td><td>/lms/wishlist · /lms/wishlist/toggle <code class="inline">{courseId}</code></td><td><span class="badge b-auth">Auth</span></td></tr>
 <tr><td>GET / POST</td><td>/lms/reviews/:courseId (alias /lms/courses/:courseId/reviews) · POST needs enrollment</td><td><span class="badge b-public">Public</span> / <span class="badge b-auth">Enrolled</span></td></tr>

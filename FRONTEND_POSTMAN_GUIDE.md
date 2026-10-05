@@ -96,8 +96,7 @@ POST {{baseUrl}}/api/v1/lms/coupons/validate
 POST {{baseUrl}}/api/v1/lms/payments/create
      { "courseId": "<courseId>", "couponCode": "WELCOME10" }
 POST {{baseUrl}}/api/v1/lms/payments/verify
-     { "razorpay_order_id": "<id>", "razorpay_payment_id": "<id>",
-       "razorpay_signature": "<sig>", "courseId": "<courseId>" }
+     { "paymentIntentId": "<id>", "courseId": "<courseId>" }
 GET  {{baseUrl}}/api/v1/lms/my-learning
 GET  {{baseUrl}}/api/v1/lms/lectures/<lectureId>
 POST {{baseUrl}}/api/v1/lms/lectures/<lectureId>/complete

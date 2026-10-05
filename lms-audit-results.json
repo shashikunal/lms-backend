@@ -1,0 +1,822 @@
+{
+  "passed": 95,
+  "failed": 7,
+  "results": [
+    {
+      "group": "System",
+      "desc": "Health",
+      "method": "GET",
+      "url": "/test",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "System",
+      "desc": "Root",
+      "method": "GET",
+      "url": "/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "System",
+      "desc": "OpenAPI JSON",
+      "method": "GET",
+      "url": "/api-docs.json",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "System",
+      "desc": "Swagger UI",
+      "method": "GET",
+      "url": "/api-docs",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "System",
+      "desc": "Docs alias",
+      "method": "GET",
+      "url": "/docs",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "System",
+      "desc": "Guide",
+      "method": "GET",
+      "url": "/guide",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "System",
+      "desc": "Simple guide",
+      "method": "GET",
+      "url": "/simple-guide",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Register",
+      "method": "POST",
+      "url": "/api/v1/auth/register",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Login (real)",
+      "method": "POST",
+      "url": "/api/v1/auth/login",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Refresh (valid cookie)",
+      "method": "GET",
+      "url": "/api/v1/auth/refreshtoken",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Get me",
+      "method": "GET",
+      "url": "/api/v1/auth/me",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Get me (no token -> 401)",
+      "method": "GET",
+      "url": "/api/v1/auth/me",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Social auth",
+      "method": "POST",
+      "url": "/api/v1/auth/social-auth",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Update info",
+      "method": "PUT",
+      "url": "/api/v1/auth/update-user-info",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Update password",
+      "method": "PUT",
+      "url": "/api/v1/auth/update-user-password",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Update avatar (needs Cloudinary)",
+      "method": "PUT",
+      "url": "/api/v1/auth/update-user-profile-picture",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Logout",
+      "method": "GET",
+      "url": "/api/v1/auth/logout",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Refresh (no cookie -> 400)",
+      "method": "GET",
+      "url": "/api/v1/auth/refreshtoken",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Activate (bad code -> 400)",
+      "method": "POST",
+      "url": "/api/v1/auth/activate-user",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Admin list users",
+      "method": "GET",
+      "url": "/api/v1/auth/get-users",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Admin list users alias",
+      "method": "GET",
+      "url": "/api/v1/auth/get-all-user-dashboard",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Admin set role",
+      "method": "PUT",
+      "url": "/api/v1/auth/update-user-roles",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Student set role (-> 403)",
+      "method": "PUT",
+      "url": "/api/v1/auth/update-user-roles",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "List public",
+      "method": "GET",
+      "url": "/api/v1/course/get-courses",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Single",
+      "method": "GET",
+      "url": "/api/v1/course/get-course/6ac34346a5bd205591a92fc7",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Admin create",
+      "method": "POST",
+      "url": "/api/v1/course/create-course",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Admin edit",
+      "method": "PUT",
+      "url": "/api/v1/course/edit-course/6ac3434ba5bd205591a930c1",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Admin dashboard list",
+      "method": "GET",
+      "url": "/api/v1/course/get-admin-courses",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Order",
+      "desc": "Create order (buyer)",
+      "method": "POST",
+      "url": "/api/v1/order/create-order",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "Order",
+      "desc": "Admin dashboard",
+      "method": "GET",
+      "url": "/api/v1/order/get-all-order-dashboard",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Content (enrolled buyer)",
+      "method": "GET",
+      "url": "/api/v1/course/get-course-content/6ac34346a5bd205591a92fc7",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Content (stranger -> 403)",
+      "method": "GET",
+      "url": "/api/v1/course/get-course-content/6ac34346a5bd205591a92fc7",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Ask question",
+      "method": "PUT",
+      "url": "/api/v1/course/add-question",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Answer question",
+      "method": "PUT",
+      "url": "/api/v1/course/add-answer",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Add review (buyer)",
+      "method": "PUT",
+      "url": "/api/v1/course/add-review/6ac34346a5bd205591a92fc7",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Reply review (admin)",
+      "method": "PUT",
+      "url": "/api/v1/course/add-replay",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Course",
+      "desc": "Admin delete (temp course)",
+      "method": "DELETE",
+      "url": "/api/v1/course/delete-course/6ac3434ba5bd205591a930c1",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Notify",
+      "desc": "Admin list",
+      "method": "GET",
+      "url": "/api/v1/notifications/get-all-notifications",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Notify",
+      "desc": "Admin mark read",
+      "method": "PUT",
+      "url": "/api/v1/notifications/update-notification-status/6ac3434fa5bd205591a931c0",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Analytics",
+      "desc": "Users",
+      "method": "GET",
+      "url": "/api/v1/analytics/users-analytics",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Analytics",
+      "desc": "Courses",
+      "method": "GET",
+      "url": "/api/v1/analytics/courses-analytics",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Analytics",
+      "desc": "Orders",
+      "method": "GET",
+      "url": "/api/v1/analytics/orders-analytics",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Layout",
+      "desc": "Admin create",
+      "method": "POST",
+      "url": "/api/v1/layout/create-layout",
+      "status": 400,
+      "ok": false
+    },
+    {
+      "group": "Layout",
+      "desc": "Admin update",
+      "method": "PUT",
+      "url": "/api/v1/layout/update-layout",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "Layout",
+      "desc": "Public get",
+      "method": "GET",
+      "url": "/api/v1/layout/get-layout?type=faq",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "List courses",
+      "method": "GET",
+      "url": "/api/v1/lms/courses",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Categories",
+      "method": "GET",
+      "url": "/api/v1/lms/categories",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Search",
+      "method": "GET",
+      "url": "/api/v1/lms/search?q=audit",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Home",
+      "method": "GET",
+      "url": "/api/v1/lms/home",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Course detail",
+      "method": "GET",
+      "url": "/api/v1/lms/courses/6ac34346a5bd205591a92fc7",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Course detail (bad id -> 404/500)",
+      "method": "GET",
+      "url": "/api/v1/lms/courses/000000000000000000000000",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Curriculum",
+      "method": "GET",
+      "url": "/api/v1/lms/courses/6ac34346a5bd205591a92fc7/curriculum",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Sections",
+      "method": "GET",
+      "url": "/api/v1/lms/courses/6ac34346a5bd205591a92fc7/sections",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Section by title",
+      "method": "GET",
+      "url": "/api/v1/lms/sections/Basics",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Section lectures by title",
+      "method": "GET",
+      "url": "/api/v1/lms/sections/Basics/lectures",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Section by lecture id",
+      "method": "GET",
+      "url": "/api/v1/lms/sections/6ac34346a5bd205591a92fc8",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Section lectures by lecture id",
+      "method": "GET",
+      "url": "/api/v1/lms/sections/6ac34346a5bd205591a92fc8/lectures",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Section unknown (-> 404)",
+      "method": "GET",
+      "url": "/api/v1/lms/sections/NoSuchSection",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Preview lecture (no enroll ok)",
+      "method": "GET",
+      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fc8",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Locked lecture (stranger -> 403)",
+      "method": "GET",
+      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fc9",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Access check (preview)",
+      "method": "GET",
+      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fc8/access",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Admin create coupon",
+      "method": "POST",
+      "url": "/api/v1/lms/coupons",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Admin list coupons",
+      "method": "GET",
+      "url": "/api/v1/lms/coupons",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Validate coupon",
+      "method": "POST",
+      "url": "/api/v1/lms/coupons/validate",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Create payment",
+      "method": "POST",
+      "url": "/api/v1/lms/payments/create",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Verify payment -> enroll",
+      "method": "POST",
+      "url": "/api/v1/lms/payments/verify",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Verify payment (bad intent -> 400)",
+      "method": "POST",
+      "url": "/api/v1/lms/payments/verify",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Locked lecture (now enrolled)",
+      "method": "GET",
+      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcd",
+      "status": 403,
+      "ok": false
+    },
+    {
+      "group": "LMS",
+      "desc": "Access check (enrolled)",
+      "method": "GET",
+      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcd/access",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Save progress",
+      "method": "POST",
+      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcd/progress",
+      "status": 403,
+      "ok": false
+    },
+    {
+      "group": "LMS",
+      "desc": "Complete L1",
+      "method": "POST",
+      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcc/complete",
+      "status": 403,
+      "ok": false
+    },
+    {
+      "group": "LMS",
+      "desc": "Complete L2 (-> certificate)",
+      "method": "POST",
+      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcd/complete",
+      "status": 403,
+      "ok": false
+    },
+    {
+      "group": "LMS",
+      "desc": "My learning",
+      "method": "GET",
+      "url": "/api/v1/lms/my-learning",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "My enrollments",
+      "method": "GET",
+      "url": "/api/v1/lms/enrollments",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "My purchases",
+      "method": "GET",
+      "url": "/api/v1/lms/purchases",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "My orders",
+      "method": "GET",
+      "url": "/api/v1/lms/orders",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Wishlist toggle",
+      "method": "POST",
+      "url": "/api/v1/lms/wishlist",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Wishlist get",
+      "method": "GET",
+      "url": "/api/v1/lms/wishlist",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Wishlist toggle alias",
+      "method": "POST",
+      "url": "/api/v1/lms/wishlist/toggle",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Reviews list",
+      "method": "GET",
+      "url": "/api/v1/lms/reviews/6ac34346a5bd205591a92fcb",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Reviews list alias",
+      "method": "GET",
+      "url": "/api/v1/lms/courses/6ac34346a5bd205591a92fcb/reviews",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Add review",
+      "method": "POST",
+      "url": "/api/v1/lms/reviews/6ac34346a5bd205591a92fcb",
+      "status": 403,
+      "ok": false
+    },
+    {
+      "group": "LMS",
+      "desc": "My certificates",
+      "method": "GET",
+      "url": "/api/v1/lms/certificates",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Certificate auto-issue",
+      "method": "DB",
+      "url": "-",
+      "status": 0,
+      "ok": false
+    },
+    {
+      "group": "LMS",
+      "desc": "Instructor courses (empty)",
+      "method": "GET",
+      "url": "/api/v1/lms/instructor/courses",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Instructor create (DRAFT)",
+      "method": "POST",
+      "url": "/api/v1/lms/instructor/courses",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Instructor update",
+      "method": "PUT",
+      "url": "/api/v1/lms/instructor/courses/6ac34354a5bd205591a932d4",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Instructor add lecture",
+      "method": "POST",
+      "url": "/api/v1/lms/instructor/courses/6ac34354a5bd205591a932d4/lectures",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Instructor submit",
+      "method": "POST",
+      "url": "/api/v1/lms/instructor/courses/6ac34354a5bd205591a932d4/submit",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Student update others course (-> 403)",
+      "method": "PUT",
+      "url": "/api/v1/lms/instructor/courses/6ac34354a5bd205591a932d4",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Admin publish",
+      "method": "PUT",
+      "url": "/api/v1/lms/admin/courses/6ac34354a5bd205591a932d4/status",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Instructor students",
+      "method": "GET",
+      "url": "/api/v1/lms/instructor/students",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Instructor revenue",
+      "method": "GET",
+      "url": "/api/v1/lms/instructor/revenue",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Instructor analytics",
+      "method": "GET",
+      "url": "/api/v1/lms/instructor/analytics",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Student instructor route (-> 403)",
+      "method": "GET",
+      "url": "/api/v1/lms/instructor/courses",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Admin courses",
+      "method": "GET",
+      "url": "/api/v1/lms/admin/courses",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Admin instructors",
+      "method": "GET",
+      "url": "/api/v1/lms/admin/instructors",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Admin orders",
+      "method": "GET",
+      "url": "/api/v1/lms/admin/orders",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Admin enrollments",
+      "method": "GET",
+      "url": "/api/v1/lms/admin/enrollments",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Admin analytics",
+      "method": "GET",
+      "url": "/api/v1/lms/admin/analytics",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "group": "LMS",
+      "desc": "Admin bad status (-> 400)",
+      "method": "PUT",
+      "url": "/api/v1/lms/admin/courses/6ac34346a5bd205591a92fc7/status",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "group": "Auth",
+      "desc": "Admin delete temp user",
+      "method": "DELETE",
+      "url": "/api/v1/auth/delete-user/6ac34346a5bd205591a92fc5",
+      "status": 200,
+      "ok": true
+    }
+  ]
+}

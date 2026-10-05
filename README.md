@@ -292,7 +292,7 @@ POST /api/v1/auth/login           # { email, password } → save accessToken
 GET  /api/v1/auth/me              # Authorization: Bearer <token>
 GET  /api/v1/lms/courses          # browse marketplace
 POST /api/v1/lms/payments/create  # { courseId }
-POST /api/v1/lms/payments/verify  # { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId }
+POST /api/v1/lms/payments/verify  # { paymentIntentId, courseId }
 GET  /api/v1/lms/my-learning      # Go to Course
 ```
 

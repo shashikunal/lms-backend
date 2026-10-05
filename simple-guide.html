@@ -170,8 +170,7 @@ pm.environment.set("token", j.accessToken);</pre></li></ol>
 <h3>E1. Create payment <span class="badge b-auth">Login</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/payments/create</code>:
 <pre>{ "courseId": "PASTE_COURSE_ID", "couponCode": "OPTIONAL_CODE" }</pre>Copy <code class="inline">order.id</code> from the reply.</h3>
 <h3>E2. Verify &amp; enroll <span class="badge b-auth">Login</span> &mdash; <b>POST</b> <code class="inline">{{baseUrl}}/api/v1/lms/payments/verify</code>:
-<pre>{ "razorpay_order_id": "PASTE_ORDER_ID", "razorpay_payment_id": "PASTE_PAY_ID",
-  "razorpay_signature": "PASTE_SIG", "courseId": "PASTE_COURSE_ID" }</pre>Good reply: <code class="inline">201</code> + enrollment. Bad signature &rarr; <code class="inline">400</code>.</h3>
+<pre>{ "paymentIntentId": "PASTE_INTENT_ID", "courseId": "PASTE_COURSE_ID" }</pre>Good reply: <code class="inline">201</code> + enrollment. Payment not completed &rarr; <code class="inline">400</code>.</h3>
 <h3>E3. My purchases <span class="badge b-auth">Login</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/purchases</code> and <code class="inline">{{baseUrl}}/api/v1/lms/orders</code></h3>
 <h3>E4. One order <span class="badge b-auth">Login</span> &mdash; <b>GET</b> <code class="inline">{{baseUrl}}/api/v1/lms/orders/PASTE_ORDER_ID</code></h3>
 </section>
