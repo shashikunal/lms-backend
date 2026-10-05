@@ -15,6 +15,7 @@ import CertificateModel from "../models/certificate.model";
 import CategoryModel from "../models/category.model";
 import PDFDocument from "pdfkit";
 import { redis } from "../utils/redis";
+import CartModel from "../models/cart.model";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -1392,5 +1393,85 @@ export const lmsBulkCourseOperation = CatchAsyncErrors(
       message: `${result.modifiedCount} courses ${action}ed`,
       modifiedCount: result.modifiedCount,
     });
+  }
+);
+
+export const lmsGetCart = CatchAsyncErrors(
+  async (req: Request | any, res: Response) => {
+    const userId = req.userId?.toString();
+    let cart = await CartModel.findOne({ userId });
+    if (!cart) {
+      cart = await CartModel.create({ userId, courses: [] });
+    }
+    const courseIds = cart.courses.map((c) => c.courseId);
+    const courses: any[] = courseIds.length
+      ? await CourseModel.find({ _id: { $in: courseIds }, status: "PUBLISHED" }).select("name price discountPrice thumbnail category level")
+      : [];
+    res.status(200).json({ success: true, cart: cart.courses, courses });
+  }
+);
+
+export const lmsAddToCart = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const userId = req.userId?.toString();
+    const { courseId } = req.body || {};
+    if (!courseId) return next(new ErrorHandler("courseId is required", 400));
+    const course = await CourseModel.findById(courseId);
+    if (!course || course.status !== "PUBLISHED")
+      return next(new ErrorHandler("Course not available", 404));
+    let cart = await CartModel.findOne({ userId });
+    if (!cart) cart = await CartModel.create({ userId, courses: [] });
+    const exists = cart.courses.some((c) => c.courseId === courseId);
+    if (exists)
+      return next(new ErrorHandler("Course already in cart", 400));
+    cart.courses.push({ courseId, addedAt: new Date() } as any);
+    await cart.save();
+    res.status(200).json({ success: true, cart: cart.courses });
+  }
+);
+
+export const lmsRemoveFromCart = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const userId = req.userId?.toString();
+    const { courseId } = req.body || {};
+    if (!courseId) return next(new ErrorHandler("courseId is required", 400));
+    const cart = await CartModel.findOne({ userId });
+    if (!cart) return next(new ErrorHandler("Cart not found", 404));
+    const idx = cart.courses.findIndex((c) => c.courseId === courseId);
+    if (idx === -1)
+      return next(new ErrorHandler("Course not in cart", 404));
+    cart.courses.splice(idx, 1);
+    await cart.save();
+    res.status(200).json({ success: true, cart: cart.courses });
+  }
+);
+
+export const lmsClearCart = CatchAsyncErrors(
+  async (req: Request | any, res: Response) => {
+    const userId = req.userId?.toString();
+    await CartModel.findOneAndUpdate({ userId }, { $set: { courses: [] } });
+    res.status(200).json({ success: true, message: "Cart cleared" });
+  }
+);
+
+export const lmsMoveWishlistToCart = CatchAsyncErrors(
+  async (req: Request | any, res: Response) => {
+    const userId = req.userId?.toString();
+    const wishlist = await CourseWishlistModel.findOne({ userId });
+    if (!wishlist || wishlist.courses.length === 0)
+      return res.status(200).json({ success: true, message: "Wishlist is empty", moved: 0 });
+    let cart = await CartModel.findOne({ userId });
+    if (!cart) cart = await CartModel.create({ userId, courses: [] });
+    let moved = 0;
+    for (const item of wishlist.courses) {
+      const exists = cart.courses.some((c) => c.courseId === item.courseId);
+      if (!exists) {
+        cart.courses.push({ courseId: item.courseId, addedAt: new Date() } as any);
+        moved++;
+      }
+    }
+    await cart.save();
+    await CourseWishlistModel.findOneAndUpdate({ userId }, { $set: { courses: [] } });
+    res.status(200).json({ success: true, message: `${moved} courses moved to cart`, moved });
   }
 );

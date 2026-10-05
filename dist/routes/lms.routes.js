@@ -42,6 +42,11 @@ lmsRouter.post("/courses/bulk", auth_1.isAuthenticated, (0, auth_1.authorizeRole
 lmsRouter.get("/wishlist", auth_1.isAuthenticated, lms_controller_1.lmsGetWishlist);
 lmsRouter.post("/wishlist", auth_1.isAuthenticated, lms_controller_1.lmsToggleWishlist);
 lmsRouter.post("/wishlist/toggle", auth_1.isAuthenticated, lms_controller_1.lmsToggleWishlist);
+lmsRouter.get("/cart", auth_1.isAuthenticated, lms_controller_1.lmsGetCart);
+lmsRouter.post("/cart", auth_1.isAuthenticated, lms_controller_1.lmsAddToCart);
+lmsRouter.delete("/cart", auth_1.isAuthenticated, lms_controller_1.lmsRemoveFromCart);
+lmsRouter.delete("/cart/all", auth_1.isAuthenticated, lms_controller_1.lmsClearCart);
+lmsRouter.post("/wishlist/move-to-cart", auth_1.isAuthenticated, lms_controller_1.lmsMoveWishlistToCart);
 // Reviews (courses)
 lmsRouter.get("/reviews/:courseId", lms_controller_1.lmsListReviews);
 lmsRouter.get("/courses/:courseId/reviews", lms_controller_1.lmsListReviews);

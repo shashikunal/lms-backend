@@ -56,6 +56,11 @@ import {
   lmsCloneCourse,
   lmsDownloadCertificate,
   lmsBulkCourseOperation,
+  lmsGetCart,
+  lmsAddToCart,
+  lmsRemoveFromCart,
+  lmsClearCart,
+  lmsMoveWishlistToCart,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -116,6 +121,12 @@ lmsRouter.post("/courses/bulk", isAuthenticated, authorizeRoles("admin"), lmsBul
 lmsRouter.get("/wishlist", isAuthenticated, lmsGetWishlist);
 lmsRouter.post("/wishlist", isAuthenticated, lmsToggleWishlist);
 lmsRouter.post("/wishlist/toggle", isAuthenticated, lmsToggleWishlist);
+
+lmsRouter.get("/cart", isAuthenticated, lmsGetCart);
+lmsRouter.post("/cart", isAuthenticated, lmsAddToCart);
+lmsRouter.delete("/cart", isAuthenticated, lmsRemoveFromCart);
+lmsRouter.delete("/cart/all", isAuthenticated, lmsClearCart);
+lmsRouter.post("/wishlist/move-to-cart", isAuthenticated, lmsMoveWishlistToCart);
 
 // Reviews (courses)
 lmsRouter.get("/reviews/:courseId", lmsListReviews);

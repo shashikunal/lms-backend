@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -41,6 +41,7 @@ const certificate_model_1 = __importDefault(require("../models/certificate.model
 const category_model_1 = __importDefault(require("../models/category.model"));
 const pdfkit_1 = __importDefault(require("pdfkit"));
 const redis_1 = require("../utils/redis");
+const cart_model_1 = __importDefault(require("../models/cart.model"));
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -1222,5 +1223,80 @@ exports.lmsBulkCourseOperation = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, 
         message: `${result.modifiedCount} courses ${action}ed`,
         modifiedCount: result.modifiedCount,
     });
+}));
+exports.lmsGetCart = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _45;
+    const userId = (_45 = req.userId) === null || _45 === void 0 ? void 0 : _45.toString();
+    let cart = yield cart_model_1.default.findOne({ userId });
+    if (!cart) {
+        cart = yield cart_model_1.default.create({ userId, courses: [] });
+    }
+    const courseIds = cart.courses.map((c) => c.courseId);
+    const courses = courseIds.length
+        ? yield course_model_1.default.find({ _id: { $in: courseIds }, status: "PUBLISHED" }).select("name price discountPrice thumbnail category level")
+        : [];
+    res.status(200).json({ success: true, cart: cart.courses, courses });
+}));
+exports.lmsAddToCart = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _46;
+    const userId = (_46 = req.userId) === null || _46 === void 0 ? void 0 : _46.toString();
+    const { courseId } = req.body || {};
+    if (!courseId)
+        return next(new ErrorHandler_1.default("courseId is required", 400));
+    const course = yield course_model_1.default.findById(courseId);
+    if (!course || course.status !== "PUBLISHED")
+        return next(new ErrorHandler_1.default("Course not available", 404));
+    let cart = yield cart_model_1.default.findOne({ userId });
+    if (!cart)
+        cart = yield cart_model_1.default.create({ userId, courses: [] });
+    const exists = cart.courses.some((c) => c.courseId === courseId);
+    if (exists)
+        return next(new ErrorHandler_1.default("Course already in cart", 400));
+    cart.courses.push({ courseId, addedAt: new Date() });
+    yield cart.save();
+    res.status(200).json({ success: true, cart: cart.courses });
+}));
+exports.lmsRemoveFromCart = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _47;
+    const userId = (_47 = req.userId) === null || _47 === void 0 ? void 0 : _47.toString();
+    const { courseId } = req.body || {};
+    if (!courseId)
+        return next(new ErrorHandler_1.default("courseId is required", 400));
+    const cart = yield cart_model_1.default.findOne({ userId });
+    if (!cart)
+        return next(new ErrorHandler_1.default("Cart not found", 404));
+    const idx = cart.courses.findIndex((c) => c.courseId === courseId);
+    if (idx === -1)
+        return next(new ErrorHandler_1.default("Course not in cart", 404));
+    cart.courses.splice(idx, 1);
+    yield cart.save();
+    res.status(200).json({ success: true, cart: cart.courses });
+}));
+exports.lmsClearCart = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _48;
+    const userId = (_48 = req.userId) === null || _48 === void 0 ? void 0 : _48.toString();
+    yield cart_model_1.default.findOneAndUpdate({ userId }, { $set: { courses: [] } });
+    res.status(200).json({ success: true, message: "Cart cleared" });
+}));
+exports.lmsMoveWishlistToCart = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _49;
+    const userId = (_49 = req.userId) === null || _49 === void 0 ? void 0 : _49.toString();
+    const wishlist = yield courseWishlist_model_1.default.findOne({ userId });
+    if (!wishlist || wishlist.courses.length === 0)
+        return res.status(200).json({ success: true, message: "Wishlist is empty", moved: 0 });
+    let cart = yield cart_model_1.default.findOne({ userId });
+    if (!cart)
+        cart = yield cart_model_1.default.create({ userId, courses: [] });
+    let moved = 0;
+    for (const item of wishlist.courses) {
+        const exists = cart.courses.some((c) => c.courseId === item.courseId);
+        if (!exists) {
+            cart.courses.push({ courseId: item.courseId, addedAt: new Date() });
+            moved++;
+        }
+    }
+    yield cart.save();
+    yield courseWishlist_model_1.default.findOneAndUpdate({ userId }, { $set: { courses: [] } });
+    res.status(200).json({ success: true, message: `${moved} courses moved to cart`, moved });
 }));
 //# sourceMappingURL=lms.controller.js.map
