@@ -63,6 +63,8 @@ import {
   lmsMoveWishlistToCart,
   lmsBulkCouponOperation,
   lmsExportEnrollments,
+  lmsSetEnrollmentExpiry,
+  lmsBulkSetEnrollmentExpiry,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -254,6 +256,18 @@ lmsRouter.get(
   isAuthenticated,
   authorizeRoles("admin"),
   lmsExportEnrollments
+);
+lmsRouter.put(
+  "/admin/enrollments/expiry",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  lmsSetEnrollmentExpiry
+);
+lmsRouter.put(
+  "/admin/enrollments/expiry/bulk",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  lmsBulkSetEnrollmentExpiry
 );
 lmsRouter.get(
   "/admin/analytics",

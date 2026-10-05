@@ -33,6 +33,7 @@ const enrollmentSchema = new mongoose_1.Schema({
     completed: { type: Boolean, default: false },
     completedAt: { type: Date },
     enrolledAt: { type: Date, default: Date.now },
+    expiresAt: { type: Date },
 }, { timestamps: true });
 enrollmentSchema.index({ userId: 1, courseId: 1 }, { unique: true });
 const EnrollmentModel = mongoose_1.default.model("Enrollment", enrollmentSchema);

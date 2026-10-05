@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsExportEnrollments = exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsBulkSetEnrollmentExpiry = exports.lmsSetEnrollmentExpiry = exports.lmsExportEnrollments = exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -48,9 +48,13 @@ const cart_model_1 = __importDefault(require("../models/cart.model"));
 const isEnrolled = (userId, courseId) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const enrollment = yield enrollment_model_1.default.findOne({ userId, courseId });
-    if (enrollment)
+    if (enrollment) {
+        if (enrollment.expiresAt && enrollment.expiresAt < new Date()) {
+            yield enrollment_model_1.default.findOneAndDelete({ userId, courseId });
+            return null;
+        }
         return enrollment;
-    // Backward compat: legacy enrollment stored on User.courses + Order
+    }
     const user = yield user_model_1.default.findById(userId);
     const legacy = ((_a = user === null || user === void 0 ? void 0 : user.courses) === null || _a === void 0 ? void 0 : _a.some((c) => {
         var _a, _b;
@@ -1354,5 +1358,39 @@ exports.lmsExportEnrollments = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, re
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", `attachment; filename="enrollments-${Date.now()}.csv"`);
     res.status(200).send(csv);
+}));
+exports.lmsSetEnrollmentExpiry = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { enrollmentId, expiresAt } = req.body || {};
+    if (!enrollmentId)
+        return next(new ErrorHandler_1.default("enrollmentId is required", 400));
+    if (!expiresAt)
+        return next(new ErrorHandler_1.default("expiresAt is required", 400));
+    const expiryDate = new Date(expiresAt);
+    if (isNaN(expiryDate.getTime()))
+        return next(new ErrorHandler_1.default("Invalid date format", 400));
+    const enrollment = yield enrollment_model_1.default.findByIdAndUpdate(enrollmentId, { $set: { expiresAt: expiryDate } }, { new: true });
+    if (!enrollment)
+        return next(new ErrorHandler_1.default("Enrollment not found", 404));
+    res.status(200).json({
+        success: true,
+        message: "Enrollment expiry set successfully",
+        enrollment,
+    });
+}));
+exports.lmsBulkSetEnrollmentExpiry = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { courseId, expiresAt } = req.body || {};
+    if (!courseId)
+        return next(new ErrorHandler_1.default("courseId is required", 400));
+    if (!expiresAt)
+        return next(new ErrorHandler_1.default("expiresAt is required", 400));
+    const expiryDate = new Date(expiresAt);
+    if (isNaN(expiryDate.getTime()))
+        return next(new ErrorHandler_1.default("Invalid date format", 400));
+    const result = yield enrollment_model_1.default.updateMany({ courseId }, { $set: { expiresAt: expiryDate } });
+    res.status(200).json({
+        success: true,
+        message: `${result.modifiedCount} enrollments updated`,
+        modifiedCount: result.modifiedCount,
+    });
 }));
 //# sourceMappingURL=lms.controller.js.map

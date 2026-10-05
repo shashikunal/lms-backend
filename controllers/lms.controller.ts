@@ -23,8 +23,13 @@ import CartModel from "../models/cart.model";
 
 const isEnrolled = async (userId: string, courseId: string) => {
   const enrollment = await EnrollmentModel.findOne({ userId, courseId });
-  if (enrollment) return enrollment;
-  // Backward compat: legacy enrollment stored on User.courses + Order
+  if (enrollment) {
+    if (enrollment.expiresAt && enrollment.expiresAt < new Date()) {
+      await EnrollmentModel.findOneAndDelete({ userId, courseId });
+      return null;
+    }
+    return enrollment;
+  }
   const user: any = await userModel.findById(userId);
   const legacy =
     user?.courses?.some(
@@ -1536,5 +1541,47 @@ export const lmsExportEnrollments = CatchAsyncErrors(
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", `attachment; filename="enrollments-${Date.now()}.csv"`);
     res.status(200).send(csv);
+  }
+);
+
+export const lmsSetEnrollmentExpiry = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { enrollmentId, expiresAt } = req.body || {};
+    if (!enrollmentId) return next(new ErrorHandler("enrollmentId is required", 400));
+    if (!expiresAt) return next(new ErrorHandler("expiresAt is required", 400));
+    const expiryDate = new Date(expiresAt);
+    if (isNaN(expiryDate.getTime()))
+      return next(new ErrorHandler("Invalid date format", 400));
+    const enrollment = await EnrollmentModel.findByIdAndUpdate(
+      enrollmentId,
+      { $set: { expiresAt: expiryDate } },
+      { new: true }
+    );
+    if (!enrollment) return next(new ErrorHandler("Enrollment not found", 404));
+    res.status(200).json({
+      success: true,
+      message: "Enrollment expiry set successfully",
+      enrollment,
+    });
+  }
+);
+
+export const lmsBulkSetEnrollmentExpiry = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseId, expiresAt } = req.body || {};
+    if (!courseId) return next(new ErrorHandler("courseId is required", 400));
+    if (!expiresAt) return next(new ErrorHandler("expiresAt is required", 400));
+    const expiryDate = new Date(expiresAt);
+    if (isNaN(expiryDate.getTime()))
+      return next(new ErrorHandler("Invalid date format", 400));
+    const result = await EnrollmentModel.updateMany(
+      { courseId },
+      { $set: { expiresAt: expiryDate } }
+    );
+    res.status(200).json({
+      success: true,
+      message: `${result.modifiedCount} enrollments updated`,
+      modifiedCount: result.modifiedCount,
+    });
   }
 );
