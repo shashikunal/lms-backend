@@ -184,7 +184,6 @@ app.get("/", (req: Request, res: Response) => {
       notifications: "/api/v1/notifications",
       analytics: "/api/v1/analytics",
       layout: "/api/v1/layout",
-      // LMS Course Marketplace
       lms: "/api/v1/lms",
       healthCheck: "/test",
     },

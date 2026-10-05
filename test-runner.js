@@ -1,9 +1,8 @@
 const http = require("http");
 
 async function runTests() {
-  console.log("\n🚀 Starting E-Commerce Integration Test Suite...\n");
+  console.log("\n🚀 Starting LMS API Test Suite...\n");
 
-  // Load app from dist
   const { app } = require("./dist/app.js");
 
   const server = http.createServer(app);
@@ -60,20 +59,14 @@ async function runTests() {
     validator: (d) => d && d.success === true,
   });
 
-  // 2. Welcome Index & Route Registration
-  await test("Welcome Route & E-Commerce Directory", "/", {
+  // 2. Welcome Index
+  await test("Welcome Route & API Directory", "/", {
     expectedStatus: 200,
     validator: (d) =>
       d &&
       d.endpoints &&
-      d.endpoints.product === "/api/v1/product" &&
-      d.endpoints.category === "/api/v1/category" &&
-      d.endpoints.cart === "/api/v1/cart" &&
-      d.endpoints.wishlist === "/api/v1/wishlist" &&
-      d.endpoints.coupon === "/api/v1/coupon" &&
-      d.endpoints.payment === "/api/v1/payment" &&
-      d.endpoints.ecommerceOrder === "/api/v1/ecommerce/order" &&
-      d.endpoints.productReviews === "/api/v1/product-reviews",
+      d.endpoints.auth === "/api/v1/auth" &&
+      d.endpoints.lms === "/api/v1/lms",
   });
 
   // 3. OpenAPI Documentation JSON
@@ -82,42 +75,41 @@ async function runTests() {
     validator: (d) => d && d.openapi && d.info,
   });
 
-  // 4. Razorpay Key Endpoint (Public)
-  // Accept 200 or 503 (if DB middleware runs)
-  await test("Razorpay Key Endpoint", "/api/v1/payment/razorpay-key", {
-    expectedStatus: [200, 503],
-    validator: (d, res) => {
-      if (res.status === 200) {
-        return d && d.success === true && d.key !== undefined;
-      }
-      return true; // 503 is acceptable if MongoDB Atlas is not connected
-    },
+  // 4. LMS Public Endpoints
+  await test("LMS List Courses", "/api/v1/lms/courses");
+  await test("LMS Categories", "/api/v1/lms/categories");
+  await test("LMS Search", "/api/v1/lms/search?q=test");
+  await test("LMS Home", "/api/v1/lms/home");
+
+  // 5. Auth Endpoints
+  await test("Auth Register", "/api/v1/auth/register", {
+    expectedStatus: [201, 400],
+  });
+  await test("Auth Login (invalid)", "/api/v1/auth/login", {
+    expectedStatus: [400, 401],
+    body: { email: "invalid@test.com", password: "wrong" },
+  });
+  await test("Auth Me (no token -> 401)", "/api/v1/auth/me", {
+    expectedStatus: [401],
   });
 
-  // 5. Protected Route Guard Check (Cart without Token)
-  await test("Auth Guard on Cart (/api/v1/cart)", "/api/v1/cart", {
-    expectedStatus: [400, 401, 503],
-    validator: (d, res) => {
-      // Must block unauthorized requests or return DB unavailable
-      return res.status !== 200;
-    },
+  // 6. Protected Route Guards
+  await test("LMS Purchases (no token -> 401)", "/api/v1/lms/purchases", {
+    expectedStatus: [401],
+  });
+  await test("LMS Enrollments (no token -> 401)", "/api/v1/lms/enrollments", {
+    expectedStatus: [401],
   });
 
-  // 6. Protected Route Guard Check (Address without Token)
-  await test("Auth Guard on Address Book (/api/v1/address/my-addresses)", "/api/v1/address/my-addresses", {
-    expectedStatus: [400, 401, 503],
-    validator: (d, res) => res.status !== 200,
-  });
-
-  // 7. Protected Route Guard Check (Orders without Token)
-  await test("Auth Guard on Orders (/api/v1/ecommerce/order/my-orders)", "/api/v1/ecommerce/order/my-orders", {
-    expectedStatus: [400, 401, 503],
-    validator: (d, res) => res.status !== 200,
+  // 7. Legacy Course Endpoints
+  await test("Course List", "/api/v1/course/get-courses");
+  await test("Course Single (bad id)", "/api/v1/course/get-course/000000000000000000000000", {
+    expectedStatus: [200, 404],
   });
 
   // 8. 404 Route Handler
-  await test("404 Not Found Handler", "/api/v1/non-existent-ecommerce-route", {
-    expectedStatus: [404, 503],
+  await test("404 Not Found Handler", "/api/v1/non-existent-route", {
+    expectedStatus: [404],
   });
 
   server.close(() => {

@@ -24,11 +24,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-const crypto_1 = __importDefault(require("crypto"));
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
-const config_1 = require("../config");
-const razorpay_1 = require("../config/razorpay");
+const stripe_1 = require("../config/stripe");
 const course_model_1 = __importDefault(require("../models/course.model"));
 const orderModel_1 = __importDefault(require("../models/orderModel"));
 const user_model_1 = __importDefault(require("../models/user.model"));
@@ -454,7 +452,7 @@ exports.lmsCompleteLecture = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res,
 // No shipping address. No quantity. No physical cart. Digital product only.
 // ---------------------------------------------------------------------------
 exports.lmsCreatePayment = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _v, _w;
+    var _v, _w, _x;
     const { courseId, couponCode } = req.body || {};
     if (!courseId)
         return next(new ErrorHandler_1.default("courseId is required", 400));
@@ -474,61 +472,66 @@ exports.lmsCreatePayment = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, n
         return next(e);
     }
     const amount = Math.round((basePrice - discount) * 100) / 100;
-    const razorpay = (0, razorpay_1.getRazorpayInstance)();
-    const options = {
-        amount: Math.round(amount * 100),
-        currency: "INR",
-        receipt: `lms_${Date.now()}`,
-        notes: {
-            userId: (_w = req.userId) === null || _w === void 0 ? void 0 : _w.toString(),
-            courseId: courseId.toString(),
-        },
-    };
-    let rpOrder;
+    const stripe = (0, stripe_1.getStripeInstance)();
+    let paymentIntent;
     try {
-        rpOrder = yield razorpay.orders.create(options);
+        paymentIntent = yield stripe.paymentIntents.create({
+            amount: Math.round(amount * 100),
+            currency: "inr",
+            automatic_payment_methods: { enabled: true },
+            metadata: {
+                userId: (_w = req.userId) === null || _w === void 0 ? void 0 : _w.toString(),
+                courseId: courseId.toString(),
+                couponCode: couponCode || "",
+            },
+        });
     }
-    catch (_x) {
-        // Offline / placeholder-key fallback (dev). Real verification still HMAC-checked.
-        rpOrder = {
-            id: `order_mock_${Date.now()}`,
-            entity: "order",
-            amount: options.amount,
-            currency: "INR",
-            receipt: options.receipt,
-            status: "created",
-            notes: options.notes,
+    catch (_y) {
+        paymentIntent = {
+            id: `pi_mock_${Date.now()}`,
+            amount: Math.round(amount * 100),
+            currency: "inr",
+            status: "requires_payment_method",
+            client_secret: `pi_mock_${Date.now()}_secret_mock`,
+            metadata: {
+                userId: (_x = req.userId) === null || _x === void 0 ? void 0 : _x.toString(),
+                courseId: courseId.toString(),
+            },
         };
     }
     res.status(200).json({
         success: true,
-        order: rpOrder,
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
         amount,
-        currency: "INR",
+        currency: "inr",
         course: { _id: course._id, name: course.name, price: basePrice, discount },
     });
 }));
 exports.lmsVerifyPayment = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _y;
-    const userId = (_y = req.userId) === null || _y === void 0 ? void 0 : _y.toString();
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId, couponCode, } = req.body || {};
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !courseId)
+    var _z, _0;
+    const userId = (_z = req.userId) === null || _z === void 0 ? void 0 : _z.toString();
+    const { paymentIntentId, courseId, couponCode } = req.body || {};
+    if (!paymentIntentId || !courseId)
         return next(new ErrorHandler_1.default("Missing payment verification parameters", 400));
-    const secret = config_1.CONFIG.RAZORPAY_KEY_SECRET ||
-        process.env.RAZORPAY_KEY_SECRET ||
-        "placeholder_secret";
-    const expected = crypto_1.default
-        .createHmac("sha256", secret)
-        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-        .digest("hex");
-    if (expected !== razorpay_signature)
-        return next(new ErrorHandler_1.default("Payment verification failed", 400));
     const course = yield course_model_1.default.findById(courseId);
     if (!course)
         return next(new ErrorHandler_1.default("Course not found", 404));
     const already = yield isEnrolled(userId, courseId);
     if (already)
         return next(new ErrorHandler_1.default("You are already enrolled in this course", 400));
+    const stripe = (0, stripe_1.getStripeInstance)();
+    let paymentIntent;
+    try {
+        paymentIntent = yield stripe.paymentIntents.retrieve(paymentIntentId);
+    }
+    catch (_1) {
+        return next(new ErrorHandler_1.default("Invalid payment intent", 400));
+    }
+    if (paymentIntent.status !== "succeeded")
+        return next(new ErrorHandler_1.default("Payment not completed", 400));
+    if (((_0 = paymentIntent.metadata) === null || _0 === void 0 ? void 0 : _0.userId) !== userId)
+        return next(new ErrorHandler_1.default("Payment verification failed", 400));
     let coupon = null;
     if (couponCode) {
         const r = yield computeCouponDiscount(couponCode, courseId, Number(course.price));
@@ -542,11 +545,11 @@ exports.lmsVerifyPayment = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, n
         courseId: course._id.toString(),
         userId,
         payment_info: {
-            id: razorpay_payment_id,
-            orderId: razorpay_order_id,
-            signature: razorpay_signature,
-            method: "razorpay",
-            status: "paid",
+            id: paymentIntent.id,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            status: paymentIntent.status,
+            method: "stripe",
             paidAt: new Date(),
             couponCode: couponCode || undefined,
         },
@@ -571,26 +574,26 @@ exports.lmsVerifyPayment = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, n
     });
 }));
 exports.lmsPurchases = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _z;
-    const orders = yield orderModel_1.default.find({ userId: (_z = req.userId) === null || _z === void 0 ? void 0 : _z.toString() }).sort({
+    var _2;
+    const orders = yield orderModel_1.default.find({ userId: (_2 = req.userId) === null || _2 === void 0 ? void 0 : _2.toString() }).sort({
         createdAt: -1,
     });
     res.status(200).json({ success: true, orders });
 }));
 exports.lmsOrders = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _0;
-    const orders = yield orderModel_1.default.find({ userId: (_0 = req.userId) === null || _0 === void 0 ? void 0 : _0.toString() }).sort({
+    var _3;
+    const orders = yield orderModel_1.default.find({ userId: (_3 = req.userId) === null || _3 === void 0 ? void 0 : _3.toString() }).sort({
         createdAt: -1,
     });
     res.status(200).json({ success: true, orders });
 }));
 exports.lmsGetOrder = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _1, _2, _3;
+    var _4, _5, _6;
     const order = yield orderModel_1.default.findById(req.params.orderId);
     if (!order)
         return next(new ErrorHandler_1.default("Order not found", 404));
-    if (((_1 = order.userId) === null || _1 === void 0 ? void 0 : _1.toString()) !== ((_2 = req.userId) === null || _2 === void 0 ? void 0 : _2.toString()) &&
-        ((_3 = req.user) === null || _3 === void 0 ? void 0 : _3.role) !== "admin")
+    if (((_4 = order.userId) === null || _4 === void 0 ? void 0 : _4.toString()) !== ((_5 = req.userId) === null || _5 === void 0 ? void 0 : _5.toString()) &&
+        ((_6 = req.user) === null || _6 === void 0 ? void 0 : _6.role) !== "admin")
         return next(new ErrorHandler_1.default("Not authorized", 403));
     res.status(200).json({ success: true, order });
 }));
@@ -598,25 +601,25 @@ exports.lmsGetOrder = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) 
 // Enrollments + My Learning (primary model; orders live under history)
 // ---------------------------------------------------------------------------
 exports.lmsEnrollments = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _4;
+    var _7;
     const enrollments = yield enrollment_model_1.default.find({
-        userId: (_4 = req.userId) === null || _4 === void 0 ? void 0 : _4.toString(),
+        userId: (_7 = req.userId) === null || _7 === void 0 ? void 0 : _7.toString(),
     }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, enrollments });
 }));
 exports.lmsGetEnrollment = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _5, _6;
+    var _8, _9;
     const enrollment = yield enrollment_model_1.default.findById(req.params.enrollmentId);
     if (!enrollment)
         return next(new ErrorHandler_1.default("Enrollment not found", 404));
-    if (enrollment.userId !== ((_5 = req.userId) === null || _5 === void 0 ? void 0 : _5.toString()) &&
-        ((_6 = req.user) === null || _6 === void 0 ? void 0 : _6.role) !== "admin")
+    if (enrollment.userId !== ((_8 = req.userId) === null || _8 === void 0 ? void 0 : _8.toString()) &&
+        ((_9 = req.user) === null || _9 === void 0 ? void 0 : _9.role) !== "admin")
         return next(new ErrorHandler_1.default("Not authorized", 403));
     res.status(200).json({ success: true, enrollment });
 }));
 exports.lmsMyLearning = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _7;
-    const userId = (_7 = req.userId) === null || _7 === void 0 ? void 0 : _7.toString();
+    var _10;
+    const userId = (_10 = req.userId) === null || _10 === void 0 ? void 0 : _10.toString();
     const enrollments = yield enrollment_model_1.default.find({ userId }).sort({
         updatedAt: -1,
     });
@@ -654,15 +657,15 @@ exports.lmsMyLearning = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => _
 // Wishlist (courses)
 // ---------------------------------------------------------------------------
 exports.lmsGetWishlist = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _8;
+    var _11;
     const wishlist = yield courseWishlist_model_1.default.findOne({
-        userId: (_8 = req.userId) === null || _8 === void 0 ? void 0 : _8.toString(),
+        userId: (_11 = req.userId) === null || _11 === void 0 ? void 0 : _11.toString(),
     });
     res.status(200).json({ success: true, wishlist: (wishlist === null || wishlist === void 0 ? void 0 : wishlist.courses) || [] });
 }));
 exports.lmsToggleWishlist = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _9;
-    const userId = (_9 = req.userId) === null || _9 === void 0 ? void 0 : _9.toString();
+    var _12;
+    const userId = (_12 = req.userId) === null || _12 === void 0 ? void 0 : _12.toString();
     const { courseId } = req.body || {};
     if (!courseId)
         return next(new ErrorHandler_1.default("courseId is required", 400));
@@ -695,8 +698,8 @@ exports.lmsListReviews = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, nex
     res.status(200).json({ success: true, reviews: course.reviews || [] });
 }));
 exports.lmsAddReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _10;
-    const userId = (_10 = req.userId) === null || _10 === void 0 ? void 0 : _10.toString();
+    var _13;
+    const userId = (_13 = req.userId) === null || _13 === void 0 ? void 0 : _13.toString();
     const { courseId } = req.params;
     const { rating, comment } = req.body || {};
     if (!rating)
@@ -749,19 +752,19 @@ exports.lmsListCoupons = (0, catchAsyncErrors_1.CatchAsyncErrors)((_req, res) =>
 // Certificates
 // ---------------------------------------------------------------------------
 exports.lmsMyCertificates = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _11;
+    var _14;
     const certificates = yield certificate_model_1.default.find({
-        userId: (_11 = req.userId) === null || _11 === void 0 ? void 0 : _11.toString(),
+        userId: (_14 = req.userId) === null || _14 === void 0 ? void 0 : _14.toString(),
     }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, certificates });
 }));
 exports.lmsGetCertificate = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _12, _13;
+    var _15, _16;
     const certificate = yield certificate_model_1.default.findById(req.params.certificateId);
     if (!certificate)
         return next(new ErrorHandler_1.default("Certificate not found", 404));
-    if (certificate.userId !== ((_12 = req.userId) === null || _12 === void 0 ? void 0 : _12.toString()) &&
-        ((_13 = req.user) === null || _13 === void 0 ? void 0 : _13.role) !== "admin")
+    if (certificate.userId !== ((_15 = req.userId) === null || _15 === void 0 ? void 0 : _15.toString()) &&
+        ((_16 = req.user) === null || _16 === void 0 ? void 0 : _16.role) !== "admin")
         return next(new ErrorHandler_1.default("Not authorized", 403));
     res.status(200).json({ success: true, certificate });
 }));
@@ -769,31 +772,31 @@ exports.lmsGetCertificate = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, 
 // Instructor marketplace
 // ---------------------------------------------------------------------------
 exports.lmsInstructorCourses = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _14;
+    var _17;
     const courses = yield course_model_1.default.find({
-        "instructor.id": (_14 = req.userId) === null || _14 === void 0 ? void 0 : _14.toString(),
+        "instructor.id": (_17 = req.userId) === null || _17 === void 0 ? void 0 : _17.toString(),
     }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, courses });
 }));
 exports.lmsInstructorCreateCourse = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _15, _16;
+    var _18, _19;
     const data = Object.assign(Object.assign({}, req.body), { status: "DRAFT", instructor: {
-            id: (_15 = req.userId) === null || _15 === void 0 ? void 0 : _15.toString(),
-            name: ((_16 = req.user) === null || _16 === void 0 ? void 0 : _16.name) || "Instructor",
+            id: (_18 = req.userId) === null || _18 === void 0 ? void 0 : _18.toString(),
+            name: ((_19 = req.user) === null || _19 === void 0 ? void 0 : _19.name) || "Instructor",
         } });
     const course = yield course_model_1.default.create(data);
     res.status(201).json({ success: true, course });
 }));
 exports.lmsInstructorUpdateCourse = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _17, _18, _19, _20, _21;
+    var _20, _21, _22, _23, _24;
     const course = yield course_model_1.default.findById(req.params.courseId);
     if (!course)
         return next(new ErrorHandler_1.default("Course not found", 404));
-    const isOwner = ((_18 = (_17 = course.instructor) === null || _17 === void 0 ? void 0 : _17.id) === null || _18 === void 0 ? void 0 : _18.toString()) === ((_19 = req.userId) === null || _19 === void 0 ? void 0 : _19.toString());
-    if (!isOwner && ((_20 = req.user) === null || _20 === void 0 ? void 0 : _20.role) !== "admin")
+    const isOwner = ((_21 = (_20 = course.instructor) === null || _20 === void 0 ? void 0 : _20.id) === null || _21 === void 0 ? void 0 : _21.toString()) === ((_22 = req.userId) === null || _22 === void 0 ? void 0 : _22.toString());
+    if (!isOwner && ((_23 = req.user) === null || _23 === void 0 ? void 0 : _23.role) !== "admin")
         return next(new ErrorHandler_1.default("Not authorized", 403));
-    if (course.status === "PUBLISHED" && ((_21 = req.user) === null || _21 === void 0 ? void 0 : _21.role) !== "admin") {
-        const _22 = req.body || {}, { status } = _22, rest = __rest(_22, ["status"]);
+    if (course.status === "PUBLISHED" && ((_24 = req.user) === null || _24 === void 0 ? void 0 : _24.role) !== "admin") {
+        const _25 = req.body || {}, { status } = _25, rest = __rest(_25, ["status"]);
         void status;
         Object.assign(course, rest);
     }
@@ -804,33 +807,33 @@ exports.lmsInstructorUpdateCourse = (0, catchAsyncErrors_1.CatchAsyncErrors)((re
     res.status(200).json({ success: true, course });
 }));
 exports.lmsInstructorAddLecture = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _23, _24, _25, _26;
+    var _26, _27, _28, _29;
     const course = yield course_model_1.default.findById(req.params.courseId);
     if (!course)
         return next(new ErrorHandler_1.default("Course not found", 404));
-    const isOwner = ((_24 = (_23 = course.instructor) === null || _23 === void 0 ? void 0 : _23.id) === null || _24 === void 0 ? void 0 : _24.toString()) === ((_25 = req.userId) === null || _25 === void 0 ? void 0 : _25.toString());
-    if (!isOwner && ((_26 = req.user) === null || _26 === void 0 ? void 0 : _26.role) !== "admin")
+    const isOwner = ((_27 = (_26 = course.instructor) === null || _26 === void 0 ? void 0 : _26.id) === null || _27 === void 0 ? void 0 : _27.toString()) === ((_28 = req.userId) === null || _28 === void 0 ? void 0 : _28.toString());
+    if (!isOwner && ((_29 = req.user) === null || _29 === void 0 ? void 0 : _29.role) !== "admin")
         return next(new ErrorHandler_1.default("Not authorized", 403));
     course.courseData.push(req.body);
     yield course.save();
     res.status(201).json({ success: true, courseData: course.courseData });
 }));
 exports.lmsInstructorSubmitCourse = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _27, _28, _29, _30;
+    var _30, _31, _32, _33;
     const course = yield course_model_1.default.findById(req.params.courseId);
     if (!course)
         return next(new ErrorHandler_1.default("Course not found", 404));
-    const isOwner = ((_28 = (_27 = course.instructor) === null || _27 === void 0 ? void 0 : _27.id) === null || _28 === void 0 ? void 0 : _28.toString()) === ((_29 = req.userId) === null || _29 === void 0 ? void 0 : _29.toString());
-    if (!isOwner && ((_30 = req.user) === null || _30 === void 0 ? void 0 : _30.role) !== "admin")
+    const isOwner = ((_31 = (_30 = course.instructor) === null || _30 === void 0 ? void 0 : _30.id) === null || _31 === void 0 ? void 0 : _31.toString()) === ((_32 = req.userId) === null || _32 === void 0 ? void 0 : _32.toString());
+    if (!isOwner && ((_33 = req.user) === null || _33 === void 0 ? void 0 : _33.role) !== "admin")
         return next(new ErrorHandler_1.default("Not authorized", 403));
     course.status = "SUBMITTED";
     yield course.save();
     res.status(200).json({ success: true, course });
 }));
 exports.lmsInstructorStudents = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _31;
+    var _34;
     const courses = yield course_model_1.default.find({
-        "instructor.id": (_31 = req.userId) === null || _31 === void 0 ? void 0 : _31.toString(),
+        "instructor.id": (_34 = req.userId) === null || _34 === void 0 ? void 0 : _34.toString(),
     }).select("_id name");
     const ids = courses.map((c) => c._id.toString());
     const enrollments = yield enrollment_model_1.default.find({
@@ -839,9 +842,9 @@ exports.lmsInstructorStudents = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, r
     res.status(200).json({ success: true, enrollments });
 }));
 exports.lmsInstructorRevenue = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _32;
+    var _35;
     const courses = yield course_model_1.default.find({
-        "instructor.id": (_32 = req.userId) === null || _32 === void 0 ? void 0 : _32.toString(),
+        "instructor.id": (_35 = req.userId) === null || _35 === void 0 ? void 0 : _35.toString(),
     }).select("_id name price");
     const ids = courses.map((c) => c._id.toString());
     const orders = yield orderModel_1.default.find({ courseId: { $in: ids } });
@@ -867,9 +870,9 @@ exports.lmsInstructorRevenue = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, re
     });
 }));
 exports.lmsInstructorAnalytics = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _33;
+    var _36;
     const courses = yield course_model_1.default.find({
-        "instructor.id": (_33 = req.userId) === null || _33 === void 0 ? void 0 : _33.toString(),
+        "instructor.id": (_36 = req.userId) === null || _36 === void 0 ? void 0 : _36.toString(),
     }).select("_id name ratings purchased");
     const ids = courses.map((c) => c._id.toString());
     const [enrollments, certificates] = yield Promise.all([

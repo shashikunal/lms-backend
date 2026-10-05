@@ -1,9 +1,8 @@
-import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
 import { CatchAsyncErrors } from "../middlewares/catchAsyncErrors";
 import ErrorHandler from "../utils/ErrorHandler";
 import { CONFIG } from "../config";
-import { getRazorpayInstance } from "../config/razorpay";
+import { getStripeInstance } from "../config/stripe";
 import CourseModel from "../models/course.model";
 import OrderModel from "../models/orderModel";
 import userModel from "../models/user.model";
@@ -537,36 +536,38 @@ export const lmsCreatePayment = CatchAsyncErrors(
       return next(e);
     }
     const amount = Math.round((basePrice - discount) * 100) / 100;
-    const razorpay = getRazorpayInstance();
-    const options = {
-      amount: Math.round(amount * 100),
-      currency: "INR",
-      receipt: `lms_${Date.now()}`,
-      notes: {
-        userId: req.userId?.toString(),
-        courseId: courseId.toString(),
-      },
-    };
-    let rpOrder: any;
+    const stripe = getStripeInstance();
+    let paymentIntent: any;
     try {
-      rpOrder = await razorpay.orders.create(options);
+      paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100),
+        currency: "inr",
+        automatic_payment_methods: { enabled: true },
+        metadata: {
+          userId: req.userId?.toString(),
+          courseId: courseId.toString(),
+          couponCode: couponCode || "",
+        },
+      });
     } catch {
-      // Offline / placeholder-key fallback (dev). Real verification still HMAC-checked.
-      rpOrder = {
-        id: `order_mock_${Date.now()}`,
-        entity: "order",
-        amount: options.amount,
-        currency: "INR",
-        receipt: options.receipt,
-        status: "created",
-        notes: options.notes,
+      paymentIntent = {
+        id: `pi_mock_${Date.now()}`,
+        amount: Math.round(amount * 100),
+        currency: "inr",
+        status: "requires_payment_method",
+        client_secret: `pi_mock_${Date.now()}_secret_mock`,
+        metadata: {
+          userId: req.userId?.toString(),
+          courseId: courseId.toString(),
+        },
       };
     }
     res.status(200).json({
       success: true,
-      order: rpOrder,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
       amount,
-      currency: "INR",
+      currency: "inr",
       course: { _id: course._id, name: course.name, price: basePrice, discount },
     });
   }
@@ -575,30 +576,26 @@ export const lmsCreatePayment = CatchAsyncErrors(
 export const lmsVerifyPayment = CatchAsyncErrors(
   async (req: Request | any, res: Response, next: NextFunction) => {
     const userId = req.userId?.toString();
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      courseId,
-      couponCode,
-    } = req.body || {};
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !courseId)
+    const { paymentIntentId, courseId, couponCode } = req.body || {};
+    if (!paymentIntentId || !courseId)
       return next(new ErrorHandler("Missing payment verification parameters", 400));
-    const secret =
-      CONFIG.RAZORPAY_KEY_SECRET ||
-      (process.env.RAZORPAY_KEY_SECRET as string) ||
-      "placeholder_secret";
-    const expected = crypto
-      .createHmac("sha256", secret)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex");
-    if (expected !== razorpay_signature)
-      return next(new ErrorHandler("Payment verification failed", 400));
     const course: any = await CourseModel.findById(courseId);
     if (!course) return next(new ErrorHandler("Course not found", 404));
     const already = await isEnrolled(userId, courseId);
     if (already)
       return next(new ErrorHandler("You are already enrolled in this course", 400));
+
+    const stripe = getStripeInstance();
+    let paymentIntent: any;
+    try {
+      paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    } catch {
+      return next(new ErrorHandler("Invalid payment intent", 400));
+    }
+    if (paymentIntent.status !== "succeeded")
+      return next(new ErrorHandler("Payment not completed", 400));
+    if (paymentIntent.metadata?.userId !== userId)
+      return next(new ErrorHandler("Payment verification failed", 400));
 
     let coupon: any = null;
     if (couponCode) {
@@ -613,11 +610,11 @@ export const lmsVerifyPayment = CatchAsyncErrors(
       courseId: course._id.toString(),
       userId,
       payment_info: {
-        id: razorpay_payment_id,
-        orderId: razorpay_order_id,
-        signature: razorpay_signature,
-        method: "razorpay",
-        status: "paid",
+        id: paymentIntent.id,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        status: paymentIntent.status,
+        method: "stripe",
         paidAt: new Date(),
         couponCode: couponCode || undefined,
       },

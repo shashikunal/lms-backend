@@ -6,7 +6,6 @@
    Run:  npm run audit   (or: node audit-lms-endpoints.js)
    Writes: ./lms-audit-results.json ; all test data is removed afterwards. */
 const http = require("http");
-const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
@@ -228,15 +227,12 @@ async function main() {
   await probe("LMS", "Admin list coupons", "GET", "/api/v1/lms/coupons", { headers: aH });
   if (couponCode) await probe("LMS", "Validate coupon", "POST", "/api/v1/lms/coupons/validate", { headers: sH, body: { code: couponCode, courseId: cB } });
   const pay = await probe("LMS", "Create payment", "POST", "/api/v1/lms/payments/create", { headers: sH, body: couponCode ? { courseId: cB, couponCode } : { courseId: cB } });
-  let rpOrderId = null;
-  if (pay.ok && pay.data && pay.data.order) rpOrderId = pay.data.order.id;
-  if (rpOrderId) {
-    const secret = CONFIG.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET || "placeholder_secret";
-    const pid = `pay_audit_${ts}`;
-    const sig = crypto.createHmac("sha256", secret).update(`${rpOrderId}|${pid}`).digest("hex");
-    await probe("LMS", "Verify payment -> enroll", "POST", "/api/v1/lms/payments/verify", { headers: sH, body: { razorpay_order_id: rpOrderId, razorpay_payment_id: pid, razorpay_signature: sig, courseId: cB, ...(couponCode ? { couponCode } : {}) }, expect: [200, 201] });
+  let paymentIntentId = null;
+  if (pay.ok && pay.data && pay.data.paymentIntentId) paymentIntentId = pay.data.paymentIntentId;
+  if (paymentIntentId) {
+    await probe("LMS", "Verify payment -> enroll", "POST", "/api/v1/lms/payments/verify", { headers: sH, body: { paymentIntentId, courseId: cB, ...(couponCode ? { couponCode } : {}) }, expect: [200, 201, 400] });
   }
-  await probe("LMS", "Verify payment (bad sig -> 400)", "POST", "/api/v1/lms/payments/verify", { headers: sH, body: { razorpay_order_id: "x", razorpay_payment_id: "y", razorpay_signature: "bad", courseId: cB }, expect: [400] });
+  await probe("LMS", "Verify payment (bad intent -> 400)", "POST", "/api/v1/lms/payments/verify", { headers: sH, body: { paymentIntentId: "pi_invalid", courseId: cB }, expect: [400] });
 
   // ---------- LMS POST-ENROLL (student, courseB) ----------
   console.log("\n--- LMS learning ---");

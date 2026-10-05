@@ -1489,7 +1489,7 @@ export const swaggerDocument: Record<string, any> = {
           },
         },
         responses: {
-          200: { description: "Razorpay order created" },
+          200: { description: "Stripe PaymentIntent created" },
         },
       },
     },
@@ -1504,17 +1504,11 @@ export const swaggerDocument: Record<string, any> = {
             "application/json": {
               schema: {
                 type: "object",
-                required: [
-                  "razorpay_order_id",
-                  "razorpay_payment_id",
-                  "razorpay_signature",
-                  "courseId",
-                ],
+                required: ["paymentIntentId", "courseId"],
                 properties: {
-                  razorpay_order_id: { type: "string" },
-                  razorpay_payment_id: { type: "string" },
-                  razorpay_signature: { type: "string" },
+                  paymentIntentId: { type: "string" },
                   courseId: { type: "string" },
+                  couponCode: { type: "string" },
                 },
               },
             },
