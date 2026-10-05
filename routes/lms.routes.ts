@@ -46,6 +46,7 @@ import {
   lmsValidateCoupon,
   lmsVerifyPayment,
   lmsWebhook,
+  lmsRefundPayment,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -88,6 +89,7 @@ lmsRouter.get("/orders/:orderId", isAuthenticated, lmsGetOrder);
 lmsRouter.post("/payments/create", isAuthenticated, lmsCreatePayment);
 lmsRouter.post("/payments/verify", isAuthenticated, lmsVerifyPayment);
 lmsRouter.post("/payments/webhook", express.raw({ type: "application/json" }), lmsWebhook);
+lmsRouter.post("/payments/refund", isAuthenticated, lmsRefundPayment);
 
 // Enrollments + My Learning (primary learning model)
 lmsRouter.get("/enrollments", isAuthenticated, lmsEnrollments);

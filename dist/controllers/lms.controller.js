@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
+exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -1010,4 +1010,51 @@ const lmsWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     res.status(200).json({ received: true });
 });
 exports.lmsWebhook = lmsWebhook;
+exports.lmsRefundPayment = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _37, _38, _39, _40, _41;
+    const { orderId } = req.body || {};
+    if (!orderId)
+        return next(new ErrorHandler_1.default("orderId is required", 400));
+    const order = yield orderModel_1.default.findById(orderId);
+    if (!order)
+        return next(new ErrorHandler_1.default("Order not found", 404));
+    if (((_37 = order.userId) === null || _37 === void 0 ? void 0 : _37.toString()) !== ((_38 = req.userId) === null || _38 === void 0 ? void 0 : _38.toString()) &&
+        ((_39 = req.user) === null || _39 === void 0 ? void 0 : _39.role) !== "admin")
+        return next(new ErrorHandler_1.default("Not authorized", 403));
+    if (((_40 = order.payment_info) === null || _40 === void 0 ? void 0 : _40.status) === "refunded")
+        return next(new ErrorHandler_1.default("Order already refunded", 400));
+    const paymentIntentId = (_41 = order.payment_info) === null || _41 === void 0 ? void 0 : _41.id;
+    if (!paymentIntentId)
+        return next(new ErrorHandler_1.default("No payment intent found for this order", 400));
+    const stripe = (0, stripe_1.getStripeInstance)();
+    try {
+        yield stripe.refunds.create({ payment_intent: paymentIntentId });
+    }
+    catch (err) {
+        return next(new ErrorHandler_1.default(err.message || "Refund failed", 400));
+    }
+    order.payment_info.status = "refunded";
+    order.payment_info.refundedAt = new Date();
+    yield order.save();
+    const enrollment = yield enrollment_model_1.default.findOneAndDelete({
+        userId: order.userId,
+        courseId: order.courseId,
+    });
+    const course = yield course_model_1.default.findById(order.courseId);
+    if (course && course.purchased > 0) {
+        course.purchased -= 1;
+        yield course.save();
+    }
+    yield notificationModel_1.default.create({
+        user: order.userId,
+        title: "Refund processed",
+        message: `Your order has been refunded.`,
+    });
+    void enrollment;
+    res.status(200).json({
+        success: true,
+        message: "Refund processed successfully",
+        order,
+    });
+}));
 //# sourceMappingURL=lms.controller.js.map

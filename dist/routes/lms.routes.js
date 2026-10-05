@@ -30,6 +30,7 @@ lmsRouter.get("/orders/:orderId", auth_1.isAuthenticated, lms_controller_1.lmsGe
 lmsRouter.post("/payments/create", auth_1.isAuthenticated, lms_controller_1.lmsCreatePayment);
 lmsRouter.post("/payments/verify", auth_1.isAuthenticated, lms_controller_1.lmsVerifyPayment);
 lmsRouter.post("/payments/webhook", express_1.default.raw({ type: "application/json" }), lms_controller_1.lmsWebhook);
+lmsRouter.post("/payments/refund", auth_1.isAuthenticated, lms_controller_1.lmsRefundPayment);
 // Enrollments + My Learning (primary learning model)
 lmsRouter.get("/enrollments", auth_1.isAuthenticated, lms_controller_1.lmsEnrollments);
 lmsRouter.get("/enrollments/:enrollmentId", auth_1.isAuthenticated, lms_controller_1.lmsGetEnrollment);

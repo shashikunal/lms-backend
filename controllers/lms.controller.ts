@@ -1158,3 +1158,51 @@ export const lmsWebhook = async (req: Request | any, res: Response) => {
   }
   res.status(200).json({ received: true });
 };
+
+export const lmsRefundPayment = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { orderId } = req.body || {};
+    if (!orderId) return next(new ErrorHandler("orderId is required", 400));
+    const order: any = await OrderModel.findById(orderId);
+    if (!order) return next(new ErrorHandler("Order not found", 404));
+    if (
+      order.userId?.toString() !== req.userId?.toString() &&
+      req.user?.role !== "admin"
+    )
+      return next(new ErrorHandler("Not authorized", 403));
+    if (order.payment_info?.status === "refunded")
+      return next(new ErrorHandler("Order already refunded", 400));
+    const paymentIntentId = order.payment_info?.id;
+    if (!paymentIntentId)
+      return next(new ErrorHandler("No payment intent found for this order", 400));
+    const stripe = getStripeInstance();
+    try {
+      await stripe.refunds.create({ payment_intent: paymentIntentId });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message || "Refund failed", 400));
+    }
+    order.payment_info.status = "refunded";
+    order.payment_info.refundedAt = new Date();
+    await order.save();
+    const enrollment = await EnrollmentModel.findOneAndDelete({
+      userId: order.userId,
+      courseId: order.courseId,
+    });
+    const course: any = await CourseModel.findById(order.courseId);
+    if (course && course.purchased > 0) {
+      course.purchased -= 1;
+      await course.save();
+    }
+    await NotificationModel.create({
+      user: order.userId,
+      title: "Refund processed",
+      message: `Your order has been refunded.`,
+    });
+    void enrollment;
+    res.status(200).json({
+      success: true,
+      message: "Refund processed successfully",
+      order,
+    });
+  }
+);
