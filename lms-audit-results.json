@@ -191,14 +191,14 @@
       "desc": "List public",
       "method": "GET",
       "url": "/api/v1/course/get-courses",
-      "status": 201,
+      "status": 200,
       "ok": true
     },
     {
       "group": "Course",
       "desc": "Single",
       "method": "GET",
-      "url": "/api/v1/course/get-course/6ac34346a5bd205591a92fc7",
+      "url": "/api/v1/course/get-course/6ac34c08d4ea34b2eeb0db49",
       "status": 200,
       "ok": true
     },
@@ -214,8 +214,8 @@
       "group": "Course",
       "desc": "Admin edit",
       "method": "PUT",
-      "url": "/api/v1/course/edit-course/6ac3434ba5bd205591a930c1",
-      "status": 201,
+      "url": "/api/v1/course/edit-course/6ac34c0cd4ea34b2eeb0dc46",
+      "status": 200,
       "ok": true
     },
     {
@@ -246,7 +246,7 @@
       "group": "Course",
       "desc": "Content (enrolled buyer)",
       "method": "GET",
-      "url": "/api/v1/course/get-course-content/6ac34346a5bd205591a92fc7",
+      "url": "/api/v1/course/get-course-content/6ac34c08d4ea34b2eeb0db49",
       "status": 200,
       "ok": true
     },
@@ -254,7 +254,7 @@
       "group": "Course",
       "desc": "Content (stranger -> 403)",
       "method": "GET",
-      "url": "/api/v1/course/get-course-content/6ac34346a5bd205591a92fc7",
+      "url": "/api/v1/course/get-course-content/6ac34c08d4ea34b2eeb0db49",
       "status": 403,
       "ok": true
     },
@@ -278,7 +278,7 @@
       "group": "Course",
       "desc": "Add review (buyer)",
       "method": "PUT",
-      "url": "/api/v1/course/add-review/6ac34346a5bd205591a92fc7",
+      "url": "/api/v1/course/add-review/6ac34c08d4ea34b2eeb0db49",
       "status": 200,
       "ok": true
     },
@@ -294,7 +294,7 @@
       "group": "Course",
       "desc": "Admin delete (temp course)",
       "method": "DELETE",
-      "url": "/api/v1/course/delete-course/6ac3434ba5bd205591a930c1",
+      "url": "/api/v1/course/delete-course/6ac34c0cd4ea34b2eeb0dc46",
       "status": 200,
       "ok": true
     },
@@ -310,7 +310,7 @@
       "group": "Notify",
       "desc": "Admin mark read",
       "method": "PUT",
-      "url": "/api/v1/notifications/update-notification-status/6ac3434fa5bd205591a931c0",
+      "url": "/api/v1/notifications/update-notification-status/6ac34c11d4ea34b2eeb0dd44",
       "status": 200,
       "ok": true
     },
@@ -398,7 +398,7 @@
       "group": "LMS",
       "desc": "Course detail",
       "method": "GET",
-      "url": "/api/v1/lms/courses/6ac34346a5bd205591a92fc7",
+      "url": "/api/v1/lms/courses/6ac34c08d4ea34b2eeb0db49",
       "status": 200,
       "ok": true
     },
@@ -414,7 +414,7 @@
       "group": "LMS",
       "desc": "Curriculum",
       "method": "GET",
-      "url": "/api/v1/lms/courses/6ac34346a5bd205591a92fc7/curriculum",
+      "url": "/api/v1/lms/courses/6ac34c08d4ea34b2eeb0db49/curriculum",
       "status": 200,
       "ok": true
     },
@@ -422,7 +422,7 @@
       "group": "LMS",
       "desc": "Sections",
       "method": "GET",
-      "url": "/api/v1/lms/courses/6ac34346a5bd205591a92fc7/sections",
+      "url": "/api/v1/lms/courses/6ac34c08d4ea34b2eeb0db49/sections",
       "status": 200,
       "ok": true
     },
@@ -446,7 +446,7 @@
       "group": "LMS",
       "desc": "Section by lecture id",
       "method": "GET",
-      "url": "/api/v1/lms/sections/6ac34346a5bd205591a92fc8",
+      "url": "/api/v1/lms/sections/6ac34c08d4ea34b2eeb0db4a",
       "status": 200,
       "ok": true
     },
@@ -454,7 +454,7 @@
       "group": "LMS",
       "desc": "Section lectures by lecture id",
       "method": "GET",
-      "url": "/api/v1/lms/sections/6ac34346a5bd205591a92fc8/lectures",
+      "url": "/api/v1/lms/sections/6ac34c08d4ea34b2eeb0db4a/lectures",
       "status": 200,
       "ok": true
     },
@@ -470,7 +470,7 @@
       "group": "LMS",
       "desc": "Preview lecture (no enroll ok)",
       "method": "GET",
-      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fc8",
+      "url": "/api/v1/lms/lectures/6ac34c08d4ea34b2eeb0db4a",
       "status": 200,
       "ok": true
     },
@@ -478,7 +478,7 @@
       "group": "LMS",
       "desc": "Locked lecture (stranger -> 403)",
       "method": "GET",
-      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fc9",
+      "url": "/api/v1/lms/lectures/6ac34c08d4ea34b2eeb0db4b",
       "status": 403,
       "ok": true
     },
@@ -486,7 +486,7 @@
       "group": "LMS",
       "desc": "Access check (preview)",
       "method": "GET",
-      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fc8/access",
+      "url": "/api/v1/lms/lectures/6ac34c08d4ea34b2eeb0db4a/access",
       "status": 200,
       "ok": true
     },
@@ -542,7 +542,7 @@
       "group": "LMS",
       "desc": "Locked lecture (now enrolled)",
       "method": "GET",
-      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcd",
+      "url": "/api/v1/lms/lectures/6ac34c08d4ea34b2eeb0db4f",
       "status": 403,
       "ok": false
     },
@@ -550,7 +550,7 @@
       "group": "LMS",
       "desc": "Access check (enrolled)",
       "method": "GET",
-      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcd/access",
+      "url": "/api/v1/lms/lectures/6ac34c08d4ea34b2eeb0db4f/access",
       "status": 200,
       "ok": true
     },
@@ -558,7 +558,7 @@
       "group": "LMS",
       "desc": "Save progress",
       "method": "POST",
-      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcd/progress",
+      "url": "/api/v1/lms/lectures/6ac34c08d4ea34b2eeb0db4f/progress",
       "status": 403,
       "ok": false
     },
@@ -566,7 +566,7 @@
       "group": "LMS",
       "desc": "Complete L1",
       "method": "POST",
-      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcc/complete",
+      "url": "/api/v1/lms/lectures/6ac34c08d4ea34b2eeb0db4e/complete",
       "status": 403,
       "ok": false
     },
@@ -574,7 +574,7 @@
       "group": "LMS",
       "desc": "Complete L2 (-> certificate)",
       "method": "POST",
-      "url": "/api/v1/lms/lectures/6ac34346a5bd205591a92fcd/complete",
+      "url": "/api/v1/lms/lectures/6ac34c08d4ea34b2eeb0db4f/complete",
       "status": 403,
       "ok": false
     },
@@ -638,7 +638,7 @@
       "group": "LMS",
       "desc": "Reviews list",
       "method": "GET",
-      "url": "/api/v1/lms/reviews/6ac34346a5bd205591a92fcb",
+      "url": "/api/v1/lms/reviews/6ac34c08d4ea34b2eeb0db4d",
       "status": 200,
       "ok": true
     },
@@ -646,7 +646,7 @@
       "group": "LMS",
       "desc": "Reviews list alias",
       "method": "GET",
-      "url": "/api/v1/lms/courses/6ac34346a5bd205591a92fcb/reviews",
+      "url": "/api/v1/lms/courses/6ac34c08d4ea34b2eeb0db4d/reviews",
       "status": 200,
       "ok": true
     },
@@ -654,7 +654,7 @@
       "group": "LMS",
       "desc": "Add review",
       "method": "POST",
-      "url": "/api/v1/lms/reviews/6ac34346a5bd205591a92fcb",
+      "url": "/api/v1/lms/reviews/6ac34c08d4ea34b2eeb0db4d",
       "status": 403,
       "ok": false
     },
@@ -694,7 +694,7 @@
       "group": "LMS",
       "desc": "Instructor update",
       "method": "PUT",
-      "url": "/api/v1/lms/instructor/courses/6ac34354a5bd205591a932d4",
+      "url": "/api/v1/lms/instructor/courses/6ac34c15d4ea34b2eeb0de55",
       "status": 200,
       "ok": true
     },
@@ -702,7 +702,7 @@
       "group": "LMS",
       "desc": "Instructor add lecture",
       "method": "POST",
-      "url": "/api/v1/lms/instructor/courses/6ac34354a5bd205591a932d4/lectures",
+      "url": "/api/v1/lms/instructor/courses/6ac34c15d4ea34b2eeb0de55/lectures",
       "status": 201,
       "ok": true
     },
@@ -710,7 +710,7 @@
       "group": "LMS",
       "desc": "Instructor submit",
       "method": "POST",
-      "url": "/api/v1/lms/instructor/courses/6ac34354a5bd205591a932d4/submit",
+      "url": "/api/v1/lms/instructor/courses/6ac34c15d4ea34b2eeb0de55/submit",
       "status": 200,
       "ok": true
     },
@@ -718,7 +718,7 @@
       "group": "LMS",
       "desc": "Student update others course (-> 403)",
       "method": "PUT",
-      "url": "/api/v1/lms/instructor/courses/6ac34354a5bd205591a932d4",
+      "url": "/api/v1/lms/instructor/courses/6ac34c15d4ea34b2eeb0de55",
       "status": 403,
       "ok": true
     },
@@ -726,7 +726,7 @@
       "group": "LMS",
       "desc": "Admin publish",
       "method": "PUT",
-      "url": "/api/v1/lms/admin/courses/6ac34354a5bd205591a932d4/status",
+      "url": "/api/v1/lms/admin/courses/6ac34c15d4ea34b2eeb0de55/status",
       "status": 200,
       "ok": true
     },
@@ -806,7 +806,7 @@
       "group": "LMS",
       "desc": "Admin bad status (-> 400)",
       "method": "PUT",
-      "url": "/api/v1/lms/admin/courses/6ac34346a5bd205591a92fc7/status",
+      "url": "/api/v1/lms/admin/courses/6ac34c08d4ea34b2eeb0db49/status",
       "status": 400,
       "ok": true
     },
@@ -814,7 +814,7 @@
       "group": "Auth",
       "desc": "Admin delete temp user",
       "method": "DELETE",
-      "url": "/api/v1/auth/delete-user/6ac34346a5bd205591a92fc5",
+      "url": "/api/v1/auth/delete-user/6ac34c08d4ea34b2eeb0db47",
       "status": 200,
       "ok": true
     }
