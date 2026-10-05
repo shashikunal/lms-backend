@@ -296,9 +296,9 @@ const detail = await api.get(`/lms/courses/${courseId}`);
 ```jsx
 await api.post("/lms/coupons/validate", { code: "WELCOME10", courseId });
 const { data: pay } = await api.post("/lms/payments/create", { courseId, couponCode: "WELCOME10" });
-// ... open Razorpay Checkout with pay.order.id ...
+// ... confirm payment with Stripe.js using pay.clientSecret ...
 await api.post("/lms/payments/verify", {
-  razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId,
+  paymentIntentId: pay.paymentIntentId, courseId,
 }); // → enrollment; show "Go to Course"
 ```
 
