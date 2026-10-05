@@ -12,6 +12,9 @@ interface IReview extends Document {
   rating: number;
   comment: string;
   commentReplies?: IComment[];
+  helpfulCount: number;
+  notHelpfulCount: number;
+  votedBy: Array<{ userId: string; vote: "helpful" | "not_helpful" }>;
 }
 
 interface ILink extends Document {

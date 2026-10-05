@@ -68,6 +68,7 @@ import {
   lmsSetCourseSale,
   lmsClearCourseSale,
   lmsGetActiveSales,
+  lmsVoteReview,
 } from "../controllers/lms.controller";
 
 const lmsRouter = express.Router();
@@ -285,6 +286,7 @@ lmsRouter.delete(
   lmsClearCourseSale
 );
 lmsRouter.get("/sales", lmsGetActiveSales);
+lmsRouter.post("/reviews/vote", isAuthenticated, lmsVoteReview);
 lmsRouter.get(
   "/admin/analytics",
   isAuthenticated,

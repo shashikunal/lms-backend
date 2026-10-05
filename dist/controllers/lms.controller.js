@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmsUpdateCategory = exports.lmsGetAllCategories = exports.lmsGetCategories = exports.lmsCreateCategory = exports.lmsRefundPayment = exports.lmsWebhook = exports.lmsAdminAnalytics = exports.lmsAdminEnrollments = exports.lmsAdminOrders = exports.lmsAdminInstructors = exports.lmsAdminReviewCourse = exports.lmsAdminCourses = exports.lmsInstructorAnalytics = exports.lmsInstructorRevenue = exports.lmsInstructorStudents = exports.lmsInstructorSubmitCourse = exports.lmsInstructorAddLecture = exports.lmsInstructorUpdateCourse = exports.lmsInstructorCreateCourse = exports.lmsInstructorCourses = exports.lmsGetCertificate = exports.lmsMyCertificates = exports.lmsListCoupons = exports.lmsCreateCoupon = exports.lmsValidateCoupon = exports.lmsAddReview = exports.lmsListReviews = exports.lmsToggleWishlist = exports.lmsGetWishlist = exports.lmsMyLearning = exports.lmsGetEnrollment = exports.lmsEnrollments = exports.lmsGetOrder = exports.lmsOrders = exports.lmsPurchases = exports.lmsVerifyPayment = exports.lmsCreatePayment = exports.lmsCompleteLecture = exports.lmsSaveProgress = exports.lmsLectureAccess = exports.lmsGetLecture = exports.lmsSectionLectures = exports.lmsGetSection = exports.lmsGetSections = exports.lmsGetCurriculum = exports.lmsGetCourse = exports.lmsCategories = exports.lmsHome = exports.lmsSearchCourses = exports.lmsListCourses = void 0;
-exports.lmsGetActiveSales = exports.lmsClearCourseSale = exports.lmsSetCourseSale = exports.lmsBulkSetEnrollmentExpiry = exports.lmsSetEnrollmentExpiry = exports.lmsExportEnrollments = exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
+exports.lmsVoteReview = exports.lmsGetActiveSales = exports.lmsClearCourseSale = exports.lmsSetCourseSale = exports.lmsBulkSetEnrollmentExpiry = exports.lmsSetEnrollmentExpiry = exports.lmsExportEnrollments = exports.lmsBulkCouponOperation = exports.lmsMoveWishlistToCart = exports.lmsClearCart = exports.lmsRemoveFromCart = exports.lmsAddToCart = exports.lmsGetCart = exports.lmsBulkCourseOperation = exports.lmsDownloadCertificate = exports.lmsCloneCourse = exports.lmsUserProgressAnalytics = exports.lmsDeleteCategory = void 0;
 const catchAsyncErrors_1 = require("../middlewares/catchAsyncErrors");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const config_1 = require("../config");
@@ -1439,5 +1439,51 @@ exports.lmsGetActiveSales = (0, catchAsyncErrors_1.CatchAsyncErrors)((_req, res)
         saleEndsAt: { $gte: now },
     }).select("name price salePrice saleStartsAt saleEndsAt thumbnail");
     res.status(200).json({ success: true, sales });
+}));
+exports.lmsVoteReview = (0, catchAsyncErrors_1.CatchAsyncErrors)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _50;
+    const { courseId, reviewId, vote } = req.body || {};
+    if (!courseId || !reviewId || !vote)
+        return next(new ErrorHandler_1.default("courseId, reviewId, and vote are required", 400));
+    if (!["helpful", "not_helpful"].includes(vote))
+        return next(new ErrorHandler_1.default("Vote must be 'helpful' or 'not_helpful'", 400));
+    const course = yield course_model_1.default.findById(courseId);
+    if (!course)
+        return next(new ErrorHandler_1.default("Course not found", 404));
+    const review = course.reviews.find((r) => r._id.toString() === reviewId);
+    if (!review)
+        return next(new ErrorHandler_1.default("Review not found", 404));
+    const userId = (_50 = req.userId) === null || _50 === void 0 ? void 0 : _50.toString();
+    if (!review.votedBy)
+        review.votedBy = [];
+    const existingVote = review.votedBy.find((v) => v.userId === userId);
+    if (existingVote) {
+        if (existingVote.vote === vote) {
+            return next(new ErrorHandler_1.default("You already voted this", 400));
+        }
+        if (existingVote.vote === "helpful") {
+            review.helpfulCount = Math.max(0, (review.helpfulCount || 0) - 1);
+        }
+        else {
+            review.notHelpfulCount = Math.max(0, (review.notHelpfulCount || 0) - 1);
+        }
+        existingVote.vote = vote;
+    }
+    else {
+        review.votedBy.push({ userId, vote });
+    }
+    if (vote === "helpful") {
+        review.helpfulCount = (review.helpfulCount || 0) + 1;
+    }
+    else {
+        review.notHelpfulCount = (review.notHelpfulCount || 0) + 1;
+    }
+    yield course.save();
+    res.status(200).json({
+        success: true,
+        message: "Vote recorded",
+        helpfulCount: review.helpfulCount,
+        notHelpfulCount: review.notHelpfulCount,
+    });
 }));
 //# sourceMappingURL=lms.controller.js.map

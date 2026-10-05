@@ -1642,3 +1642,49 @@ export const lmsGetActiveSales = CatchAsyncErrors(
     res.status(200).json({ success: true, sales });
   }
 );
+
+export const lmsVoteReview = CatchAsyncErrors(
+  async (req: Request | any, res: Response, next: NextFunction) => {
+    const { courseId, reviewId, vote } = req.body || {};
+    if (!courseId || !reviewId || !vote)
+      return next(new ErrorHandler("courseId, reviewId, and vote are required", 400));
+    if (!["helpful", "not_helpful"].includes(vote))
+      return next(new ErrorHandler("Vote must be 'helpful' or 'not_helpful'", 400));
+    const course: any = await CourseModel.findById(courseId);
+    if (!course) return next(new ErrorHandler("Course not found", 404));
+    const review = course.reviews.find(
+      (r: any) => r._id.toString() === reviewId
+    );
+    if (!review) return next(new ErrorHandler("Review not found", 404));
+    const userId = req.userId?.toString();
+    if (!review.votedBy) review.votedBy = [];
+    const existingVote = review.votedBy.find(
+      (v: any) => v.userId === userId
+    );
+    if (existingVote) {
+      if (existingVote.vote === vote) {
+        return next(new ErrorHandler("You already voted this", 400));
+      }
+      if (existingVote.vote === "helpful") {
+        review.helpfulCount = Math.max(0, (review.helpfulCount || 0) - 1);
+      } else {
+        review.notHelpfulCount = Math.max(0, (review.notHelpfulCount || 0) - 1);
+      }
+      existingVote.vote = vote;
+    } else {
+      review.votedBy.push({ userId, vote });
+    }
+    if (vote === "helpful") {
+      review.helpfulCount = (review.helpfulCount || 0) + 1;
+    } else {
+      review.notHelpfulCount = (review.notHelpfulCount || 0) + 1;
+    }
+    await course.save();
+    res.status(200).json({
+      success: true,
+      message: "Vote recorded",
+      helpfulCount: review.helpfulCount,
+      notHelpfulCount: review.notHelpfulCount,
+    });
+  }
+);
